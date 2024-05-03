@@ -6,3 +6,19 @@ join_kb = ReplyKeyboardMarkup(
     ],
     resize_keyboard=True,
 )
+
+done_cancel_kb = ReplyKeyboardMarkup(
+    keyboard=[
+        KeyboardButton(text="✅ Done"),
+        KeyboardButton(text="❌ Cancel"),
+    ],
+    resize_keyboard=True,
+)
+
+sub_cancel_kb = ReplyKeyboardMarkup(
+    keyboard=[
+        KeyboardButton(text="✅ Submit Details"),
+        KeyboardButton(text="❌ Cancel"),
+    ],
+    resize_keyboard=True,
+)
