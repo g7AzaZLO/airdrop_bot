@@ -4,8 +4,9 @@ import os
 COIN_SYMBOL = "TIME"
 COIN_NAME = "Buy or Die"
 AIRDROP_TOTAL = 50000000
-AIRDROP_NETWORK = "TON"
 REFERRAL_REWARD = 1000
+AIRDROP_AMOUNT = 10000
+AIRDROP_NETWORK = "TON"
 
 # Links
 TWITTER_LINKS = ["https://twitter.com/buyordie_ton"]
