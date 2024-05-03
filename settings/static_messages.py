@@ -1,5 +1,7 @@
 from config import *
 
+CAPTCHA_MESSAGE = "Please type in the numbers on the image"
+
 WELCOME_MESSAGE = f"""
 Hello, NAME! I am your friendly {COIN_NAME} Airdrop bot
 
