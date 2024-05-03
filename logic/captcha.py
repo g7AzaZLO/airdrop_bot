@@ -2,7 +2,7 @@ from multicolorcaptcha import CaptchaGenerator
 from aiogram import types
 
 
-async def check_captcha(message: types.Message, captcha_data: dict):
+async def check_captcha(message: types.Message, captcha_data: dict) -> bool:
     """
     Проверяет правильность ответа пользователя на капчу.
 
