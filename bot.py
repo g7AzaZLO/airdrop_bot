@@ -10,8 +10,10 @@ dp = Dispatcher()
 
 
 async def main() -> None:
-    await bot.delete_webhook(drop_pending_updates=True)  # Пропускает сообщения накопившиеся пока бот отключен
-    await dp.start_polling(bot)
+	await bot.delete_webhook(drop_pending_updates=True)  # Пропускает сообщения накопившиеся пока бот отключен
+	await dp.start_polling(bot)
 
 
 asyncio.run(main())
+
+# test commit
