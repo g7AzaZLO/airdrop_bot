@@ -5,7 +5,7 @@ from logic.captcha import generate_captcha, check_captcha
 from aiogram.fsm.context import FSMContext
 from FSM.states import CaptchaState
 
-standart_handler_router = Router()
+standard_handler_router = Router()
 
 
 def get_message(messages, message_key, language, **kwargs):
@@ -32,7 +32,7 @@ def get_message(messages, message_key, language, **kwargs):
 
 
 # Handler под команду /start
-@standart_handler_router.message(CommandStart())
+@standard_handler_router.message(CommandStart())
 async def start(message: types.Message, state: FSMContext) -> None:
 	print("Processing /start command...")
 	await generate_captcha(message)
@@ -42,7 +42,7 @@ async def start(message: types.Message, state: FSMContext) -> None:
 
 
 # Handler состояния капчи
-@standart_handler_router.message(CaptchaState.wait_captcha_state)
+@standard_handler_router.message(CaptchaState.wait_captcha_state)
 async def captcha_response_handler(message: types.Message, state: FSMContext) -> None:
 	user_response = message.text
 	await state.update_data(user_captcha_response=user_response)
