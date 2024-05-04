@@ -96,7 +96,7 @@ UQBxCOstPWvIADbaYYBapGhwfRZCEZUui5p2OEFHU0a\_wWem
 _Ввели неверно? Используйте /restart команду, чтобы начать заново_
 """}
 
-JOINED = {"ENG":f"""
+JOINED = {"ENG": f"""
 *Thank you!*
 
 Rewards would be sent out automatically to your {AIRDROP_NETWORK} address
@@ -108,7 +108,7 @@ Rewards would be sent out automatically to your {AIRDROP_NETWORK} address
 Your personal referral link (+*{REFERRAL_REWARD}* point for each referral)
 REPLACEME
 """,
-          "RU":f"""
+          "RU": f"""
 *Спасибо вам!*
 
 Награды будут автоматически отправлены на ваш {AIRDROP_NETWORK} адрес, после завершения аирдропа
