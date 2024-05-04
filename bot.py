@@ -2,14 +2,14 @@ import asyncio
 
 from aiogram import Bot, Dispatcher
 from settings.config import BOT_TOKEN
-from handlers.standart_handler import standart_handler_router
+from handlers.standart_handler import standard_handler_router
 
 # Инициализация бота
 
 bot = Bot(token=BOT_TOKEN)
 dp = Dispatcher()
 
-dp.include_router(standart_handler_router)
+dp.include_router(standard_handler_router)
 
 
 async def main() -> None:
