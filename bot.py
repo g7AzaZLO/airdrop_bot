@@ -3,6 +3,7 @@ import asyncio
 from aiogram import Bot, Dispatcher
 from settings.config import BOT_TOKEN
 
+# import os
 # Инициализация бота
 
 bot = Bot(token=BOT_TOKEN)
@@ -16,4 +17,3 @@ async def main() -> None:
 
 asyncio.run(main())
 
-# test commit

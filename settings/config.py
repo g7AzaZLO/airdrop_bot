@@ -1,5 +1,10 @@
 import os
 
+# making sure the environment can be loaded
+from dotenv import load_dotenv
+env_path = '.env'
+load_dotenv(env_path)
+
 # General
 COIN_SYMBOL = "TIME"
 COIN_NAME = "Buy or Die"
@@ -16,7 +21,9 @@ MAX_USERS = 100000
 MAX_REFS = 100
 
 # Admins
-ADMIN_USERNAME = "\n".join(os.environ["ADMIN_USERNAME"].split(","))
+# ADMIN_USERNAME = "\n".join(os.environ["ADMIN_USERNAME"].split(","))  # old, delete later
+ADMIN_USERNAME = "\n".join(os.getenv("ADMIN_USERNAME").split(","))
 
 # Token
-BOT_TOKEN = os.environ["BOT_TOKEN"]
+# BOT_TOKEN = os.environ["BOT_TOKEN"]  # old, delete later
+BOT_TOKEN = os.getenv("BOT_TOKEN")
