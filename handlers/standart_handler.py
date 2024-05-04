@@ -1,11 +1,24 @@
 from aiogram import types, Router
 from aiogram.filters import CommandStart
-from messages.eng.basic_messages import CAPTCHA_MESSAGE
+from messages.basic_messages import messages
 from logic.captcha import generate_captcha, check_captcha
 from aiogram.fsm.context import FSMContext
 from FSM.states import CaptchaState
 
 standart_handler_router = Router()
+
+
+def get_message(messages, message_key, language, **kwargs):
+    """
+    Retrieve a message based on the key and language,
+    formatting it with any provided keyword arguments.
+    """
+    message_template = messages.get(message_key, {}).get(language)
+    if message_template:
+        return message_template.format(**kwargs)
+    else:
+        # Return a default message if the specific language or key is not found
+        return "Message not available."
 
 
 # Handler под команду /start
@@ -14,7 +27,8 @@ async def start(message: types.Message, state: FSMContext) -> None:
     print("Processing /start command...")
     await generate_captcha(message)
     await state.set_state(CaptchaState.wait_captcha_state)
-    await message.answer(text=CAPTCHA_MESSAGE["ENG"])
+    capture_message = get_message(messages, "WELCOME_MESSAGE", "ENG")
+    await message.answer(text=capture_message)
 
 
 # Handler состояния капчи

@@ -26,3 +26,6 @@ ADMIN_USERNAME = "\n".join(os.getenv("ADMIN_USERNAME").split(","))
 
 # Token
 BOT_TOKEN = os.getenv("BOT_TOKEN")
+
+# Default values
+NAME_DEFAULT = 'Friend'
