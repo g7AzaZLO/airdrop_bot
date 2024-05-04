@@ -1,35 +1,47 @@
 from settings.config import *
 
 messages = {
+	"default_values": {
+		"user_name": "Friend",
+		"coin_name": COIN_NAME,
+		"coin_symbol": COIN_SYMBOL,
+		"airdrop_amount": AIRDROP_AMOUNT,
+		"referral_reward": REFERRAL_REWARD,
+		"website_url": WEBSITE_URL,
+		"telegram_links": TELEGRAM_LINKS,
+		"twitter_links": TWITTER_LINKS,
+		"airdrop_network": AIRDROP_NETWORK,
+		
+	},
 	"CAPTCHA_MESSAGE": {
 		"ENG": "Please type in the numbers on the image",
 		"RU": "Пожалуйста, введите числа на картинке"
 	},
 	
 	"WELCOME_MESSAGE": {
-		"ENG": f"""
-	        Hello, {NAME_DEFAULT}! I am your friendly {COIN_NAME} Airdrop bot
+		"ENG": """
+	        Hello, {user_name}! I am your friendly {coin_name} Airdrop bot
 	
-	        Total tokens allocated to airdrop:  *50,000,000 ${COIN_SYMBOL}*
+	        Total tokens allocated to airdrop:  *50,000,000 ${coin_symbol}*
 	
-	        ⭐️ For Joining - Get *{AIRDROP_AMOUNT}* point
-	        ⭐️ For each referral - Get *{REFERRAL_REWARD}* point
+	        ⭐️ For Joining - Get *{airdrop_amount}* point
+	        ⭐️ For each referral - Get *{referral_reward}* point
 	
-	        📘_By Participating you are agreeing to the {COIN_NAME} (Airdrop) Program Terms and Conditions. Please see pinned post for more information.
+	        📘_By Participating you are agreeing to the {coin_name} (Airdrop) Program Terms and Conditions. Please see pinned post for more information.
 	        Click "🚀 Join Airdrop" to proceed_
 	        """,
-		"RU": f"""
-	        Привет, {NAME_DEFAULT}! Я твой дружелюбный {COIN_NAME} аирдрп бот
+		"RU": """
+	        Привет, {user_name}! Я твой дружелюбный {coin_name} аирдрп бот
 	
-	        Общее количество токенов, выделенных для аирдропа:  *50,000,000 ${COIN_SYMBOL}*
+	        Общее количество токенов, выделенных для аирдропа:  *50,000,000 ${coin_symbol}*
 	
-	        ⭐️ За присоединение - Получи *{AIRDROP_AMOUNT}* баллов
-	        ⭐️ За каждого реферала - Получи *{REFERRAL_REWARD}* баллов
+	        ⭐️ За присоединение - Получи *{airdrop_amount}* баллов
+	        ⭐️ За каждого реферала - Получи *{referral_reward}* баллов
 	        """
 	},
 	
 	"PROCEED_MESSAGE": {
-		"ENG": f"""
+		"ENG": """
 	        📢*Airdrop Rules*
 	
 	        ✏️ *Mandatory Tasks*:
@@ -42,9 +54,9 @@ messages = {
 	
 	        _NOTE: Users found cheating would be disqualified & banned immediately._
 	
-	        {WEBSITE_URL}
+	        {website_url}
 	        """,
-		"RU": f"""
+		"RU": """
 	        📢*Правила аирдропа*
 	
 	        ✏️ *Обязательные задания*:
@@ -57,47 +69,47 @@ messages = {
 	
 	        _ВНИМАНИЕ: Пользователи которые читерят будут удалены и забанены._
 	
-	        {WEBSITE_URL}
+	        {website_url}
 	        """
 	},
 	
 	"MAKE_SURE_TELEGRAM": {
-		"ENG": f"""
+		"ENG": """
 			🔹 Subscribe to our channel and join the chat room
-			{TELEGRAM_LINKS}
+			{telegram_links}
 			""",
-		"RU": f"""
+		"RU": """
 			🔹 Подпишись на наш телеграм и вступи в чат
-			{TELEGRAM_LINKS}
+			{telegram_links}
 			"""
 	},
 	
 	"FOLLOW_TWITTER_TEXT": {
-		"ENG": f"""
+		"ENG": """
 			🔹 Follow our Twitter page
-			{TWITTER_LINKS}
+			{twitter_links}
 			""",
-		"RU": f"""
+		"RU": """
 			🔹 Подпишись на наш Твиттер
-			{TWITTER_LINKS}
+			{twitter_links}
 			"""
 	},
 	
 	"SUBMIT_BEP20_TEXT": {
-		"ENG": f"""
+		"ENG": """
 			Type in your Wallet Address
 			
-			Please make sure your wallet supports the *{AIRDROP_NETWORK}*
+			Please make sure your wallet supports the *{airdrop_network}*
 			
 			Example:
 			UQBxCOstPWvIADbaYYBapGhwfRZCEZUui5p2OEFHU0a\_wWem
 			
 			_Incorrect Details? Use /restart command to start over_
 			""",
-		"RU": f"""
+		"RU": """
 			Введите ваш адрес кошелька
 			
-			Пожалуйста убедитесь что адрес поддерживает сеть *{AIRDROP_NETWORK}*
+			Пожалуйста убедитесь что адрес поддерживает сеть *{airdrop_network}*
 			
 			Пример:
 			UQBxCOstPWvIADbaYYBapGhwfRZCEZUui5p2OEFHU0a\_wWem
@@ -107,28 +119,28 @@ messages = {
 	},
 	
 	"JOINED": {
-		"ENG": f"""
+		"ENG": """
 			*Thank you!*
 			
-			Rewards would be sent out automatically to your {AIRDROP_NETWORK} address
+			Rewards would be sent out automatically to your {airdrop_network} address
 			
 			*Don't forget to*:
 			🔸 Stay in the telegram channels
 			🔸 Follow all the social media channels for the updates
 			
-			Your personal referral link (+*{REFERRAL_REWARD}* point for each referral)
+			Your personal referral link (+*{referral_reward}* point for each referral)
 			REPLACEME
 			""",
-		"RU": f"""
+		"RU": """
 			*Спасибо вам!*
 			
-			Награды будут автоматически отправлены на ваш {AIRDROP_NETWORK} адрес, после завершения аирдропа
+			Награды будут автоматически отправлены на ваш {airdrop_network} адрес, после завершения аирдропа
 			
 			*Не забывайте, что необходимо*:
 			🔸 Оставаться в телеграм и твиттер канале
 			🔸 Подписаться на все соц сети, чтобы знать актуальную информацию
 			
-			Ваша персональная реферальная ссылка (+*{REFERRAL_REWARD}* поинтов за каждого реферала)
+			Ваша персональная реферальная ссылка (+*{referral_reward}* поинтов за каждого реферала)
 			REPLACEME
 			"""
 	},
