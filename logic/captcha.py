@@ -41,7 +41,6 @@ async def generate_captcha(message: types.Message) -> None:
 
     Параметры:
     - message: сообщение для отправки капчи.
-    - captcha_data: словарь, содержащий данные капчи для каждого пользователя.
     """
     print("def generate_captcha")
     try:
