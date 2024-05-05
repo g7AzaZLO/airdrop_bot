@@ -3,13 +3,19 @@ import asyncio
 from aiogram import Bot, Dispatcher
 from settings.config import BOT_TOKEN
 from handlers.standart_handler import standard_handler_router
+from handlers.game_commands import setup_game_routes
+from dotenv import load_dotenv
+
+# loading the environment
+env_path = '.env'  # '..\\.env'
+load_dotenv(env_path)
 
 # Инициализация бота
-
 bot = Bot(token=BOT_TOKEN)
 dp = Dispatcher()
 
 dp.include_router(standard_handler_router)
+setup_game_routes(dp)
 
 
 async def main() -> None:
@@ -17,4 +23,5 @@ async def main() -> None:
     await dp.start_polling(bot)
 
 
-asyncio.run(main())
+if __name__ == '__main__':
+    asyncio.run(main())

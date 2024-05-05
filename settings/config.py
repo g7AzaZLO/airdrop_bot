@@ -3,9 +3,10 @@ import os
 # making sure the environment can be loaded
 from dotenv import load_dotenv
 
-env_path = '..\\.env'
+# env_path = '..\\.env'
+# load_dotenv(env_path)
+env_path = '.env'
 load_dotenv(env_path)
-
 # General
 COIN_SYMBOL = "TIME"
 COIN_NAME = "Buy or Die"
