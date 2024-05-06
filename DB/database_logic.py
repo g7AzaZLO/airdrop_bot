@@ -15,6 +15,7 @@ def initialize_db() -> None:
     - NUM_OF_REFS (INT) - количество рефералов
     - REF_BY_USER (INTEGER) - user_id пользователя чьим рефералом является
     - TWITTER_USER (TEXT) - ссылка на твиттер пользователя
+    - LANGUAGE (TEXT) - язык пользователя
 
     Печатает соответствующее сообщение о наличии или создании базы данных.
     """
@@ -23,7 +24,7 @@ def initialize_db() -> None:
     else:
         print("Creating Database...")
         execute_non_query(
-            "CREATE TABLE users (USER_ID INTEGER, ADDR TEXT, ALREADY_REG BOOL, NUM_OF_REFS INT, REF_BY_USER INTEGER, TWITTER_USER TEXT);")
+            "CREATE TABLE users (USER_ID INTEGER, ADDR TEXT, ALREADY_REG BOOL, NUM_OF_REFS INT, REF_BY_USER INTEGER, TWITTER_USER TEXT, LANGUAGE TEXT);")
         print("Database created successfully")
 
 
