@@ -5,6 +5,7 @@ class CaptchaState(StatesGroup):
     wait_captcha_state = State()
 
 class RegestrationState(StatesGroup):
+    captcha_state = State()
     proceed_state = State()
     follow_telegram_state = State()
     follow_twitter_state = State()

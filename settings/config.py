@@ -14,6 +14,7 @@ AIRDROP_TOTAL = 50000000
 REFERRAL_REWARD = 1000
 AIRDROP_AMOUNT = 10000
 AIRDROP_NETWORK = "TON"
+DATABASE_FILE = "airdrop.db"
 
 # Links
 TWITTER_LINKS = ["https://twitter.com/buyordie_ton"]

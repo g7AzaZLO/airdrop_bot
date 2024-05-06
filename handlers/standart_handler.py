@@ -8,7 +8,7 @@ from FSM.states import CaptchaState
 standard_handler_router = Router()
 
 
-def get_message(messages, message_key, language, **kwargs):
+def get_message(messages, message_key, language, **kwargs) -> str:
 	"""
 	Retrieve a message based on the key and language,
 	formatting it with any provided keyword arguments.
