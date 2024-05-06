@@ -6,7 +6,6 @@ from aiogram.fsm.context import FSMContext
 from FSM.states import CaptchaState, RegestrationState
 from DB.database_logic import check_is_user_already_here
 from keyboards.menu_kb import menu_kb_ru, menu_kb_eng
-
 standard_handler_router = Router()
 
 
@@ -43,10 +42,13 @@ async def start(message: types.Message, state: FSMContext) -> None:
         await state.set_state(CaptchaState.wait_captcha_state)
         capture_message = get_message(messages, "CAPTCHA_MESSAGE", "ENG")
         await message.answer(text=capture_message)
-        # Запуск меню после капчи
     else:
         print("User not in db")
         await generate_captcha(message)
         await state.set_state(RegestrationState.captcha_state)
         capture_message = get_message(messages, "CAPTCHA_MESSAGE", "ENG")
         await message.answer(text=capture_message)
+    # Запуск меню после капчи
+    # current_state = await state.get_state()  # Get the current state of the user
+    # if current_state == 'RegestrationState.hello_state':
+    #     await show_english_menu(message)

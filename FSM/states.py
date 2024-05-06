@@ -15,3 +15,5 @@ class RegestrationState(StatesGroup):
     submit_address_state = State()
     end_conversation_state = State()
     loop_state = State()
+    
+    main_menu_state = State()

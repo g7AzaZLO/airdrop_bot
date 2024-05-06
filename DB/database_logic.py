@@ -170,38 +170,7 @@ def get_user_details(user_id: int):
     except Exception as e:
         print(e)
         return None
-    
-def list_users_by_filter(**filters):
-    """
-    Fetches a list of users who match specified filter criteria from the database.
 
-    Parameters:
-    - **filters: Variable keyword arguments where each key-value pair represents a column and a corresponding filter value to apply.
-
-    Returns:
-    - A list of tuples, where each tuple represents a user record that matches the criteria.
-    - An empty list if no users meet the criteria or in case of an error.
-
-    The function constructs a SQL query dynamically based on the provided filters, uses parameterized queries to safely include values, and retrieves users from the database. It returns a list of users or an empty list depending on query results.
-    """
-    query = "SELECT * FROM users"
-    conditions = []
-    params = []
-    for key, value in filters.items():
-        conditions.append(f"{key} = ?")
-        params.append(value)
-    if conditions:
-        query += " WHERE " + " AND ".join(conditions)
-    try:
-        conn = sqlite3.connect(DATABASE_FILE)
-        cursor = conn.cursor()
-        cursor.execute(query, tuple(params))
-        results = cursor.fetchall()
-        conn.close()
-        return results
-    except Exception as e:
-        print(e)
-        return []
 
 def update_language_in_db(user_id: int, language: str) -> None:
     """
@@ -218,3 +187,29 @@ def update_language_in_db(user_id: int, language: str) -> None:
         print("Language updated successfully.")
     except Exception as e:
         print(f"Error updating language in DB: {e}")
+        
+def get_language_for_user(user_id: int) -> str:
+    """
+    Получает язык пользователя из базы данных.
+
+    Параметры:
+    - user_id (int): Уникальный идентификатор пользователя.
+
+    Возвращает:
+    - language (str): Язык пользователя, хранящийся в базе данных. Возвращает None, если не найдено.
+    """
+    conn = sqlite3.connect(DATABASE_FILE)  # Adjust database connection as necessary
+    cursor = conn.cursor()
+    try:
+        cursor.execute(f"SELECT LANGUAGE FROM users WHERE USER_ID = {user_id}")
+        result = cursor.fetchone()
+        print(result)
+        if result:
+            return result[0]  # Return the language if available
+        else:
+            return None  # No language set
+    except Exception as e:
+        print(f"Error fetching language from DB: {e}")
+        return None
+    finally:
+        conn.close()
