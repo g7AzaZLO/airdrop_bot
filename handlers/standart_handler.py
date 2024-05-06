@@ -49,7 +49,7 @@ async def start(message: types.Message, state: FSMContext) -> None:
     else:
         print("User not in db")
         add_user_to_db(message.from_user.id)
-        refferer = get_refferer_id(message.text)
+        refferer = await get_refferer_id(message.text)
         if refferer is not None:
             add_referrer_to_user(message.from_user.id, refferer)
         await generate_captcha(message)
