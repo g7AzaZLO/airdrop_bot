@@ -92,3 +92,113 @@ def check_is_user_already_here(user_id: int) ->bool:
     except Exception as e:
         print(e)
         return False
+
+def register_user(user_id: int, addr: str, twitter_user: str, language: str):
+    """
+    Registers a new user in the database with initial details such as address, Twitter handle, and language preference.
+
+    Parameters:
+    - user_id (int): Unique identifier for the user.
+    - addr (str): Address of the user.
+    - twitter_user (str): Twitter handle of the user.
+    - language (str): Preferred language of the user.
+
+    Returns:
+    - True if the user is successfully registered.
+    - False if the registration fails.
+
+    The function opens a connection to the database, executes an INSERT query to add the new user with the given details into the users table, and commits the transaction. It returns the success status of the registration.
+    """
+    try:
+        conn = sqlite3.connect(DATABASE_FILE)
+        cursor = conn.cursor()
+        cursor.execute("INSERT INTO users (USER_ID, ADDR, ALREADY_REG, NUM_OF_REFS, TWITTER_USER, LANGUAGE) VALUES (?, ?, ?, ?, ?, ?)", (user_id, addr, True, 0, twitter_user, language))
+        conn.commit()
+        conn.close()
+        return True
+    except Exception as e:
+        print(e)
+        return False
+
+def update_user_details(user_id: int, **kwargs) -> bool:
+    """
+    Updates specific user details in the database. Accepts the user ID and keyword arguments representing the fields to update.
+
+    Parameters:
+    - user_id (int): Unique identifier of the user.
+    - **kwargs: Variable keyword arguments representing column-value pairs to be updated in the database.
+
+    Returns:
+    - True if the update is successful.
+    - False if the update fails.
+
+    The function uses parameterized queries to prevent SQL injections, opens a connection to the database, executes the SQL command to update specific fields for a given user ID, and returns the success status of the operation.
+    """
+    try:
+        conn = sqlite3.connect(DATABASE_FILE)
+        cursor = conn.cursor()
+        for key, value in kwargs.items():
+            cursor.execute(f"UPDATE users SET {key} = ? WHERE USER_ID = ?", (value, user_id))
+        conn.commit()
+        conn.close()
+        return True
+    except Exception as e:
+        print(e)
+        return False
+    
+    
+def get_user_details(user_id: int):
+    """
+    Retrieves all stored details for a specific user from the database.
+
+    Parameters:
+    - user_id (int): Unique identifier of the user to retrieve details for.
+
+    Returns:
+    - A tuple containing the user details if the user exists in the database.
+    - None if there is no such user or if an error occurs.
+
+    The function establishes a connection to the database, executes a SELECT query to fetch all columns for the specified user ID, and returns the result or None based on the presence of data.
+    """
+    try:
+        conn = sqlite3.connect(DATABASE_FILE)
+        cursor = conn.cursor()
+        cursor.execute("SELECT * FROM users WHERE USER_ID = ?", (user_id,))
+        user_details = cursor.fetchone()
+        conn.close()
+        return user_details
+    except Exception as e:
+        print(e)
+        return None
+    
+def list_users_by_filter(**filters):
+    """
+    Fetches a list of users who match specified filter criteria from the database.
+
+    Parameters:
+    - **filters: Variable keyword arguments where each key-value pair represents a column and a corresponding filter value to apply.
+
+    Returns:
+    - A list of tuples, where each tuple represents a user record that matches the criteria.
+    - An empty list if no users meet the criteria or in case of an error.
+
+    The function constructs a SQL query dynamically based on the provided filters, uses parameterized queries to safely include values, and retrieves users from the database. It returns a list of users or an empty list depending on query results.
+    """
+    query = "SELECT * FROM users"
+    conditions = []
+    params = []
+    for key, value in filters.items():
+        conditions.append(f"{key} = ?")
+        params.append(value)
+    if conditions:
+        query += " WHERE " + " AND ".join(conditions)
+    try:
+        conn = sqlite3.connect(DATABASE_FILE)
+        cursor = conn.cursor()
+        cursor.execute(query, tuple(params))
+        results = cursor.fetchall()
+        conn.close()
+        return results
+    except Exception as e:
+        print(e)
+        return []

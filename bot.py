@@ -7,6 +7,7 @@ from handlers.game_commands import setup_game_routes
 from dotenv import load_dotenv
 from DB.database_logic import initialize_db
 
+
 # loading the environment
 env_path = '.env'  # '..\\.env'
 load_dotenv(env_path)

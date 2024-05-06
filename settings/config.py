@@ -28,4 +28,5 @@ ADMIN_USERNAME = "\n".join(os.getenv("ADMIN_USERNAME").split(","))
 
 # Token
 BOT_TOKEN = os.getenv("BOT_TOKEN")
+AI_KEY = os.getenv("AI_KEY")
 
