@@ -23,7 +23,7 @@ dp.include_router(standard_handler_router)
 
 async def main() -> None:
     initialize_db() # Инициализация базы данных
-    register_buttons_handlers(dp)
+    # register_buttons_handlers(dp)
 
     setup_game_routes(dp)
     await bot.delete_webhook(drop_pending_updates=True)  # Пропускает сообщения накопившиеся пока бот отключен
