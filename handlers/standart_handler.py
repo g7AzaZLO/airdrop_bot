@@ -4,7 +4,7 @@ from messages.basic_messages import messages
 from logic.captcha import generate_captcha, check_captcha
 from aiogram.fsm.context import FSMContext
 from FSM.states import CaptchaState, RegestrationState
-from DB.database_logic import check_is_user_already_here
+from DB.database_logic import check_is_user_already_here, add_user_to_db
 from keyboards.menu_kb import menu_kb_ru, menu_kb_eng
 
 standard_handler_router = Router()
@@ -47,6 +47,7 @@ async def start(message: types.Message, state: FSMContext) -> None:
         # Запуск меню после капчи
     else:
         print("User not in db")
+        add_user_to_db(message.from_user.id)
         await generate_captcha(message)
         await state.set_state(RegestrationState.captcha_state)
         capture_message = get_message(messages, "CAPTCHA_MESSAGE", "ENG")

@@ -224,3 +224,17 @@ def update_language_in_db(user_id: int, language: str) -> None:
         print("Language updated successfully.")
     except Exception as e:
         print(f"Error updating language in DB: {e}")
+
+def add_user_to_db(user_id):
+    """
+    Добавляет нового пользователя в базу данных.
+
+    Параметры:
+    - user_id (int): Уникальный идентификатор пользователя.
+    """
+    try:
+        command = f"INSERT INTO users (USER_ID) VALUES ({user_id})"
+        execute_non_query(command)
+        print(f"User {user_id} added to the database.")
+    except Exception as e:
+        print(f"Error adding user {user_id} to the database: {e}")
