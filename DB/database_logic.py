@@ -94,6 +94,7 @@ def check_is_user_already_here(user_id: int) -> bool:
         print(e)
         return False
 
+
 def register_user(user_id: int, addr: str, twitter_user: str, language: str):
     """
     Registers a new user in the database with initial details such as address, Twitter handle, and language preference.
@@ -114,13 +115,16 @@ def register_user(user_id: int, addr: str, twitter_user: str, language: str):
     try:
         conn = sqlite3.connect(DATABASE_FILE)
         cursor = conn.cursor()
-        cursor.execute("INSERT INTO users (USER_ID, ADDR, ALREADY_REG, NUM_OF_REFS, TWITTER_USER, LANGUAGE) VALUES (?, ?, ?, ?, ?, ?)", (user_id, addr, True, 0, twitter_user, language))
+        cursor.execute(
+            "INSERT INTO users (USER_ID, ADDR, ALREADY_REG, NUM_OF_REFS, TWITTER_USER, LANGUAGE) VALUES (?, ?, ?, ?, ?, ?)",
+            (user_id, addr, True, 0, twitter_user, language))
         conn.commit()
         conn.close()
         return True
     except Exception as e:
         print(e)
         return False
+
 
 def update_user_details(user_id: int, **kwargs) -> bool:
     """
@@ -148,8 +152,8 @@ def update_user_details(user_id: int, **kwargs) -> bool:
     except Exception as e:
         print(e)
         return False
-    
-    
+
+
 def get_user_details(user_id: int):
     """
     Retrieves all stored details for a specific user from the database.
@@ -174,7 +178,8 @@ def get_user_details(user_id: int):
     except Exception as e:
         print(e)
         return None
-    
+
+
 def list_users_by_filter(**filters):
     """
     Fetches a list of users who match specified filter criteria from the database.
@@ -208,6 +213,7 @@ def list_users_by_filter(**filters):
         print(e)
         return []
 
+
 def update_language_in_db(user_id: int, language: str) -> None:
     """
     Обновляет или добавляет язык пользователя в базе данных.
@@ -225,7 +231,8 @@ def update_language_in_db(user_id: int, language: str) -> None:
     except Exception as e:
         print(f"Error updating language in DB: {e}")
 
-def add_user_to_db(user_id):
+
+def add_user_to_db(user_id: int) -> None:
     """
     Добавляет нового пользователя в базу данных.
 
@@ -238,3 +245,21 @@ def add_user_to_db(user_id):
         print(f"User {user_id} added to the database.")
     except Exception as e:
         print(f"Error adding user {user_id} to the database: {e}")
+
+
+def add_referrer_to_user(user_id: int, referrer_id: int) -> None:
+    """
+    Добавляет идентификатор пользователя-реферера к записи пользователя.
+
+    Параметры:
+    - user_id (int): Уникальный идентификатор пользователя, которому нужно добавить реферера.
+    - referrer_id (int): Уникальный идентификатор пользователя-реферера.
+
+    Эта функция обновляет запись в таблице `users`, устанавливая ID реферера для конкретного пользователя.
+    """
+    try:
+        command = f"UPDATE users SET REF_BY_USER = {referrer_id} WHERE USER_ID = {user_id}"
+        execute_non_query(command)
+        print(f"Referrer {referrer_id} added to user {user_id}.")
+    except Exception as e:
+        print(f"Error adding referrer to user {user_id}: {e}")
