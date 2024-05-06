@@ -4,6 +4,7 @@ from aiogram.fsm.state import StatesGroup, State
 class CaptchaState(StatesGroup):
     wait_captcha_state = State()
 
+
 class RegestrationState(StatesGroup):
     captcha_state = State()
     lang_choose_state = State()

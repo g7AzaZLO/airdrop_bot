@@ -27,10 +27,10 @@ async def check_captcha(message: types.Message) -> bool:
         user_input = message.text
 
         if captcha_text != user_input:
-            await message.reply("Неверная капча!")
+            await message.reply("Incorrect!")
             return False
         else:
-            await message.reply("Правильно!")
+            await message.reply("Correct!")
             return True
     except Exception as e:
         print("Ошибка при проверке капчи:", e)

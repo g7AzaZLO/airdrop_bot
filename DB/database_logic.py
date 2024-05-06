@@ -202,3 +202,19 @@ def list_users_by_filter(**filters):
     except Exception as e:
         print(e)
         return []
+
+def update_language_in_db(user_id: int, language: str) -> None:
+    """
+    Обновляет или добавляет язык пользователя в базе данных.
+
+    Параметры:
+    - user_id (int): Уникальный идентификатор пользователя.
+    - language (str): Выбранный язык пользователя.
+    """
+    try:
+        # Формирование SQL команды для обновления языка пользователя
+        command = f"UPDATE users SET LANGUAGE = '{language}' WHERE USER_ID = {user_id};"
+        execute_non_query(command)
+        print("Language updated successfully.")
+    except Exception as e:
+        print(f"Error updating language in DB: {e}")
