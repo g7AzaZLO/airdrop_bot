@@ -4,8 +4,9 @@ from messages.basic_messages import messages
 from logic.captcha import generate_captcha, check_captcha
 from aiogram.fsm.context import FSMContext
 from FSM.states import CaptchaState, RegestrationState
-from DB.database_logic import check_is_user_already_here, add_user_to_db
+from DB.database_logic import check_is_user_already_here, add_user_to_db, add_referrer_to_user
 from keyboards.menu_kb import menu_kb_ru, menu_kb_eng
+from logic.refs import get_refferer_id
 
 standard_handler_router = Router()
 
@@ -48,6 +49,9 @@ async def start(message: types.Message, state: FSMContext) -> None:
     else:
         print("User not in db")
         add_user_to_db(message.from_user.id)
+        refferer = get_refferer_id(message.text)
+        if refferer is not None:
+            add_referrer_to_user(message.from_user.id, refferer)
         await generate_captcha(message)
         await state.set_state(RegestrationState.captcha_state)
         capture_message = get_message(messages, "CAPTCHA_MESSAGE", "ENG")
