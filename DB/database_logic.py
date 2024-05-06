@@ -263,3 +263,34 @@ def add_referrer_to_user(user_id: int, referrer_id: int) -> None:
         print(f"Referrer {referrer_id} added to user {user_id}.")
     except Exception as e:
         print(f"Error adding referrer to user {user_id}: {e}")
+
+
+def increment_referrer_count(referrer_id):
+    """
+    Увеличивает количество рефералов у пользователя-реферера.
+
+    Параметры:
+    - referrer_id (int): Уникальный идентификатор пользователя-реферера.
+
+    Эта функция обновляет запись в таблице `users`, увеличивая счетчик рефералов для указанного пользователя.
+    """
+    try:
+        conn = sqlite3.connect(DATABASE_FILE)
+        cursor = conn.cursor()
+        # Первоначально проверяем, есть ли поле NUM_OF_REFS, если нет, устанавливаем его в 0
+        cursor.execute("SELECT NUM_OF_REFS FROM users WHERE USER_ID = ?", (referrer_id,))
+        result = cursor.fetchone()
+        if result:
+            current_count = result[0] if result[0] is not None else 0
+        else:
+            current_count = 0
+
+        # Увеличиваем количество рефералов
+        new_count = current_count + 1
+        cursor.execute("UPDATE users SET NUM_OF_REFS = ? WHERE USER_ID = ?", (new_count, referrer_id))
+        conn.commit()
+        print(f"Referral count for user {referrer_id} incremented to {new_count}.")
+    except Exception as e:
+        print(f"Error incrementing referral count for user {referrer_id}: {e}")
+    finally:
+        conn.close()
