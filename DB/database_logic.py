@@ -82,6 +82,7 @@ def check_is_user_already_here(user_id: int) -> bool:
     соединение с базой данных, выполняет SQL-запрос для поиска пользователя с указанным идентификатором
     и возвращает результат на основе наличия или отсутствия данных в ответе.
     """
+    print("def check_is_user_already_here")
     try:
         conn = sqlite3.connect(DATABASE_FILE)
         cursor = conn.cursor()
@@ -109,6 +110,7 @@ def register_user(user_id: int, addr: str, twitter_user: str, language: str):
 
     The function opens a connection to the database, executes an INSERT query to add the new user with the given details into the users table, and commits the transaction. It returns the success status of the registration.
     """
+    print("def register_user")
     try:
         conn = sqlite3.connect(DATABASE_FILE)
         cursor = conn.cursor()
@@ -134,6 +136,7 @@ def update_user_details(user_id: int, **kwargs) -> bool:
 
     The function uses parameterized queries to prevent SQL injections, opens a connection to the database, executes the SQL command to update specific fields for a given user ID, and returns the success status of the operation.
     """
+    print("def update_user_details")
     try:
         conn = sqlite3.connect(DATABASE_FILE)
         cursor = conn.cursor()
@@ -160,6 +163,7 @@ def get_user_details(user_id: int):
 
     The function establishes a connection to the database, executes a SELECT query to fetch all columns for the specified user ID, and returns the result or None based on the presence of data.
     """
+    print("def get_user_details")
     try:
         conn = sqlite3.connect(DATABASE_FILE)
         cursor = conn.cursor()
@@ -170,7 +174,39 @@ def get_user_details(user_id: int):
     except Exception as e:
         print(e)
         return None
+    
+def list_users_by_filter(**filters):
+    """
+    Fetches a list of users who match specified filter criteria from the database.
 
+    Parameters:
+    - **filters: Variable keyword arguments where each key-value pair represents a column and a corresponding filter value to apply.
+
+    Returns:
+    - A list of tuples, where each tuple represents a user record that matches the criteria.
+    - An empty list if no users meet the criteria or in case of an error.
+
+    The function constructs a SQL query dynamically based on the provided filters, uses parameterized queries to safely include values, and retrieves users from the database. It returns a list of users or an empty list depending on query results.
+    """
+    print("def list_users_by_filter")
+    query = "SELECT * FROM users"
+    conditions = []
+    params = []
+    for key, value in filters.items():
+        conditions.append(f"{key} = ?")
+        params.append(value)
+    if conditions:
+        query += " WHERE " + " AND ".join(conditions)
+    try:
+        conn = sqlite3.connect(DATABASE_FILE)
+        cursor = conn.cursor()
+        cursor.execute(query, tuple(params))
+        results = cursor.fetchall()
+        conn.close()
+        return results
+    except Exception as e:
+        print(e)
+        return []
 
 def update_language_in_db(user_id: int, language: str) -> None:
     """
@@ -180,6 +216,7 @@ def update_language_in_db(user_id: int, language: str) -> None:
     - user_id (int): Уникальный идентификатор пользователя.
     - language (str): Выбранный язык пользователя.
     """
+    print("def update_language_in_db")
     try:
         # Формирование SQL команды для обновления языка пользователя
         command = f"UPDATE users SET LANGUAGE = '{language}' WHERE USER_ID = {user_id};"
@@ -187,29 +224,17 @@ def update_language_in_db(user_id: int, language: str) -> None:
         print("Language updated successfully.")
     except Exception as e:
         print(f"Error updating language in DB: {e}")
-        
-def get_language_for_user(user_id: int) -> str:
+
+def add_user_to_db(user_id):
     """
-    Получает язык пользователя из базы данных.
+    Добавляет нового пользователя в базу данных.
 
     Параметры:
     - user_id (int): Уникальный идентификатор пользователя.
-
-    Возвращает:
-    - language (str): Язык пользователя, хранящийся в базе данных. Возвращает None, если не найдено.
     """
-    conn = sqlite3.connect(DATABASE_FILE)  # Adjust database connection as necessary
-    cursor = conn.cursor()
     try:
-        cursor.execute(f"SELECT LANGUAGE FROM users WHERE USER_ID = {user_id}")
-        result = cursor.fetchone()
-        print(result)
-        if result:
-            return result[0]  # Return the language if available
-        else:
-            return None  # No language set
+        command = f"INSERT INTO users (USER_ID) VALUES ({user_id})"
+        execute_non_query(command)
+        print(f"User {user_id} added to the database.")
     except Exception as e:
-        print(f"Error fetching language from DB: {e}")
-        return None
-    finally:
-        conn.close()
+        print(f"Error adding user {user_id} to the database: {e}")
