@@ -7,6 +7,8 @@ from handlers.game_commands import setup_game_routes
 from dotenv import load_dotenv
 from DB.database_logic import initialize_db
 
+# from handlers.buttons_handler import start_command, show_english_menu
+from handlers.buttons_handler import register_buttons_handlers
 
 # loading the environment
 env_path = '.env'  # '..\\.env'
@@ -17,11 +19,13 @@ bot = Bot(token=BOT_TOKEN)
 dp = Dispatcher()
 
 dp.include_router(standard_handler_router)
-setup_game_routes(dp)
 
 
 async def main() -> None:
     initialize_db() # Инициализация базы данных
+    register_buttons_handlers(dp)
+
+    setup_game_routes(dp)
     await bot.delete_webhook(drop_pending_updates=True)  # Пропускает сообщения накопившиеся пока бот отключен
     await dp.start_polling(bot)
 

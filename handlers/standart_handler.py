@@ -55,5 +55,9 @@ async def captcha_response_handler(message: types.Message, state: FSMContext) ->
 	result = await check_captcha(message, user_answer)
 	if result:
 		await state.clear()
+		
+
+
+
 
 
