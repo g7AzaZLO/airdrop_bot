@@ -4,6 +4,7 @@ from messages.basic_messages import messages
 from logic.captcha import generate_captcha, check_captcha
 from aiogram.fsm.context import FSMContext
 from FSM.states import CaptchaState
+from DB.database_logic import check_is_user_already_here
 
 standard_handler_router = Router()
 
@@ -35,11 +36,15 @@ def get_message(messages, message_key, language, **kwargs) -> str:
 @standard_handler_router.message(CommandStart())
 async def start(message: types.Message, state: FSMContext) -> None:
 	print("Processing /start command...")
-	await generate_captcha(message)
-	await state.set_state(CaptchaState.wait_captcha_state)
-	capture_message = get_message(messages, "WELCOME_MESSAGE", "ENG")
-	await message.answer(text=capture_message)
-
+	if check_is_user_already_here(message.from_user.id):
+		await generate_captcha(message)
+		await state.set_state(CaptchaState.wait_captcha_state)
+		capture_message = get_message(messages, "WELCOME_MESSAGE", "ENG")
+		await message.answer(text=capture_message)
+		# Запуск меню после капчи
+	else:
+		pass
+		# регистрация в боте
 
 # Handler состояния капчи
 @standard_handler_router.message(CaptchaState.wait_captcha_state)
