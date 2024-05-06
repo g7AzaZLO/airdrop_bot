@@ -8,7 +8,7 @@ async def get_refferal_link(user_id: int) -> str:
     return f"https://t.me/{BOT_NICKNAME}?start={user_id}"
 
 
-async def get_refferer_id(link: str):
+async def get_refferer_id(link: str) -> str:
     """"
     Функция возвращает id реферера из ссылки.
     """
