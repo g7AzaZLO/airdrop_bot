@@ -15,6 +15,7 @@ REFERRAL_REWARD = 1000
 AIRDROP_AMOUNT = 10000
 AIRDROP_NETWORK = "TON"
 DATABASE_FILE = "airdrop.db"
+BOT_NICKNAME = "Rcrvynjibot"
 
 # Links
 TWITTER_LINKS = ["https://twitter.com/buyordie_ton"]
