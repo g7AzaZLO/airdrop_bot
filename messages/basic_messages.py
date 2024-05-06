@@ -1,25 +1,25 @@
 from settings.config import *
 
 messages = {
-	"default_values": {
-		"user_name": "Friend",
-		"coin_name": COIN_NAME,
-		"coin_symbol": COIN_SYMBOL,
-		"airdrop_amount": AIRDROP_AMOUNT,
-		"referral_reward": REFERRAL_REWARD,
-		"website_url": WEBSITE_URL,
-		"telegram_links": TELEGRAM_LINKS,
-		"twitter_links": TWITTER_LINKS,
-		"airdrop_network": AIRDROP_NETWORK,
-		
-	},
-	"CAPTCHA_MESSAGE": {
-"ENG": "Please type in the numbers on the image",
-"RU": "Пожалуйста, введите числа на картинке"
-	},
-	
-	"WELCOME_MESSAGE": {
-		"ENG": """
+    "default_values": {
+        "user_name": "Friend",
+        "coin_name": COIN_NAME,
+        "coin_symbol": COIN_SYMBOL,
+        "airdrop_amount": AIRDROP_AMOUNT,
+        "referral_reward": REFERRAL_REWARD,
+        "website_url": WEBSITE_URL,
+        "telegram_links": TELEGRAM_LINKS,
+        "twitter_links": TWITTER_LINKS,
+        "airdrop_network": AIRDROP_NETWORK,
+
+    },
+    "CAPTCHA_MESSAGE": {
+        "ENG": "Please type in the numbers on the image",
+        "RU": "Пожалуйста, введите числа на картинке"
+    },
+
+    "WELCOME_MESSAGE": {
+        "ENG": """
 Hello, {user_name}! I am your friendly {coin_name} Airdrop bot
 
 Total tokens allocated to airdrop:  *50,000,000 ${coin_symbol}*
@@ -30,7 +30,7 @@ Total tokens allocated to airdrop:  *50,000,000 ${coin_symbol}*
 📘_By Participating you are agreeing to the {coin_name} (Airdrop) Program Terms and Conditions. Please see pinned post for more information.
 Click "🚀 Join Airdrop" to proceed_
 	        """,
-		"RU": """
+        "RU": """
 Привет, {user_name}! Я твой дружелюбный {coin_name} аирдрп бот
 
 Общее количество токенов, выделенных для аирдропа:  *50,000,000 ${coin_symbol}*
@@ -38,10 +38,10 @@ Click "🚀 Join Airdrop" to proceed_
 ⭐️ За присоединение - Получи *{airdrop_amount}* баллов
 ⭐️ За каждого реферала - Получи *{referral_reward}* баллов
 	        """
-	},
-	
-	"PROCEED_MESSAGE": {
-		"ENG": """
+    },
+
+    "PROCEED_MESSAGE": {
+        "ENG": """
 📢*Airdrop Rules*
 
 ✏️ *Mandatory Tasks*:
@@ -56,7 +56,7 @@ _NOTE: Users found cheating would be disqualified & banned immediately._
 
 {website_url}
 	        """,
-		"RU": """
+        "RU": """
 📢*Правила аирдропа*
 
 ✏️ *Обязательные задания*:
@@ -71,32 +71,32 @@ _ВНИМАНИЕ: Пользователи которые читерят буд
 
 {website_url}
 	        """
-	},
-	
-	"MAKE_SURE_TELEGRAM": {
-		"ENG": """
+    },
+
+    "MAKE_SURE_TELEGRAM": {
+        "ENG": """
 🔹 Subscribe to our channel and join the chat room
 {telegram_links}
 			""",
-		"RU": """
+        "RU": """
 🔹 Подпишись на наш телеграм и вступи в чат
 {telegram_links}
 			"""
-	},
-	
-	"FOLLOW_TWITTER_TEXT": {
-		"ENG": """
+    },
+
+    "FOLLOW_TWITTER_TEXT": {
+        "ENG": """
 🔹 Follow our Twitter page
 {twitter_links}
 			""",
-		"RU": """
+        "RU": """
 🔹 Подпишись на наш Твиттер
 {twitter_links}
 			"""
-	},
-	
-	"SUBMIT_BEP20_TEXT": {
-		"ENG": """
+    },
+
+    "SUBMIT_BEP20_TEXT": {
+        "ENG": """
 Type in your Wallet Address
 
 Please make sure your wallet supports the *{airdrop_network}*
@@ -106,7 +106,7 @@ UQBxCOstPWvIADbaYYBapGhwfRZCEZUui5p2OEFHU0a\_wWem
 
 _Incorrect Details? Use /restart command to start over_
 			""",
-		"RU": """
+        "RU": """
 Введите ваш адрес кошелька
 
 Пожалуйста убедитесь что адрес поддерживает сеть *{airdrop_network}*
@@ -116,10 +116,10 @@ UQBxCOstPWvIADbaYYBapGhwfRZCEZUui5p2OEFHU0a\_wWem
 
 _Ввели неверно? Используйте /restart команду, чтобы начать заново_
 			"""
-	},
-	
-	"JOINED": {
-		"ENG": """
+    },
+
+    "JOINED": {
+        "ENG": """
 *Thank you!*
 
 Rewards would be sent out automatically to your {airdrop_network} address
@@ -131,7 +131,7 @@ Rewards would be sent out automatically to your {airdrop_network} address
 Your personal referral link (+*{referral_reward}* point for each referral)
 REPLACEME
 			""",
-		"RU": """
+        "RU": """
 *Спасибо вам!*
 
 Награды будут автоматически отправлены на ваш {airdrop_network} адрес, после завершения аирдропа
@@ -143,5 +143,5 @@ REPLACEME
 Ваша персональная реферальная ссылка (+*{referral_reward}* поинтов за каждого реферала)
 REPLACEME
 			"""
-	},
+    },
 }
