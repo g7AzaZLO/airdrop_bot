@@ -1,3 +1,5 @@
+import os
+
 from multicolorcaptcha import CaptchaGenerator
 from aiogram import types
 
@@ -57,5 +59,11 @@ async def generate_captcha(message: types.Message) -> None:
         # Отправляем изображение капчи пользователю
         await message.reply_photo(photo=types.FSInputFile(path=filename))
 
+        # Удаляем файл после отправки
+        os.remove(filename)
+
+
     except Exception as e:
         print("Ошибка при генерации капчи:", e)
+        if os.path.exists(filename):
+            os.remove(filename)
