@@ -20,6 +20,7 @@ def get_message(messages, message_key, language, **kwargs) -> str:
         capture_message = get_message(messages, "WELCOME_MESSAGE", "RU", user_name='дурачок')
         print(capture_message)
     """
+    print("def get_message")
     # Retrieve the default values and specific message template
     defaults = messages.get("default_values", {})
     message_template = messages.get(message_key, {}).get(language)

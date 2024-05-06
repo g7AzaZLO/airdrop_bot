@@ -13,6 +13,7 @@ state_handler_router = Router()
 # Handler состояния капчи в CaptchaState
 @state_handler_router.message(CaptchaState.wait_captcha_state)
 async def captcha_response_handler(message: types.Message, state: FSMContext) -> None:
+    print("def captcha_response_handler")
     user_response = message.text
     await state.update_data(user_captcha_response=user_response)
     result = await check_captcha(message)
@@ -24,6 +25,7 @@ async def captcha_response_handler(message: types.Message, state: FSMContext) ->
 # Handler состояния капчи в регистрации пользователя
 @state_handler_router.message(RegestrationState.captcha_state)
 async def captcha_response_handler_in_reg(message: types.Message, state: FSMContext) -> None:
+    print("def captcha_response_handler_in_reg")
     user_response = message.text
     await state.update_data(user_captcha_response=user_response)
     result = await check_captcha(message)
@@ -34,6 +36,7 @@ async def captcha_response_handler_in_reg(message: types.Message, state: FSMCont
 
 @state_handler_router.message(RegestrationState.lang_choose_state)
 async def lang_choose_response_handler_in_reg(message: types.Message, state: FSMContext) -> None:
+    print("def lang_choose_response_handler_in_reg")
     user_response = message.text
     await state.update_data(user_lang_choose_response=user_response)
 
@@ -59,6 +62,7 @@ async def lang_choose_response_handler_in_reg(message: types.Message, state: FSM
 
 @state_handler_router.message(RegestrationState.hello_state)
 async def hello_response_handler_in_reg(message: types.Message, state: FSMContext) -> None:
+    print("def hello_response_handler")
     user_response = message.text
     await state.update_data(user_hello_response=user_response)
     if user_response == "🚀 Join Airdrop" or "🚀 Присоединиться к аирдропу":
