@@ -21,7 +21,7 @@ menu_kb_ru = ReplyKeyboardMarkup(
     resize_keyboard=True,
 )
 
-menu_kb_en = ReplyKeyboardMarkup(
+menu_kb_eng = ReplyKeyboardMarkup(
     keyboard=[
         [
             KeyboardButton(text="Profile"),
