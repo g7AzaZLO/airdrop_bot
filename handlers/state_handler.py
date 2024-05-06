@@ -70,25 +70,25 @@ async def hello_response_handler_in_reg(message: types.Message, state: FSMContex
     if user_response == "🚀 Join Airdrop" or "🚀 Присоединиться к аирдропу":
         await state.set_state(RegestrationState.main_menu_state)
         language = get_language_for_user(message.from_user.id)
-        print(language)
         if language == "RU":
-            await message.answer(text=message.answer("Вот что у нас для Вас есть:", reply_markup=menu_kb_ru))
+            await message.answer(text="Вот что у нас для Вас есть:", reply_markup=menu_kb_ru)
         elif language == "ENG":
-            await message.answer(text=message.answer("Here is what we have for you:", reply_markup=menu_kb_eng))
+            await message.answer(text="Here is what we have for you:", reply_markup=menu_kb_eng)
         else:
             await state.set_state(RegestrationState.lang_choose_state)
             await message.answer(text="Please choose your language", reply_markup=language_choose_kb)
             
 @state_handler_router.message(RegestrationState.main_menu_state)
 async def main_menu_handler(message: types.Message, state: FSMContext) -> None:
+    print("def main_menu_handler")
     user_response = message.text
     if user_response == "Profile" or "Профиль":
 
         language = get_language_for_user(message.from_user.id)
         if language == "RU":
-            await message.answer(text=message.answer(f"Вас зовут {message.from_user.last_name}"))
+            await message.answer(text=f"Вас зовут {message.from_user.last_name}")
         elif language == "ENG":
-            await message.answer(text=message.answer(f"Your name is {message.from_user.last_name}"))
+            await message.answer(text=f"Your name is {message.from_user.last_name}")
         else:
             await state.set_state(RegestrationState.lang_choose_state)
             await message.answer(text="Please choose your language", reply_markup=language_choose_kb)

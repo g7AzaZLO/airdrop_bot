@@ -238,3 +238,29 @@ def add_user_to_db(user_id):
         print(f"User {user_id} added to the database.")
     except Exception as e:
         print(f"Error adding user {user_id} to the database: {e}")
+        
+
+def get_language_for_user(user_id: int) -> str:
+    """
+    Получает язык пользователя из базы данных.
+
+    Параметры:
+    - user_id (int): Уникальный идентификатор пользователя.
+
+    Возвращает:
+    - language (str): Язык пользователя, хранящийся в базе данных. Возвращает None, если не найдено.
+    """
+    conn = sqlite3.connect(DATABASE_FILE)  # Adjust database connection as necessary
+    cursor = conn.cursor()
+    try:
+        cursor.execute("SELECT LANGUAGE FROM users WHERE USER_ID = ?", (user_id,))
+        result = cursor.fetchone()
+        if result:
+            return result[0]  # Return the language if available
+        else:
+            return None  # No language set
+    except Exception as e:
+        print(f"Error fetching language from DB: {e}")
+        return None
+    finally:
+        conn.close()
