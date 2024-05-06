@@ -114,7 +114,9 @@ def register_user(user_id: int, addr: str, twitter_user: str, language: str):
     try:
         conn = sqlite3.connect(DATABASE_FILE)
         cursor = conn.cursor()
-        cursor.execute("INSERT INTO users (USER_ID, ADDR, ALREADY_REG, NUM_OF_REFS, TWITTER_USER, LANGUAGE) VALUES (?, ?, ?, ?, ?, ?)", (user_id, addr, True, 0, twitter_user, language))
+        cursor.execute(
+            "INSERT INTO users (USER_ID, ADDR, ALREADY_REG, NUM_OF_REFS, TWITTER_USER, LANGUAGE) VALUES (?, ?, ?, ?, ?, ?)",
+            (user_id, addr, True, 0, twitter_user, language))
         conn.commit()
         conn.close()
         return True
@@ -238,7 +240,6 @@ def add_user_to_db(user_id):
         print(f"User {user_id} added to the database.")
     except Exception as e:
         print(f"Error adding user {user_id} to the database: {e}")
-        
 
 def get_language_for_user(user_id: int) -> str:
     """
