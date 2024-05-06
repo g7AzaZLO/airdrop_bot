@@ -45,3 +45,10 @@ sub_cancel_kb_ru = ReplyKeyboardMarkup(
     ],
     resize_keyboard=True,
 )
+
+language_choose_kb = ReplyKeyboardMarkup(
+    keyboard=[
+        KeyboardButton(text="ENG English"),
+        KeyboardButton(text="RU Русский"),
+    ]
+)

@@ -67,7 +67,7 @@ def delete_user_from_db(user_id: int) -> bool:
         return False
 
 
-def check_is_user_already_here(user_id: int) ->bool:
+def check_is_user_already_here(user_id: int) -> bool:
     """
     Проверяет, существует ли пользователь с заданным идентификатором в таблице 'users' базы данных.
 
@@ -88,7 +88,7 @@ def check_is_user_already_here(user_id: int) ->bool:
         cursor.execute("SELECT 1 FROM users WHERE USER_ID = ?", (user_id,))
         rows = cursor.fetchall()
         conn.close()
-        return len(rows) == 0
+        return not (len(rows) == 0)
     except Exception as e:
         print(e)
         return False
