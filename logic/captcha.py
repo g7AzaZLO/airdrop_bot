@@ -4,7 +4,7 @@ from aiogram import types
 captcha_data = {}
 
 
-async def check_captcha(message: types.Message, data) -> bool:
+async def check_captcha(message: types.Message) -> bool:
     """
     Проверяет правильность ответа пользователя на капчу.
 
