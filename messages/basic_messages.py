@@ -13,6 +13,18 @@ messages = {
         "airdrop_network": AIRDROP_NETWORK,
 
     },
+    "LANGUAGE_CHOOSE": {
+        "ENG": "Please choose your language",
+        "RU": "Пожалуйста, выберите ваш язык",
+    },
+    "PROFILE_MENU": {
+        "ENG": "Your name is {user_name}",
+        "RU": "Ваше имя {user_name}"
+    },
+    "LANGUAGE_CHOSEN": {
+        "ENG": "Here is what we have for you:",
+        "RU": "Вот что у нас для Вас есть:"
+    },
     "CAPTCHA_MESSAGE": {
         "ENG": "Please type in the numbers on the image",
         "RU": "Пожалуйста, введите числа на картинке"

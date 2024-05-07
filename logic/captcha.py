@@ -21,19 +21,22 @@ async def check_captcha(message: types.Message) -> bool:
     try:
         user_id = message.from_user.id
         if user_id not in captcha_data:
+            # Generate a CAPTCHA if it's not already there, perhaps in case of error or restart
+            await generate_captcha(message)
             return False
-
+    
         captcha_text = captcha_data[user_id]
         user_input = message.text
-
+    
         if captcha_text != user_input:
-            await message.reply("Incorrect!")
+            await message.reply("Incorrect CAPTCHA, please try again.")
+            await generate_captcha(message)
             return False
         else:
-            await message.reply("Correct!")
+            await message.reply("Correct CAPTCHA!")
             return True
     except Exception as e:
-        print("Ошибка при проверке капчи:", e)
+        print("Error while checking CAPTCHA:", e)
         return False
 
 

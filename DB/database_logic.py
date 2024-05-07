@@ -94,7 +94,6 @@ def check_is_user_already_here(user_id: int) -> bool:
         print(e)
         return False
 
-
 def register_user(user_id: int, addr: str, twitter_user: str, language: str):
     """
     Registers a new user in the database with initial details such as address, Twitter handle, and language preference.
@@ -125,7 +124,6 @@ def register_user(user_id: int, addr: str, twitter_user: str, language: str):
         print(e)
         return False
 
-
 def update_user_details(user_id: int, **kwargs) -> bool:
     """
     Updates specific user details in the database. Accepts the user ID and keyword arguments representing the fields to update.
@@ -152,8 +150,8 @@ def update_user_details(user_id: int, **kwargs) -> bool:
     except Exception as e:
         print(e)
         return False
-
-
+    
+    
 def get_user_details(user_id: int):
     """
     Retrieves all stored details for a specific user from the database.
@@ -178,8 +176,7 @@ def get_user_details(user_id: int):
     except Exception as e:
         print(e)
         return None
-
-
+    
 def list_users_by_filter(**filters):
     """
     Fetches a list of users who match specified filter criteria from the database.
@@ -213,7 +210,6 @@ def list_users_by_filter(**filters):
         print(e)
         return []
 
-
 def update_language_in_db(user_id: int, language: str) -> None:
     """
     Обновляет или добавляет язык пользователя в базе данных.
@@ -231,8 +227,7 @@ def update_language_in_db(user_id: int, language: str) -> None:
     except Exception as e:
         print(f"Error updating language in DB: {e}")
 
-
-def add_user_to_db(user_id: int) -> None:
+def add_user_to_db(user_id):
     """
     Добавляет нового пользователя в базу данных.
 
@@ -246,51 +241,27 @@ def add_user_to_db(user_id: int) -> None:
     except Exception as e:
         print(f"Error adding user {user_id} to the database: {e}")
 
-
-def add_referrer_to_user(user_id: int, referrer_id: int) -> None:
+def get_language_for_user(user_id: int) -> str:
     """
-    Добавляет идентификатор пользователя-реферера к записи пользователя.
+    Получает язык пользователя из базы данных.
 
     Параметры:
-    - user_id (int): Уникальный идентификатор пользователя, которому нужно добавить реферера.
-    - referrer_id (int): Уникальный идентификатор пользователя-реферера.
+    - user_id (int): Уникальный идентификатор пользователя.
 
-    Эта функция обновляет запись в таблице `users`, устанавливая ID реферера для конкретного пользователя.
+    Возвращает:
+    - language (str): Язык пользователя, хранящийся в базе данных. Возвращает None, если не найдено.
     """
+    conn = sqlite3.connect(DATABASE_FILE)  # Adjust database connection as necessary
+    cursor = conn.cursor()
     try:
-        command = f"UPDATE users SET REF_BY_USER = {referrer_id} WHERE USER_ID = {user_id}"
-        execute_non_query(command)
-        print(f"Referrer {referrer_id} added to user {user_id}.")
-    except Exception as e:
-        print(f"Error adding referrer to user {user_id}: {e}")
-
-
-def increment_referrer_count(referrer_id):
-    """
-    Увеличивает количество рефералов у пользователя-реферера.
-
-    Параметры:
-    - referrer_id (int): Уникальный идентификатор пользователя-реферера.
-
-    Эта функция обновляет запись в таблице `users`, увеличивая счетчик рефералов для указанного пользователя.
-    """
-    try:
-        conn = sqlite3.connect(DATABASE_FILE)
-        cursor = conn.cursor()
-        # Первоначально проверяем, есть ли поле NUM_OF_REFS, если нет, устанавливаем его в 0
-        cursor.execute("SELECT NUM_OF_REFS FROM users WHERE USER_ID = ?", (referrer_id,))
+        cursor.execute("SELECT LANGUAGE FROM users WHERE USER_ID = ?", (user_id,))
         result = cursor.fetchone()
         if result:
-            current_count = result[0] if result[0] is not None else 0
+            return result[0]  # Return the language if available
         else:
-            current_count = 0
-
-        # Увеличиваем количество рефералов
-        new_count = current_count + 1
-        cursor.execute("UPDATE users SET NUM_OF_REFS = ? WHERE USER_ID = ?", (new_count, referrer_id))
-        conn.commit()
-        print(f"Referral count for user {referrer_id} incremented to {new_count}.")
+            return None  # No language set
     except Exception as e:
-        print(f"Error incrementing referral count for user {referrer_id}: {e}")
+        print(f"Error fetching language from DB: {e}")
+        return None
     finally:
         conn.close()
