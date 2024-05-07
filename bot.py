@@ -26,7 +26,7 @@ async def main() -> None:
     initialize_db() # Инициализация базы данных
     await bot.delete_webhook(drop_pending_updates=True)  # Пропускает сообщения накопившиеся пока бот отключен
     await dp.start_polling(bot)
-
+    
 
 if __name__ == '__main__':
     asyncio.run(main())

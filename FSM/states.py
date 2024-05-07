@@ -8,6 +8,7 @@ class CaptchaState(StatesGroup):
 class RegestrationState(StatesGroup):
     captcha_state = State()
     lang_choose_state = State()
+    lang_choose_state_again = State()  # changing the language second time
     hello_state = State()
     proceed_state = State()
     follow_telegram_state = State()
@@ -16,4 +17,4 @@ class RegestrationState(StatesGroup):
     end_conversation_state = State()
     loop_state = State()
     
-    main_menu_state = State()
+    main_menu_state = State()  # State for the main menu
