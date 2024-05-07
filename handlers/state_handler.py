@@ -47,16 +47,22 @@ async def lang_choose_response_handler_in_reg(message: types.Message, state: FSM
     print("def lang_choose_response_handler_in_reg")
     user_response = message.text
     await state.update_data(user_lang_choose_response=user_response)
-    
+
     user_id = message.from_user.id  # Идентификатор пользователя для SQL запроса
     if user_response == "ENG English":
         language = "ENG"
         await state.set_state(RegestrationState.hello_state)
-        await message.answer(text=(get_message(messages, "WELCOME_MESSAGE", "ENG")), reply_markup=join_kb_eng)
+        await message.answer(
+            text=(get_message(messages, "WELCOME_MESSAGE", "ENG", user_name=message.from_user.first_name)),
+            reply_markup=join_kb_eng,
+            parse_mode="MARKDOWN")
     elif user_response == "RU Русский":
         language = "RU"
         await state.set_state(RegestrationState.hello_state)
-        await message.answer(text=(get_message(messages, "WELCOME_MESSAGE", "RU")), reply_markup=join_kb_ru)
+        await message.answer(
+            text=(get_message(messages, "WELCOME_MESSAGE", "RU", user_name=message.from_user.first_name)),
+            reply_markup=join_kb_ru,
+            parse_mode="MARKDOWN")
     else:
         await message.answer(text="That language is not on the list")
         await message.answer(text="Please choose your language", reply_markup=language_choose_kb)
@@ -71,7 +77,7 @@ async def lang_choose_response_handler(message: types.Message, state: FSMContext
     print("def lang_choose_response_handler")
     user_response = message.text
     await state.update_data(user_lang_choose_response=user_response)
-    
+
     user_id = message.from_user.id  # Идентификатор пользователя для SQL запроса
     if user_response == "ENG English":
         language = "ENG"
