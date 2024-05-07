@@ -4,7 +4,7 @@ from messages.basic_messages import messages
 from logic.captcha import generate_captcha, check_captcha
 from aiogram.fsm.context import FSMContext
 from FSM.states import CaptchaState, RegestrationState
-from DB.database_logic import check_is_user_already_here, add_user_to_db #, add_referrer_to_user
+from DB.database_logic import check_is_user_already_here, add_user_to_db, add_referrer_to_user
 from keyboards.menu_kb import menu_kb
 from logic.refs import get_refferer_id
 
