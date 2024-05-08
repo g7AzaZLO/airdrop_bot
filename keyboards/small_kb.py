@@ -52,16 +52,31 @@ language_choose_kb = ReplyKeyboardMarkup(
     resize_keyboard=True
 )
 
-kb_yes_no = {
+yes_no_kb = {
     "RU": ReplyKeyboardMarkup(
         keyboard=[
-            [KeyboardButton(text="ДА"), KeyboardButton(text="НЕТ")]
+            [KeyboardButton(text="Да"), KeyboardButton(text="Нет")]
         ],
         resize_keyboard=True
     ),
     "ENG": ReplyKeyboardMarkup(
         keyboard=[
-            [KeyboardButton(text="YES"), KeyboardButton(text="NO")]
+            [KeyboardButton(text="Yes"), KeyboardButton(text="No")]
+        ],
+        resize_keyboard=True
+    )
+}
+
+telegram_join_kb = {
+    "RU": ReplyKeyboardMarkup(
+        keyboard=[
+            [KeyboardButton(text="✅ Вступил")]
+        ],
+        resize_keyboard=True
+    ),
+    "ENG": ReplyKeyboardMarkup(
+        keyboard=[
+            [KeyboardButton(text="✅ Joined")]
         ],
         resize_keyboard=True
     )
