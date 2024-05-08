@@ -19,7 +19,7 @@ BOT_NICKNAME = "Rcrvynjibot"
 
 # Links
 TWITTER_LINKS = ["https://twitter.com/buyordie_ton"]
-TELEGRAM_LINKS = ["https://t.me/buyordie_ton", "https://t.me/buyordie_chat"]
+TELEGRAM_LINKS = "\n".join(["https://t.me/buyordie_ton", "https://t.me/buyordie_chat"])
 WEBSITE_URL = "https://buyordie.fun/"
 MAX_USERS = 100000
 MAX_REFS = 100
