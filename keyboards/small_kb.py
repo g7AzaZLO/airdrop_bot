@@ -14,33 +14,36 @@ join_kb = {
         resize_keyboard=True,
     )
 }
-done_cancel_kb_eng = ReplyKeyboardMarkup(
-    keyboard=[
-        [KeyboardButton(text="✅ Done"), KeyboardButton(text="❌ Cancel")]
-    ],
-    resize_keyboard=True,
-)
 
-done_cancel_kb_ru = ReplyKeyboardMarkup(
-    keyboard=[
-        [KeyboardButton(text="✅ Принять"), KeyboardButton(text="❌ Отказаться")]
-    ],
-    resize_keyboard=True,
-)
+done_cancel_kb = {
+    "ENG": ReplyKeyboardMarkup(
+        keyboard=[
+            [KeyboardButton(text="✅ Done"), KeyboardButton(text="❌ Cancel")]
+        ],
+        resize_keyboard=True,
+    ),
+    "RU": ReplyKeyboardMarkup(
+        keyboard=[
+            [KeyboardButton(text="✅ Принять"), KeyboardButton(text="❌ Отказаться")]
+        ],
+        resize_keyboard=True,
+    )
+}
 
-sub_cancel_kb_eng = ReplyKeyboardMarkup(
-    keyboard=[
-        [KeyboardButton(text="✅ Submit Details"), KeyboardButton(text="❌ Cancel")]
-    ],
-    resize_keyboard=True,
-)
-
-sub_cancel_kb_ru = ReplyKeyboardMarkup(
-    keyboard=[
-        [KeyboardButton(text="✅ Согласен с правилами"), KeyboardButton(text="❌ Отказаться")]
-    ],
-    resize_keyboard=True,
-)
+sub_cancel_kb = {
+    "ENG": ReplyKeyboardMarkup(
+        keyboard=[
+            [KeyboardButton(text="✅ Submit Details"), KeyboardButton(text="❌ Cancel")]
+        ],
+        resize_keyboard=True,
+    ),
+    "RU": ReplyKeyboardMarkup(
+        keyboard=[
+            [KeyboardButton(text="✅ Согласен с правилами"), KeyboardButton(text="❌ Отказаться")]
+        ],
+        resize_keyboard=True,
+    )
+}
 
 language_choose_kb = ReplyKeyboardMarkup(
     keyboard=[
