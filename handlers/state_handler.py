@@ -4,7 +4,7 @@ from logic.captcha import generate_captcha, check_captcha
 from aiogram.fsm.context import FSMContext
 from handlers.standart_handler import get_message
 from messages.basic_messages import messages
-from keyboards.small_kb import join_kb, join_kb, language_choose_kb, kb_yes_no
+from keyboards.small_kb import join_kb, language_choose_kb, kb_yes_no
 from DB.database_logic import update_language_in_db, get_language_for_user, delete_user_from_db
 from keyboards.menu_kb import menu_kb
 from aiogram.filters import Command
@@ -77,18 +77,15 @@ async def lang_choose_response_handler(message: types.Message, state: FSMContext
 	user_id = message.from_user.id  # Идентификатор пользователя для SQL запроса
 	if user_response == "ENG English":
 		language = "ENG"
-		await state.set_state(RegestrationState.main_menu_state)
-		reply = get_message(messages, "MENU", language)
-		await message.answer(text=reply, reply_markup=menu_kb[language])
 	elif user_response == "RU Русский":
 		language = "RU"
-		await state.set_state(RegestrationState.main_menu_state)
-		reply = get_message(messages, "MENU", language)
-		await message.answer(text=reply, reply_markup=menu_kb[language])
 	else:
 		await message.answer(text="That language is not on the list")
 		await message.answer(text="Please choose your language", reply_markup=language_choose_kb)
 		return
+	await state.set_state(RegestrationState.main_menu_state)
+	reply = get_message(messages, "MENU", language)
+	await message.answer(text=reply, reply_markup=menu_kb[language])
 	# Вызываем функцию для обновления языка пользователя в базе данных
 	update_language_in_db(user_id, language)
 
