@@ -7,7 +7,7 @@ from messages.basic_messages import messages
 from keyboards.small_kb import join_kb, language_choose_kb, yes_no_kb, sub_cancel_kb,telegram_join_kb
 from DB.database_logic import update_language_in_db, get_language_for_user, delete_user_from_db
 from keyboards.menu_kb import menu_kb
-from aiogram.filters import Command
+from logic.telegram import check_joined_channel
 
 state_handler_router = Router()
 
@@ -110,7 +110,15 @@ async def proceed_response_handler_in_reg(message: types.Message, state: FSMCont
 
 @state_handler_router.message(RegestrationState.follow_telegram_state)
 async def follow_telegram_response_handler_in_reg(message: types.Message, state: FSMContext) -> None:
-    pass
+    print("def follow_telegram_response_handler")
+    user_response = message.text
+    language = get_language_for_user(message.from_user.id)
+    await state.update_data(user_follow_telegram_response=user_response)
+    if await check_joined_channel(message.from_user.id):
+        print("YES HE'S HERE")
+    else:
+        print("NO HE'ISNT HERE")
+
 
 @state_handler_router.message(RegestrationState.main_menu_state)
 async def main_menu_handler(message: types.Message, state: FSMContext) -> None:
