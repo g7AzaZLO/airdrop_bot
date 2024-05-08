@@ -1,12 +1,11 @@
 import os
-
-# making sure the environment can be loaded
+from aiogram import Bot
 from dotenv import load_dotenv
 
-# env_path = '..\\.env'
-# load_dotenv(env_path)
+# ENV
 env_path = '.env'
 load_dotenv(env_path)
+
 # General
 COIN_SYMBOL = "TIME"
 COIN_NAME = "Buy or Die"
@@ -30,4 +29,7 @@ ADMIN_USERNAME = "\n".join(os.getenv("ADMIN_USERNAME").split(","))
 # Token
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 AI_KEY = os.getenv("AI_KEY")
+
+# Bot
+bot = Bot(token=BOT_TOKEN)
 

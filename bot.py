@@ -1,7 +1,7 @@
 import asyncio
 
-from aiogram import Bot, Dispatcher
-from settings.config import BOT_TOKEN
+from aiogram import Dispatcher
+from settings.config import bot
 from handlers.standart_handler import standard_handler_router
 from handlers.state_handler import state_handler_router
 from handlers.game_commands import setup_game_routes
@@ -14,7 +14,6 @@ env_path = '.env'  # '..\\.env'
 load_dotenv(env_path)
 
 # Инициализация бота
-bot = Bot(token=BOT_TOKEN)
 dp = Dispatcher()
 
 dp.include_router(standard_handler_router)
