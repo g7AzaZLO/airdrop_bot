@@ -4,7 +4,7 @@ from logic.captcha import generate_captcha, check_captcha
 from aiogram.fsm.context import FSMContext
 from handlers.standart_handler import get_message
 from messages.basic_messages import messages
-from keyboards.small_kb import join_kb, language_choose_kb, kb_yes_no, sub_cancel_kb
+from keyboards.small_kb import join_kb, language_choose_kb, yes_no_kb, sub_cancel_kb,telegram_join_kb
 from DB.database_logic import update_language_in_db, get_language_for_user, delete_user_from_db
 from keyboards.menu_kb import menu_kb
 from aiogram.filters import Command
@@ -76,7 +76,7 @@ async def hello_response_handler_in_reg(message: types.Message, state: FSMContex
     if user_response in ["🚀 Join Airdrop", "🚀 Присоединиться к аирдропу"]:
         await state.set_state(RegestrationState.proceed_state)
         reply = get_message(messages, "PROCEED_MESSAGE", language)
-        await message.answer(text=reply, reply_markup=sub_cancel_kb[language])
+        await message.answer(text=reply, reply_markup=sub_cancel_kb[language], parse_mode="MARKDOWN")
     elif user_response in ["❌ Cancel", "❌ Отказаться"]:
         # ADD добавить состояние когда все отменено и все закрыто
         await state.update_data(
@@ -88,11 +88,28 @@ async def hello_response_handler_in_reg(message: types.Message, state: FSMContex
             kb2=None
         )
         reply = get_message(messages, "YES_NO", language)
-        await message.answer(text=reply, reply_markup=kb_yes_no[language])
+        await message.answer(text=reply, reply_markup=yes_no_kb[language])
         await state.set_state(RegestrationState.yes_no_state)
+    else:
+        pass
 
 @state_handler_router.message(RegestrationState.proceed_state)
 async def proceed_response_handler_in_reg(message: types.Message, state: FSMContext) -> None:
+    print("def proceed_response_handler_in_reg")
+    user_response = message.text
+    language = get_language_for_user(message.from_user.id)
+    await state.update_data(user_proceed_response=user_response)
+    if user_response in ["✅ Согласен с правилами", "✅ Submit Details"]:
+        await state.set_state(RegestrationState.follow_telegram_state)
+        reply = get_message(messages, "MAKE_SURE_TELEGRAM", language)
+        await message.answer(text=reply, reply_markup=telegram_join_kb[language])
+    elif user_response in ["❌ Cancel", "❌ Отказаться"]:
+        pass
+    else:
+        pass
+
+@state_handler_router.message(RegestrationState.follow_telegram_state)
+async def follow_telegram_response_handler_in_reg(message: types.Message, state: FSMContext) -> None:
     pass
 
 @state_handler_router.message(RegestrationState.main_menu_state)
