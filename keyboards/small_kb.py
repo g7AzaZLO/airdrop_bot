@@ -67,7 +67,7 @@ yes_no_kb = {
 	)
 }
 
-telegram_join_kb = {
+social_join_kb = {
 	"RU": ReplyKeyboardMarkup(
 		keyboard=[
 			[KeyboardButton(text="✅ Вступил")]
