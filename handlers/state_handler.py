@@ -147,7 +147,8 @@ async def follow_telegram_response_handler_in_reg(message: types.Message, state:
     else:
         print("NO HE ISNT HERE")
         await state.set_state(RegestrationState.follow_telegram_state)
-        await message.answer(text="First, subscribe to the channels", reply_markup=social_join_kb[language])
+        reply = get_message(messages, "NOT_SUB_AT_GROUP_TEXT", language)
+        await message.answer(text=reply, reply_markup=social_join_kb[language])
 
 
 @state_handler_router.message(RegestrationState.follow_twitter_state)
@@ -165,11 +166,13 @@ async def follow_twitter_response_handler_in_reg(message: types.Message, state: 
         else:
             print("already in base")
             await state.set_state(RegestrationState.follow_twitter_state)
-            await message.answer(text="This link is already registered")
+            reply = get_message(messages, "TWITTER_ALREADY_REGISTERED_TEXT", language)
+            await message.answer(text=reply)
     else:
         print("Invalid Twitter Link")
         await state.set_state(RegestrationState.follow_twitter_state)
-        await message.answer(text="Please provide a valid Twitter link.")
+        reply = get_message(messages, "TWITTER_INVALID_LINK_TEXT", language)
+        await message.answer(text=reply)
 
 
 @state_handler_router.message(RegestrationState.submit_address_state)
@@ -190,7 +193,8 @@ async def submit_address_response_handler_in_reg(message: types.Message, state: 
     else:
         print("Invalid crypto address")
         await state.set_state(RegestrationState.submit_address_state)
-        await message.answer(text="Please provide a valid crypto address.")
+        reply = get_message(messages, "INVALID_ADDRESS_TEXT", language)
+        await message.answer(text=reply)
 
 
 @state_handler_router.message(RegestrationState.main_menu_state)
@@ -208,9 +212,8 @@ async def main_menu_handler(message: types.Message, state: FSMContext) -> None:
         await message.answer(text=reply, reply_markup=language_choose_kb)
         await state.set_state(RegestrationState.lang_choose_state_again)
     else:
-        # Handle other cases or unknown commands
-        await message.answer("Unknown command, please choose from the menu.")
-        # Ensure we go back to the main menu state
+        reply = get_message(messages, "UKNOWN_COMMAND_TEXT", language)
+        await message.answer(text=reply)
         await state.set_state(RegestrationState.main_menu_state)
 
 
@@ -272,6 +275,7 @@ async def yes_no_reply(message: types.Message, state: FSMContext) -> None:
 async def null_state(message: types.Message, state: FSMContext) -> None:
     print("def null_state")
     user_response = message.text
+    language = get_language_for_user(message.from_user.id)
     if user_response in ["start", "Start", "Начать", "начать",
                          r"\Начать", r"\начать", r"\start", r"\Start", ]:
         if check_is_user_already_here(message.from_user.id):
@@ -292,5 +296,6 @@ async def null_state(message: types.Message, state: FSMContext) -> None:
             capture_message = get_message(messages, "CAPTCHA_MESSAGE", "ENG")
             await message.answer(text=capture_message, reply_markup=types.ReplyKeyboardRemove())
     else:
-        await message.answer("Please, type /start or click the button below to begin", reply_markup=kb_start)
+        reply = get_message(messages, "START_AGAIN_TEXT", language)
+        await message.answer(text=reply, reply_markup=kb_start)
         return
