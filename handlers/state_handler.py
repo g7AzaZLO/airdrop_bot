@@ -85,7 +85,7 @@ async def hello_response_handler_in_reg(message: types.Message, state: FSMContex
         await state.update_data(
             state_end1=CaptchaState.null_state,
             state_end2=RegestrationState.hello_state,
-            text1=get_message(messages, "START_MESSAGE", "ENG"),
+            text1=get_message(messages, "START_AGAIN_TEXT", language),
             text2=get_message(messages, "WELCOME_MESSAGE", language, user_name=message.from_user.first_name),
             kb1=kb_start,
             kb2=join_kb[language],
@@ -116,7 +116,7 @@ async def proceed_response_handler_in_reg(message: types.Message, state: FSMCont
         await state.update_data(
             state_end1=CaptchaState.null_state,
             state_end2=RegestrationState.proceed_state,
-            text1=get_message(messages, "START_MESSAGE", "ENG"),
+            text1=get_message(messages, "START_AGAIN_TEXT", language),
             text2=get_message(messages, "PROCEED_MESSAGE", language),
             kb1=kb_start,
             kb2=sub_cancel_kb[language],
@@ -137,18 +137,23 @@ async def follow_telegram_response_handler_in_reg(message: types.Message, state:
     user_response = message.text
     language = get_language_for_user(message.from_user.id)
     await state.update_data(user_follow_telegram_response=user_response)
-    if await check_joined_telegram_channel(message.from_user.id):
-        print("Yes, user in all telegram channel")
-        await state.set_state(RegestrationState.follow_twitter_state)
-        reply1 = get_message(messages, "FOLLOW_TWITTER_TEXT", language)
-        reply2 = get_message(messages, "GET_TWITTER_LINK_TEXT", language)
-        await message.answer(text=reply1, reply_markup=types.ReplyKeyboardRemove())
-        await message.answer(text=reply2)
+    if user_response in ["✅ Вступил", "✅ Joined"]:
+        if await check_joined_telegram_channel(message.from_user.id):
+            print("Yes, user in all telegram channel")
+            await state.set_state(RegestrationState.follow_twitter_state)
+            reply1 = get_message(messages, "FOLLOW_TWITTER_TEXT", language)
+            reply2 = get_message(messages, "GET_TWITTER_LINK_TEXT", language)
+            await message.answer(text=reply1, reply_markup=types.ReplyKeyboardRemove())
+            await message.answer(text=reply2)
+        else:
+            print("NO HE ISNT HERE")
+            await state.set_state(RegestrationState.follow_telegram_state)
+            reply = get_message(messages, "NOT_SUB_AT_GROUP_TEXT", language)
+            await message.answer(text=reply, reply_markup=social_join_kb[language])
     else:
-        print("NO HE ISNT HERE")
+        reply = get_message(messages, "UKNOWN_COMMAND_TEXT", language)
+        await message.answer(text=reply)
         await state.set_state(RegestrationState.follow_telegram_state)
-        reply = get_message(messages, "NOT_SUB_AT_GROUP_TEXT", language)
-        await message.answer(text=reply, reply_markup=social_join_kb[language])
 
 
 @state_handler_router.message(RegestrationState.follow_twitter_state)
@@ -282,7 +287,7 @@ async def null_state(message: types.Message, state: FSMContext) -> None:
             print("User already in db")
             await generate_captcha(message)
             await state.set_state(CaptchaState.wait_captcha_state)
-            capture_message = get_message(messages, "CAPTCHA_MESSAGE", "ENG")
+            capture_message = get_message(messages, "CAPTCHA_MESSAGE", language)
             await message.answer(text=capture_message, reply_markup=types.ReplyKeyboardRemove())
         # Запуск меню после капчи
         else:
@@ -293,7 +298,7 @@ async def null_state(message: types.Message, state: FSMContext) -> None:
                 add_referrer_to_user(message.from_user.id, refferer)
             await generate_captcha(message)
             await state.set_state(RegestrationState.captcha_state)
-            capture_message = get_message(messages, "CAPTCHA_MESSAGE", "ENG")
+            capture_message = get_message(messages, "CAPTCHA_MESSAGE", language)
             await message.answer(text=capture_message, reply_markup=types.ReplyKeyboardRemove())
     else:
         reply = get_message(messages, "START_AGAIN_TEXT", language)
