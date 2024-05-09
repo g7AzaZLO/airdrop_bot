@@ -5,10 +5,12 @@ from aiogram.fsm.context import FSMContext
 from handlers.standart_handler import get_message
 from messages.basic_messages import messages
 from keyboards.small_kb import join_kb, language_choose_kb, yes_no_kb, sub_cancel_kb, social_join_kb, kb_start
-from DB.database_logic import update_language_in_db, get_language_for_user, delete_user_from_db
+from DB.database_logic import update_language_in_db, get_language_for_user, delete_user_from_db, get_user_details, \
+    update_user_details
 from keyboards.menu_kb import menu_kb
 from logic.telegram import check_joined_telegram_channel
-from DB.database_logic import check_is_user_already_here, add_user_to_db, add_referrer_to_user, get_referrer, increment_referrer_count
+from DB.database_logic import check_is_user_already_here, add_user_to_db, add_referrer_to_user, get_referrer, \
+    increment_referrer_count
 from logic.refs import get_refferer_id, get_refferal_link
 from logic.twitter import check_joined_twitter_channel, is_valid_twitter_link
 from logic.address import is_valid_crypto_address
@@ -165,6 +167,7 @@ async def follow_twitter_response_handler_in_reg(message: types.Message, state: 
     if is_valid_twitter_link(user_response):
         if await check_joined_twitter_channel(user_response):
             print("all ok")
+            await update_user_details(message.from_user.id, TWITTER_USER=user_response)
             await state.set_state(RegestrationState.submit_address_state)
             reply = get_message(messages, "SUBMIT_ADDRESS_TEXT", language)
             await message.answer(text=reply, reply_markup=types.ReplyKeyboardRemove(), parse_mode="MARKDOWN")
@@ -188,6 +191,7 @@ async def submit_address_response_handler_in_reg(message: types.Message, state: 
     await state.update_data(user_submit_address_response=user_response)
     if is_valid_crypto_address(user_response):
         print("Valid crypto address")
+        await update_user_details(message.from_user.id, ADDR=user_response, NUM_OF_REFS=0)
         await state.set_state(RegestrationState.main_menu_state)
         ref_link = await get_refferal_link(message.from_user.id)
         reply = get_message(messages, "JOINED_TEXT", language, referral_link=ref_link)
@@ -207,15 +211,31 @@ async def main_menu_handler(message: types.Message, state: FSMContext) -> None:
     user_response = message.text
     print(f"def main_menu_handler, user response {user_response}")
     language = get_language_for_user(message.from_user.id)
-    if user_response in ["Profile", "Профиль"]:
+    if user_response in ["😈Профиль", "😈Profile"]:
         reply = get_message(messages, "PROFILE_MENU", language, user_name=message.from_user.first_name)
         await message.answer(text=reply, reply_markup=menu_kb[language])
         print(f"deleted {language}")
         return
-    elif user_response in ["Change Language", "Сменить Язык"]:
+    elif user_response in ["#️⃣Информация", "#️⃣Information"]:
+        user = get_user_details(message.from_user.id)
+        print(user)
+        user_name = message.from_user.first_name
+
+        pass
+    elif user_response in ["👥Пригласить друга", "👥Invite Friends"]:
+        pass
+    elif user_response in ["💰Баланс", "💰Balance"]:
+        pass
+    elif user_response in ["🥇Задачи", "🥇Tasks"]:
+        pass
+    elif user_response in ["🔒Смартконтракт", "🔒Smartcontract"]:
+        pass
+    elif user_response in ["🌏Сменить Язык", "🌏Change Language"]:
         reply = get_message(messages, "LANGUAGE_CHOOSE", language)
         await message.answer(text=reply, reply_markup=language_choose_kb)
         await state.set_state(RegestrationState.lang_choose_state_again)
+    elif user_response in ["❌Выйти", "❌Quit"]:
+        pass
     else:
         reply = get_message(messages, "UKNOWN_COMMAND_TEXT", language)
         await message.answer(text=reply)
@@ -293,9 +313,9 @@ async def null_state(message: types.Message, state: FSMContext) -> None:
         else:
             print("User not in db")
             add_user_to_db(message.from_user.id)
-            refferer = await get_refferer_id(message.text)
-            if refferer is not None:
-                add_referrer_to_user(message.from_user.id, refferer)
+            referrer = await get_refferer_id(message.text)
+            if referrer is not None:
+                add_referrer_to_user(message.from_user.id, referrer)
             await generate_captcha(message)
             await state.set_state(RegestrationState.captcha_state)
             capture_message = get_message(messages, "CAPTCHA_MESSAGE", language)
