@@ -28,6 +28,7 @@ async def check_joined_twitter_channel(user_twitter_link: str) -> bool:
         print(f"Error checking Twitter link in database: {e}")
         return False
 
+
 def is_valid_twitter_link(twitter_link: str) -> bool:
     """
     Проверяет, является ли ссылка допустимой ссылкой на профиль Twitter.
