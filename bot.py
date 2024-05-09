@@ -22,7 +22,7 @@ setup_game_routes(dp)
 
 
 async def main() -> None:
-    initialize_db() # Инициализация базы данных
+    await initialize_db() # Инициализация базы данных
     await bot.delete_webhook(drop_pending_updates=True)  # Пропускает сообщения накопившиеся пока бот отключен
     await dp.start_polling(bot)
     
