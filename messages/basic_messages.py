@@ -149,7 +149,7 @@ _Ввели неверно? Используйте /restart команду, чт
 			"""
 	},
 	
-	"JOINED": {
+	"JOINED_TEXT": {
 		"ENG": """
 *Thank you!*
 
