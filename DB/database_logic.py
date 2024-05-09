@@ -1,5 +1,5 @@
 import sqlite3
-from settings.config import DATABASE_FILE
+from settings.config import DATABASE_FILE, REFERRAL_REWARD
 from os.path import isfile
 
 
@@ -16,6 +16,8 @@ def initialize_db() -> None:
     - REF_BY_USER (INTEGER) - user_id пользователя чьим рефералом является
     - TWITTER_USER (TEXT) - ссылка на твиттер пользователя
     - LANGUAGE (TEXT) - язык пользователя
+    - REF_POINTS (INT)
+    - POINTS (INT)
 
     Печатает соответствующее сообщение о наличии или создании базы данных.
     """
@@ -24,7 +26,7 @@ def initialize_db() -> None:
     else:
         print("Creating Database...")
         execute_non_query(
-            "CREATE TABLE users (USER_ID INTEGER, ADDR TEXT, ALREADY_REG BOOL, NUM_OF_REFS INT, REF_BY_USER INTEGER, TWITTER_USER TEXT, LANGUAGE TEXT);")
+            "CREATE TABLE users (USER_ID INTEGER, ADDR TEXT, ALREADY_REG BOOL, NUM_OF_REFS INT, REF_BY_USER INTEGER, TWITTER_USER TEXT, LANGUAGE TEXT, REF_POINTS INT, POINTS INT);")
         print("Database created successfully")
 
 
@@ -291,32 +293,41 @@ def add_referrer_to_user(user_id: int, referrer_id: int) -> None:
 
 def increment_referrer_count(referrer_id: int) -> None:
     """
-    Увеличивает количество рефералов у пользователя-реферера.
+    Увеличивает количество рефералов и количество очков за рефералов у пользователя-реферера.
 
     Параметры:
     - referrer_id (int): Уникальный идентификатор пользователя-реферера.
 
-    Эта функция обновляет запись в таблице `users`, увеличивая счетчик рефералов для указанного пользователя.
+    Эта функция обновляет запись в таблице `users`, увеличивая счетчик рефералов и очки за рефералов
+    для указанного пользователя.
     """
     print("def increment_refferer_count")
     try:
         conn = sqlite3.connect(DATABASE_FILE)
         cursor = conn.cursor()
-        # Первоначально проверяем, есть ли поле NUM_OF_REFS, если нет, устанавливаем его в 0
-        cursor.execute("SELECT NUM_OF_REFS FROM users WHERE USER_ID = ?", (referrer_id,))
+
+        # Получаем текущее количество рефералов и очков за рефералов
+        cursor.execute("SELECT NUM_OF_REFS, REF_POINTS FROM users WHERE USER_ID = ?", (referrer_id,))
         result = cursor.fetchone()
         if result:
-            current_count = result[0] if result[0] is not None else 0
+            current_ref_count = result[0] if result[0] is not None else 0
+            current_ref_points = result[1] if result[1] is not None else 0
         else:
-            current_count = 0
+            current_ref_count = 0
+            current_ref_points = 0
 
-        # Увеличиваем количество рефералов
-        new_count = current_count + 1
-        cursor.execute("UPDATE users SET NUM_OF_REFS = ? WHERE USER_ID = ?", (new_count, referrer_id))
+        # Увеличиваем количество рефералов и очки за рефералов
+        new_ref_count = current_ref_count + 1
+        new_ref_points = current_ref_points + REFERRAL_REWARD
+        cursor.execute(
+            "UPDATE users SET NUM_OF_REFS = ?, REF_POINTS = ? WHERE USER_ID = ?",
+            (new_ref_count, new_ref_points, referrer_id)
+        )
         conn.commit()
-        print(f"Referral count for user {referrer_id} incremented to {new_count}.")
+        print(f"Referral count for user {referrer_id} incremented to {new_ref_count}.")
+        print(f"Referral points for user {referrer_id} incremented to {new_ref_points}.")
     except Exception as e:
-        print(f"Error incrementing referral count for user {referrer_id}: {e}")
+        print(f"Error incrementing referral count or points for user {referrer_id}: {e}")
     finally:
         conn.close()
 
@@ -350,3 +361,31 @@ def get_referrer(user_id: int) -> int | None:
     except Exception as e:
         print(f"Error retrieving referrer for user {user_id}: {e}")
         return None
+
+def check_wallet_exists(wallet_address: str) -> bool:
+    """
+    Проверяет, отсутствует ли запись с указанным кошельком в базе данных.
+
+    Параметры:
+    - wallet_address (str): Адрес кошелька для проверки.
+
+    Возвращает:
+    - True, если запись с указанным кошельком отсутствует в базе данных.
+    - False, если запись с указанным кошельком найдена в базе данных или произошла ошибка.
+
+    Примечание:
+    Функция использует SQL-запрос для проверки наличия записи с указанным кошельком в таблице `users`.
+    """
+    try:
+        conn = sqlite3.connect(DATABASE_FILE)
+        cursor = conn.cursor()
+        # Выполняем SQL-запрос для проверки наличия кошелька
+        cursor.execute("SELECT 1 FROM users WHERE ADDR = ?", (wallet_address,))
+        result = cursor.fetchone()
+        conn.close()
+
+        # Проверяем, если результат пустой, значит запись не найдена
+        return result is None
+    except Exception as e:
+        print(f"Error checking wallet address in database: {e}")
+        return False
