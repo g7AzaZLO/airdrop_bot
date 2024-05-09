@@ -4,6 +4,7 @@ from logic.captcha import generate_captcha, check_captcha
 from aiogram.fsm.context import FSMContext
 from handlers.standart_handler import get_message
 from messages.basic_messages import messages
+from messages.menu_messages import menu_messages
 from keyboards.small_kb import join_kb, language_choose_kb, yes_no_kb, sub_cancel_kb, social_join_kb, kb_start
 from DB.database_logic import update_language_in_db, get_language_for_user, delete_user_from_db, get_user_details, \
     update_user_details
@@ -220,8 +221,14 @@ async def main_menu_handler(message: types.Message, state: FSMContext) -> None:
         user = get_user_details(message.from_user.id)
         print(user)
         user_name = message.from_user.first_name
-
-        pass
+        num_of_refs = user[3]
+        user_address = user[1]
+        user_twi = user[5]
+        reply = get_message(menu_messages, "INFORMATION_TEXT", language, user_name=user_name,
+                            refferal_number=num_of_refs,
+                            address=user_address, user_twitter_link=user_twi)
+        await message.answer(text=reply, reply_markup=menu_kb[language], parse_mode="MARKDOWN")
+        return
     elif user_response in ["👥Пригласить друга", "👥Invite Friends"]:
         pass
     elif user_response in ["💰Баланс", "💰Balance"]:
