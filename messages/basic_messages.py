@@ -14,9 +14,6 @@ messages = {
         "referral_link": "https://t.me/Rcrvynjibot"
 
     },
-    "START_MESSAGE": {
-        "ENG": "Please, type /start or click the button below to begin"
-    },
     "YES_NO": {
         "ENG": "Are you sure?",
         "RU": "Вы уверены?",
