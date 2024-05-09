@@ -11,7 +11,7 @@ from logic.refs import get_refferer_id
 standard_handler_router = Router()
 
 
-def get_message(messages, message_key, language, **kwargs) -> str:
+def get_message(messages: dict, message_key: str, language: str, **kwargs) -> str:
     """
     Retrieve a message based on the key and language,
     formatting it with any provided keyword arguments.
