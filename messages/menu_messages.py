@@ -20,10 +20,10 @@ menu_messages = {
     },
     "INFORMATION_TEXT": {
         "ENG": """
-*Name*: {user_name}
-*Referrals*: {refferal_number}
-*TON address*: {address}
-*Twitter*: {user_twitter_link}
+*Name*: [{user_name}]
+*Referrals*: [{refferal_number}]
+*TON address*: [{address}]
+*Twitter*: [{user_twitter_link}]
 """,
         "RU": """
 *Имя*: [{user_name}]
@@ -35,11 +35,11 @@ menu_messages = {
     "INVITE_FRIENDS_TEXT": {
         "ENG": """
 *Here is your referral link*
-{referral_link}      
+[{referral_link}]    
         """,
         "RU": """
 *Ваша реферальная ссылка*
-{referral_link}
+[{referral_link}]
         """,
     },
     "BALANCE_TEXT": {
