@@ -125,6 +125,20 @@ _ВНИМАНИЕ: Пользователи которые читерят буд
 {twitter_links}
 			"""
 	},
+
+	"GET_TWITTER_LINK_TEXT": {
+		"ENG": """
+Type in the link to your Twitter profile to proceed.
+
+Example: 
+https://twitter.com/example
+""",
+		"RU": """
+Введите ссылку на ваш профиль Твиттера, чтобы продолжить.
+Пример:
+https://twitter.com/example
+"""
+	},
 	
 	"SUBMIT_ADDRESS_TEXT": {
 		"ENG": """
@@ -134,8 +148,6 @@ Please make sure your wallet supports the *{airdrop_network}*
 
 Example:
 UQBxCOstPWvIADbaYYBapGhwfRZCEZUui5p2OEFHU0a\_wWem
-
-_Incorrect Details? Use /restart command to start over_
 			""",
 		"RU": """
 Введите ваш адрес кошелька
@@ -144,8 +156,6 @@ _Incorrect Details? Use /restart command to start over_
 
 Пример:
 UQBxCOstPWvIADbaYYBapGhwfRZCEZUui5p2OEFHU0a\_wWem
-
-_Ввели неверно? Используйте /restart команду, чтобы начать заново_
 			"""
 	},
 	
