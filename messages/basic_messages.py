@@ -126,7 +126,7 @@ _ВНИМАНИЕ: Пользователи которые читерят буд
 			"""
 	},
 	
-	"SUBMIT_BEP20_TEXT": {
+	"SUBMIT_ADDRESS_TEXT": {
 		"ENG": """
 Type in your Wallet Address
 
