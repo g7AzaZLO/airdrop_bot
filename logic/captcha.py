@@ -1,10 +1,12 @@
+import os
+
 from multicolorcaptcha import CaptchaGenerator
 from aiogram import types
 
 captcha_data = {}
 
 
-async def check_captcha(message: types.Message, data) -> bool:
+async def check_captcha(message: types.Message) -> bool:
     """
     Проверяет правильность ответа пользователя на капчу.
 
@@ -19,19 +21,22 @@ async def check_captcha(message: types.Message, data) -> bool:
     try:
         user_id = message.from_user.id
         if user_id not in captcha_data:
+            # Generate a CAPTCHA if it's not already there, perhaps in case of error or restart
+            await generate_captcha(message)
             return False
-
+    
         captcha_text = captcha_data[user_id]
         user_input = message.text
-
+    
         if captcha_text != user_input:
-            await message.reply("Неверная капча!")
+            await message.reply("Incorrect CAPTCHA, please try again.")
+            await generate_captcha(message)
             return False
         else:
-            await message.reply("Правильно!")
+            await message.reply("Correct CAPTCHA!")
             return True
     except Exception as e:
-        print("Ошибка при проверке капчи:", e)
+        print("Error while checking CAPTCHA:", e)
         return False
 
 
@@ -57,5 +62,11 @@ async def generate_captcha(message: types.Message) -> None:
         # Отправляем изображение капчи пользователю
         await message.reply_photo(photo=types.FSInputFile(path=filename))
 
+        # Удаляем файл после отправки
+        os.remove(filename)
+
+
     except Exception as e:
         print("Ошибка при генерации капчи:", e)
+        if os.path.exists(filename):
+            os.remove(filename)

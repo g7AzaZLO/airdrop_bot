@@ -11,11 +11,43 @@ messages = {
 		"telegram_links": TELEGRAM_LINKS,
 		"twitter_links": TWITTER_LINKS,
 		"airdrop_network": AIRDROP_NETWORK,
+		"referral_link": "https://t.me/Rcrvynjibot"
 		
 	},
+	"START_MESSAGE": {
+		"ENG": "Please, type /start or click the button below to begin"
+	},
+	"YES_NO": {
+		"ENG": "Are you sure?",
+		"RU": "Вы уверены?",
+	},
+	"CANCEL_JOINING": {
+		"ENG": """
+We are sorry to see you go. Please come back anytime.
+Thank you for your support!
+p.s. You are safely deleted from our database.
+        """,
+		"RU": """
+Нам жаль, что вы уходите. Пожалуйста, заходите в любое время.
+Спасибо за вашу поддержку!
+p.s. Вы благополучно удалены из нашей базы данных.
+        """,
+	},
+	"LANGUAGE_CHOOSE": {
+		"ENG": "Please choose your language",
+		"RU": "Пожалуйста, выберите ваш язык",
+	},
+	"PROFILE_MENU": {
+		"ENG": "Your name is {user_name}",
+		"RU": "Ваше имя {user_name}"
+	},
+	"MENU": {
+		"ENG": "Here is what we have for you:",
+		"RU": "Вот что у нас для Вас есть:"
+	},
 	"CAPTCHA_MESSAGE": {
-"ENG": "Please type in the numbers on the image",
-"RU": "Пожалуйста, введите числа на картинке"
+		"ENG": "Please type in the numbers on the image",
+		"RU": "Пожалуйста, введите числа на картинке"
 	},
 	
 	"WELCOME_MESSAGE": {
@@ -31,7 +63,7 @@ Total tokens allocated to airdrop:  *50,000,000 ${coin_symbol}*
 Click "🚀 Join Airdrop" to proceed_
 	        """,
 		"RU": """
-Привет, {user_name}! Я твой дружелюбный {coin_name} аирдрп бот
+Привет, {user_name}! Я твой дружелюбный {coin_name} аирдроп бот
 
 Общее количество токенов, выделенных для аирдропа:  *50,000,000 ${coin_symbol}*
 
@@ -94,8 +126,22 @@ _ВНИМАНИЕ: Пользователи которые читерят буд
 {twitter_links}
 			"""
 	},
+
+	"GET_TWITTER_LINK_TEXT": {
+		"ENG": """
+Type in the link to your Twitter profile to proceed.
+
+Example: 
+https://twitter.com/example
+""",
+		"RU": """
+Введите ссылку на ваш профиль Твиттера, чтобы продолжить.
+Пример:
+https://twitter.com/example
+"""
+	},
 	
-	"SUBMIT_BEP20_TEXT": {
+	"SUBMIT_ADDRESS_TEXT": {
 		"ENG": """
 Type in your Wallet Address
 
@@ -103,8 +149,6 @@ Please make sure your wallet supports the *{airdrop_network}*
 
 Example:
 UQBxCOstPWvIADbaYYBapGhwfRZCEZUui5p2OEFHU0a\_wWem
-
-_Incorrect Details? Use /restart command to start over_
 			""",
 		"RU": """
 Введите ваш адрес кошелька
@@ -113,12 +157,10 @@ _Incorrect Details? Use /restart command to start over_
 
 Пример:
 UQBxCOstPWvIADbaYYBapGhwfRZCEZUui5p2OEFHU0a\_wWem
-
-_Ввели неверно? Используйте /restart команду, чтобы начать заново_
 			"""
 	},
 	
-	"JOINED": {
+	"JOINED_TEXT": {
 		"ENG": """
 *Thank you!*
 
@@ -129,7 +171,7 @@ Rewards would be sent out automatically to your {airdrop_network} address
 🔸 Follow all the social media channels for the updates
 
 Your personal referral link (+*{referral_reward}* point for each referral)
-REPLACEME
+{referral_link}
 			""",
 		"RU": """
 *Спасибо вам!*
@@ -141,7 +183,7 @@ REPLACEME
 🔸 Подписаться на все соц сети, чтобы знать актуальную информацию
 
 Ваша персональная реферальная ссылка (+*{referral_reward}* поинтов за каждого реферала)
-REPLACEME
+{referral_link}
 			"""
 	},
 }
