@@ -251,15 +251,15 @@ async def yes_no_reply(message: types.Message, state: FSMContext) -> None:
             delete_user_from_db(message.from_user.id)
         await state.set_state(state_end1)
         if text1 is not None and kb1 is None:
-            await message.answer(text=text1, reply_markup=types.ReplyKeyboardRemove())
+            await message.answer(text=text1, reply_markup=types.ReplyKeyboardRemove(), parse_mode="MARKDOWN")
         elif text1 is not None and kb1 is not None:
-            await message.answer(text=text1, reply_markup=kb1)
+            await message.answer(text=text1, reply_markup=kb1, parse_mode="MARKDOWN")
     elif user_response in ["Нет", "No"]:
         await state.set_state(state_end2)
         if text2 is not None and kb2 is None:
-            await message.answer(text=text2, reply_markup=types.ReplyKeyboardRemove())
+            await message.answer(text=text2, reply_markup=types.ReplyKeyboardRemove(), parse_mode="MARKDOWN")
         elif text2 is not None and kb2 is not None:
-            await message.answer(text=text2, reply_markup=kb2)
+            await message.answer(text=text2, reply_markup=kb2, parse_mode="MARKDOWN")
     else:
         reply = get_message(messages, "YES_NO", language)
         await message.answer(text=reply, reply_markup=yes_no_kb[language])
