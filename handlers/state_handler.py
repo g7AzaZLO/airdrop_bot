@@ -9,7 +9,7 @@ from DB.database_logic import update_language_in_db, get_language_for_user, dele
 from keyboards.menu_kb import menu_kb
 from logic.telegram import check_joined_telegram_channel
 from DB.database_logic import check_is_user_already_here, add_user_to_db, add_referrer_to_user
-from logic.refs import get_refferer_id
+from logic.refs import get_refferer_id, get_refferal_link
 from logic.twitter import check_joined_twitter_channel, is_valid_twitter_link
 from logic.address import is_valid_crypto_address
 
@@ -181,7 +181,8 @@ async def submit_address_response_handler_in_reg(message: types.Message, state: 
     if is_valid_crypto_address(user_response):
         print("Valid crypto address")
         await state.set_state(RegestrationState.main_menu_state)
-        reply = get_message(messages, "JOINED_TEXT", language)
+        ref_link = await get_refferal_link(message.from_user.id)
+        reply = get_message(messages, "JOINED_TEXT", language, referral_link=ref_link)
         await message.answer(text=reply, reply_markup=menu_kb[language], parse_mode="MARKDOWN")
     else:
         print("Invalid crypto address")

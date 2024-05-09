@@ -11,6 +11,7 @@ messages = {
 		"telegram_links": TELEGRAM_LINKS,
 		"twitter_links": TWITTER_LINKS,
 		"airdrop_network": AIRDROP_NETWORK,
+		"referral_link": "https://t.me/Rcrvynjibot"
 		
 	},
 	"START_MESSAGE": {
@@ -170,7 +171,7 @@ Rewards would be sent out automatically to your {airdrop_network} address
 🔸 Follow all the social media channels for the updates
 
 Your personal referral link (+*{referral_reward}* point for each referral)
-REPLACEME
+{referral_link}
 			""",
 		"RU": """
 *Спасибо вам!*
@@ -182,7 +183,7 @@ REPLACEME
 🔸 Подписаться на все соц сети, чтобы знать актуальную информацию
 
 Ваша персональная реферальная ссылка (+*{referral_reward}* поинтов за каждого реферала)
-REPLACEME
+{referral_link}
 			"""
 	},
 }
