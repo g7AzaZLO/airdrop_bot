@@ -126,7 +126,7 @@ def register_user(user_id: int, addr: str, twitter_user: str, language: str):
         return False
 
 
-def update_user_details(user_id: int, **kwargs) -> bool:
+async def update_user_details(user_id: int, **kwargs) -> bool:
     """
     Updates specific user details in the database. Accepts the user ID and keyword arguments representing the fields to update.
 
