@@ -7,7 +7,7 @@ from messages.basic_messages import messages
 from messages.menu_messages import menu_messages
 from keyboards.small_kb import join_kb, language_choose_kb, yes_no_kb, sub_cancel_kb, social_join_kb, kb_start
 from DB.database_logic import update_language_in_db, get_language_for_user, delete_user_from_db, get_user_details, \
-    update_user_details
+    update_user_details, check_wallet_exists
 from keyboards.menu_kb import menu_kb
 from logic.telegram import check_joined_telegram_channel
 from DB.database_logic import check_is_user_already_here, add_user_to_db, add_referrer_to_user, get_referrer, \
@@ -15,6 +15,7 @@ from DB.database_logic import check_is_user_already_here, add_user_to_db, add_re
 from logic.refs import get_refferer_id, get_refferal_link
 from logic.twitter import check_joined_twitter_channel, is_valid_twitter_link
 from logic.address import is_valid_crypto_address
+from settings.config import AIRDROP_AMOUNT, REFERRAL_REWARD
 
 state_handler_router = Router()
 
@@ -190,20 +191,26 @@ async def submit_address_response_handler_in_reg(message: types.Message, state: 
     user_response = message.text
     language = get_language_for_user(message.from_user.id)
     await state.update_data(user_submit_address_response=user_response)
-    if is_valid_crypto_address(user_response):
-        print("Valid crypto address")
-        await update_user_details(message.from_user.id, ADDR=user_response, NUM_OF_REFS=0)
-        await state.set_state(RegestrationState.main_menu_state)
-        ref_link = await get_refferal_link(message.from_user.id)
-        reply = get_message(messages, "JOINED_TEXT", language, referral_link=ref_link)
-        await message.answer(text=reply, reply_markup=menu_kb[language], parse_mode="MARKDOWN")
-        refferer = get_referrer(message.from_user.id)
-        if refferer is not None:
-            increment_referrer_count(refferer)
+    if check_wallet_exists(user_response):
+        if is_valid_crypto_address(user_response):
+            print("Valid crypto address")
+            await update_user_details(message.from_user.id, ADDR=user_response, NUM_OF_REFS=0, REF_POINTS=0,
+                                      POINTS=AIRDROP_AMOUNT)
+            await state.set_state(RegestrationState.main_menu_state)
+            ref_link = await get_refferal_link(message.from_user.id)
+            reply = get_message(messages, "JOINED_TEXT", language, referral_link=ref_link)
+            await message.answer(text=reply, reply_markup=menu_kb[language], parse_mode="MARKDOWN")
+            refferer = get_referrer(message.from_user.id)
+            if refferer is not None:
+                increment_referrer_count(refferer)
+        else:
+            print("Invalid crypto address")
+            await state.set_state(RegestrationState.submit_address_state)
+            reply = get_message(messages, "INVALID_ADDRESS_TEXT", language)
+            await message.answer(text=reply)
     else:
-        print("Invalid crypto address")
         await state.set_state(RegestrationState.submit_address_state)
-        reply = get_message(messages, "INVALID_ADDRESS_TEXT", language)
+        reply = get_message(messages, "ADDRESS_ALREADY_REGISTERED_TEXT", language)
         await message.answer(text=reply)
 
 
@@ -230,9 +237,19 @@ async def main_menu_handler(message: types.Message, state: FSMContext) -> None:
         await message.answer(text=reply, reply_markup=menu_kb[language], parse_mode="MARKDOWN")
         return
     elif user_response in ["👥Пригласить друга", "👥Invite Friends"]:
-        pass
+        ref_link = await get_refferal_link(message.from_user.id)
+        reply = get_message(menu_messages, "INVITE_FRIENDS_TEXT", language, referral_link=ref_link)
+        await message.answer(text=reply, reply_markup=menu_kb[language], parse_mode="MARKDOWN")
+        return
     elif user_response in ["💰Баланс", "💰Balance"]:
-        pass
+        user = get_user_details(message.from_user.id)
+        print(user)
+        balance = user[8]
+        balance_by_refs = user[7]
+        reply = get_message(menu_messages, "BALANCE_TEXT", language, balance=balance,
+                            user_referral_balance=balance_by_refs)
+        await message.answer(text=reply, reply_markup=menu_kb[language], parse_mode="MARKDOWN")
+        return
     elif user_response in ["🥇Задачи", "🥇Tasks"]:
         pass
     elif user_response in ["🔒Смартконтракт", "🔒Smartcontract"]:
