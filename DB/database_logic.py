@@ -3,7 +3,7 @@ from settings.config import DATABASE_FILE, REFERRAL_REWARD
 from os.path import isfile
 
 
-def initialize_db() -> None:
+async def initialize_db() -> None:
     """
     Инициализирует базу данных. Проверяет наличие файла базы данных.
     Если файл не существует, создает базу данных и таблицу faucetClaims.
@@ -46,7 +46,7 @@ def execute_non_query(command: str) -> None:
     conn.close()
 
 
-def delete_user_from_db(user_id: int) -> bool:
+async def delete_user_from_db(user_id: int) -> bool:
     """
     Удаляет пользователя из таблицы базы данных по заданному идентификатору пользователя.
 
@@ -69,7 +69,7 @@ def delete_user_from_db(user_id: int) -> bool:
         return False
 
 
-def check_is_user_already_here(user_id: int) -> bool:
+async def check_is_user_already_here(user_id: int) -> bool:
     """
     Проверяет, существует ли пользователь с заданным идентификатором в таблице 'users' базы данных.
 
@@ -97,7 +97,7 @@ def check_is_user_already_here(user_id: int) -> bool:
         return False
 
 
-def register_user(user_id: int, addr: str, twitter_user: str, language: str):
+async def register_user(user_id: int, addr: str, twitter_user: str, language: str):
     """
     Registers a new user in the database with initial details such as address, Twitter handle, and language preference.
 
@@ -156,7 +156,7 @@ async def update_user_details(user_id: int, **kwargs) -> bool:
         return False
 
 
-def get_user_details(user_id: int):
+async def get_user_details(user_id: int):
     """
     Retrieves all stored details for a specific user from the database.
 
@@ -182,7 +182,7 @@ def get_user_details(user_id: int):
         return None
 
 
-def list_users_by_filter(**filters):
+async def list_users_by_filter(**filters):
     """
     Fetches a list of users who match specified filter criteria from the database.
 
@@ -216,7 +216,7 @@ def list_users_by_filter(**filters):
         return []
 
 
-def update_language_in_db(user_id: int, language: str) -> None:
+async def update_language_in_db(user_id: int, language: str) -> None:
     """
     Обновляет или добавляет язык пользователя в базе данных.
 
@@ -234,7 +234,7 @@ def update_language_in_db(user_id: int, language: str) -> None:
         print(f"Error updating language in DB: {e}")
 
 
-def add_user_to_db(user_id: int) -> None:
+async def add_user_to_db(user_id: int) -> None:
     """
     Добавляет нового пользователя в базу данных.
 
@@ -249,7 +249,7 @@ def add_user_to_db(user_id: int) -> None:
         print(f"Error adding user {user_id} to the database: {e}")
 
 
-def get_language_for_user(user_id: int) -> str:
+async def get_language_for_user(user_id: int) -> str:
     """
     Получает язык пользователя из базы данных.
 
@@ -275,7 +275,7 @@ def get_language_for_user(user_id: int) -> str:
         conn.close()
 
 
-def add_referrer_to_user(user_id: int, referrer_id: int) -> None:
+async def add_referrer_to_user(user_id: int, referrer_id: int) -> None:
     """
     Добавляет идентификатор пользователя-реферера к записи пользователя.
     """
@@ -291,7 +291,7 @@ def add_referrer_to_user(user_id: int, referrer_id: int) -> None:
         conn.close()
 
 
-def increment_referrer_count(referrer_id: int) -> None:
+async def increment_referrer_count(referrer_id: int) -> None:
     """
     Увеличивает количество рефералов и количество очков за рефералов у пользователя-реферера.
 
@@ -332,7 +332,7 @@ def increment_referrer_count(referrer_id: int) -> None:
         conn.close()
 
 
-def get_referrer(user_id: int) -> int | None:
+async def get_referrer(user_id: int) -> int | None:
     """
     Возвращает идентификатор реферера для указанного пользователя.
 
@@ -362,7 +362,7 @@ def get_referrer(user_id: int) -> int | None:
         print(f"Error retrieving referrer for user {user_id}: {e}")
         return None
 
-def check_wallet_exists(wallet_address: str) -> bool:
+async def check_wallet_exists(wallet_address: str) -> bool:
     """
     Проверяет, отсутствует ли запись с указанным кошельком в базе данных.
 
