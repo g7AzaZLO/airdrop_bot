@@ -233,5 +233,13 @@ Please, type /start or click the button below to begin
 Пожалуйста, напишите /start или нажмите на кнопку ниже, чтобы начать
 		"""
     },
+    "ADDRESS_ALREADY_REGISTERED_TEXT": {
+        "ENG": """
+This address is already registered
+""",
+        "RU": """
+Данный адрес уже зарегистрирован
+		"""
+    },
 
 }
