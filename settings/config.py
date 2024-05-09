@@ -17,7 +17,7 @@ DATABASE_FILE = "airdrop.db"
 BOT_NICKNAME = "Rcrvynjibot"
 
 # Links
-TWITTER_LINKS = ["https://twitter.com/buyordie_ton"]
+TWITTER_LINKS = "\n".join(["https://twitter.com/buyordie_ton"])
 TELEGRAM_LINKS = "\n".join(["https://t.me/buyordie_ton", "https://t.me/buyordie_chat"])
 WEBSITE_URL = "https://buyordie.fun/"
 MAX_USERS = 100000
@@ -32,4 +32,3 @@ AI_KEY = os.getenv("AI_KEY")
 
 # Bot
 bot = Bot(token=BOT_TOKEN)
-
