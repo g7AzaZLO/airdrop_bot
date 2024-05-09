@@ -14,8 +14,6 @@ class RegestrationState(StatesGroup):
     follow_telegram_state = State()
     follow_twitter_state = State()
     submit_address_state = State()
-    end_conversation_state = State()
-    loop_state = State()
     
     main_menu_state = State()  # State for the main menu
     lang_choose_state_again = State()  # changing the language second time
