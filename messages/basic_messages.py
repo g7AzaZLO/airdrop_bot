@@ -13,6 +13,9 @@ messages = {
 		"airdrop_network": AIRDROP_NETWORK,
 		
 	},
+	"START_MESSAGE": {
+		"ENG": "Please, type /start or click the button below to begin"
+	},
 	"YES_NO": {
 		"ENG": "Are you sure?",
 		"RU": "Вы уверены?",
