@@ -8,7 +8,7 @@ from messages.menu_messages import menu_messages
 from keyboards.small_kb import join_kb, language_choose_kb, yes_no_kb, sub_cancel_kb, social_join_kb, kb_start
 from DB.database_logic import update_language_in_db, get_language_for_user, delete_user_from_db, get_user_details, \
     update_user_details, check_wallet_exists
-from keyboards.menu_kb import menu_kb
+from keyboards.menu_kb import menu_kb, kb_menu_settings
 from logic.telegram import check_joined_telegram_channel
 from DB.database_logic import check_is_user_already_here, add_user_to_db, add_referrer_to_user, get_referrer, \
     increment_referrer_count
@@ -31,11 +31,11 @@ async def captcha_response_handler(message: types.Message, state: FSMContext) ->
         # await state.clear()
         await state.set_state(RegestrationState.main_menu_state)
         language = await get_language_for_user(message.from_user.id)
-        reply = await get_message(messages, "MENU", language)
+        reply = await get_message(menu_messages, "MENU", language)
         await message.answer(text=reply, reply_markup=menu_kb[language])
         if language not in ["ENG", "RU"]:
             await state.set_state(RegestrationState.lang_choose_state)
-            reply = get_message(messages, "LANGUAGE_CHOOSE", "ENG")
+            reply = get_message(menu_messages, "LANGUAGE_CHOOSE", "ENG")
             await message.answer(text=reply, reply_markup=language_choose_kb)
 
 
@@ -48,7 +48,7 @@ async def captcha_response_handler_in_reg(message: types.Message, state: FSMCont
     result = await check_captcha(message)
     if result:
         await state.set_state(RegestrationState.lang_choose_state)
-        reply = get_message(messages, "LANGUAGE_CHOOSE", "ENG")
+        reply = get_message(menu_messages, "LANGUAGE_CHOOSE", "ENG")
         await message.answer(text=reply, reply_markup=language_choose_kb)
 
 
@@ -64,7 +64,7 @@ async def lang_choose_response_handler_in_reg(message: types.Message, state: FSM
     elif user_response == "RU Русский":
         language = "RU"
     else:
-        reply = get_message(messages, "LANGUAGE_CHOSEN_WRONG", "ENG")
+        reply = get_message(menu_messages, "LANGUAGE_CHOSEN_WRONG", "ENG")
         await message.answer(text=reply, reply_markup=language_choose_kb)
         return
     await state.set_state(RegestrationState.hello_state)
@@ -96,7 +96,7 @@ async def hello_response_handler_in_reg(message: types.Message, state: FSMContex
             kb2=join_kb[language],
             delete=True
         )
-        reply = await get_message(messages, "YES_NO", language)
+        reply = await get_message(menu_messages, "YES_NO", language)
         await message.answer(text=reply, reply_markup=yes_no_kb[language])
         await state.set_state(RegestrationState.yes_no_state)
     else:
@@ -127,7 +127,7 @@ async def proceed_response_handler_in_reg(message: types.Message, state: FSMCont
             kb2=sub_cancel_kb[language],
             delete=True
         )
-        reply =await get_message(messages, "YES_NO", language)
+        reply =await get_message(menu_messages, "YES_NO", language)
         await message.answer(text=reply, reply_markup=yes_no_kb[language])
         await state.set_state(RegestrationState.yes_no_state)
     else:
@@ -156,8 +156,8 @@ async def follow_telegram_response_handler_in_reg(message: types.Message, state:
             reply = get_message(messages, "NOT_SUB_AT_GROUP_TEXT", language)
             await message.answer(text=reply, reply_markup=social_join_kb[language])
     else:
-        reply = get_message(messages, "UNKNOWN_COMMAND_TEXT", language)
-        await message.answer(text=reply)
+        reply = get_message(menu_messages, "UNKNOWN_COMMAND_TEXT", language)
+        await message.answer(text=reply, reply_markup=social_join_kb[language])
         await state.set_state(RegestrationState.follow_telegram_state)
 
 
@@ -221,9 +221,9 @@ async def main_menu_handler(message: types.Message, state: FSMContext) -> None:
     print(f"def main_menu_handler, user response {user_response}")
     language = await get_language_for_user(message.from_user.id)
     if user_response in ["😈Профиль", "😈Profile"]:
-        reply = await get_message(messages, "PROFILE_MENU", language, user_name=message.from_user.first_name)
+        reply = await get_message(menu_messages, "PROFILE_MENU", language, user_name=message.from_user.first_name)
         await message.answer(text=reply, reply_markup=menu_kb[language])
-        print(f"deleted {language}")
+        print(f"Profile {language}")
         return
     elif user_response in ["#️⃣Информация", "#️⃣Information"]:
         user = await get_user_details(message.from_user.id)
@@ -255,16 +255,46 @@ async def main_menu_handler(message: types.Message, state: FSMContext) -> None:
         pass
     elif user_response in ["🔒Смартконтракт", "🔒Smartcontract"]:
         pass
-    elif user_response in ["🌏Сменить Язык", "🌏Change Language"]:
-        reply = await get_message(messages, "LANGUAGE_CHOOSE", language)
+    elif user_response in ["🔧Настройки", "🔧Settings"]:
+        reply = await get_message(menu_messages, "MENU_SETTINGS", language)
+        await message.answer(text=reply, reply_markup=kb_menu_settings[language])
+        await state.set_state(RegestrationState.menu_settings)
+    else:
+        reply = await get_message(menu_messages, "UNKNOWN_COMMAND_TEXT", language)
+        await message.answer(text=reply, reply_markup=menu_kb[language])
+        # await state.set_state(RegestrationState.main_menu_state)
+        return
+
+@state_handler_router.message(RegestrationState.menu_settings)
+async def menu_settings(message: types.Message, state: FSMContext) -> None:
+    user_response = message.text
+    print(f"def menu_settings")
+    language = await get_language_for_user(message.from_user.id)
+    if user_response in ["🌏Сменить Язык", "🌏Change Language"]:
+        reply = await get_message(menu_messages, "LANGUAGE_CHOOSE", language)
         await message.answer(text=reply, reply_markup=language_choose_kb)
         await state.set_state(RegestrationState.lang_choose_state_again)
-    elif user_response in ["❌Выйти", "❌Quit"]:
-        pass
-    else:
-        reply = await get_message(messages, "UKNOWN_COMMAND_TEXT", language)
-        await message.answer(text=reply)
+    elif user_response in ["❌Удалить Аккаунт", "❌Delete Account"]:
+        await state.update_data(
+            state_end1=CaptchaState.null_state,
+            state_end2=RegestrationState.menu_settings,
+            text1=await get_message(messages, "START_AGAIN_TEXT", language),
+            text2=await get_message(menu_messages, "MENU_SETTINGS", language),
+            kb1=kb_start,
+            kb2=kb_menu_settings[language],
+            delete=True
+        )
+        reply = await get_message(menu_messages, "YES_NO", language)
+        await message.answer(text=reply, reply_markup=yes_no_kb[language])
+        await state.set_state(RegestrationState.yes_no_state)
+    elif user_response in ["⏪Вернуться Назад", "⏪Return back"]:
         await state.set_state(RegestrationState.main_menu_state)
+        reply = await get_message(menu_messages, "MENU", language)
+        await message.answer(text=reply, reply_markup=menu_kb[language])
+    else:
+        reply = await get_message(menu_messages, "UNKNOWN_COMMAND_TEXT", language)
+        await message.answer(text=reply, reply_markup=kb_menu_settings[language])
+        return
 
 
 @state_handler_router.message(RegestrationState.lang_choose_state_again)
@@ -278,11 +308,11 @@ async def lang_choose_response_handler(message: types.Message, state: FSMContext
     elif user_response == "RU Русский":
         language = "RU"
     else:
-        reply = get_message(messages, "LANGUAGE_CHOSEN_WRONG", "ENG")
+        reply = get_message(menu_messages, "LANGUAGE_CHOSEN_WRONG", "ENG")
         await message.answer(text=reply, reply_markup=language_choose_kb)
         return
     await state.set_state(RegestrationState.main_menu_state)
-    reply = await get_message(messages, "MENU", language)
+    reply = await get_message(menu_messages, "MENU", language)
     await message.answer(text=reply, reply_markup=menu_kb[language])
     # Вызываем функцию для обновления языка пользователя в базе данных
     await update_language_in_db(user_id, language)
@@ -317,7 +347,7 @@ async def yes_no_reply(message: types.Message, state: FSMContext) -> None:
         elif text2 is not None and kb2 is not None:
             await message.answer(text=text2, reply_markup=kb2, parse_mode="MARKDOWN")
     else:
-        reply = await get_message(messages, "YES_NO", language)
+        reply = await get_message(menu_messages, "YES_NO", language)
         await message.answer(text=reply, reply_markup=yes_no_kb[language])
 
 

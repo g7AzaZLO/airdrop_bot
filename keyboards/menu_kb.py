@@ -16,8 +16,7 @@ menu_kb = {
 				KeyboardButton(text="🔒Смартконтракт"),
 			],
 			[
-				KeyboardButton(text="🌏Сменить Язык"),
-				KeyboardButton(text="❌Выйти"),
+				KeyboardButton(text="🔧Настройки"),
 			],
 		],
 		resize_keyboard=True,
@@ -38,8 +37,35 @@ menu_kb = {
 				KeyboardButton(text="🔒Smartcontract"),
 			],
 			[
+				KeyboardButton(text="🔧Settings"),
+			],
+		],
+		resize_keyboard=True,
+	)
+}
+
+kb_menu_settings = {
+	'RU': ReplyKeyboardMarkup(
+		keyboard=[
+			[
+				KeyboardButton(text="🌏Сменить Язык"),
+				KeyboardButton(text="❌Удалить Аккаунт"),
+			],
+			[
+				KeyboardButton(text="⏪Вернуться Назад"),
+			],
+		],
+		resize_keyboard=True,
+	),
+	
+	'ENG': ReplyKeyboardMarkup(
+		keyboard=[
+			[
 				KeyboardButton(text="🌏Change Language"),
-				KeyboardButton(text="❌Quit"),
+				KeyboardButton(text="❌Delete Account"),
+			],
+			[
+				KeyboardButton(text="⏪Return back"),
 			],
 		],
 		resize_keyboard=True,

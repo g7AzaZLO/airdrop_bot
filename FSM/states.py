@@ -16,6 +16,7 @@ class RegestrationState(StatesGroup):
     submit_address_state = State()
     
     main_menu_state = State()  # State for the main menu
+    menu_settings = State()  # State for the main menu
     lang_choose_state_again = State()  # changing the language second time
     yes_no_state = State()
     
