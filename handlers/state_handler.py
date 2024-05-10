@@ -233,9 +233,8 @@ async def main_menu_handler(message: types.Message, state: FSMContext) -> None:
         await message.answer(text=reply, reply_markup=menu_kb[language], parse_mode="MARKDOWN")
         return
     elif user_response in ["#️⃣Информация", "#️⃣Information"]:
-        reply = await get_message(menu_messages, "INFORMATION_TEXT", language, user_name=message.from_user.first_name)
-        await message.answer(text=reply, reply_markup=menu_kb[language])
-        print(f"Profile {language}")
+        reply = await get_message(menu_messages, "INFORMATION_TEXT", language)
+        await message.answer(text=reply, reply_markup=menu_kb[language], parse_mode="MARKDOWN")
         return
     elif user_response in ["👥Пригласить друга", "👥Invite Friends"]:
         ref_link = await get_refferal_link(message.from_user.id)
@@ -252,14 +251,12 @@ async def main_menu_handler(message: types.Message, state: FSMContext) -> None:
         await message.answer(text=reply, reply_markup=menu_kb[language], parse_mode="MARKDOWN")
 
     elif user_response in ["🥇Задачи", "🥇Tasks"]:
-        reply = await get_message(menu_messages, "INFORMATION_TEXT", language, user_name=message.from_user.first_name)
-        await message.answer(text=reply, reply_markup=menu_kb[language])
-        print(f"Profile {language}")
+        reply = await get_message(menu_messages, "INFORMATION_TEXT", language)
+        await message.answer(text=reply, reply_markup=menu_kb[language], parse_mode="MARKDOWN")
         return
     elif user_response in ["🔒Смартконтракт", "🔒Smartcontract"]:
-        reply = await get_message(menu_messages, "INFORMATION_TEXT", language, user_name=message.from_user.first_name)
-        await message.answer(text=reply, reply_markup=menu_kb[language])
-        print(f"Profile {language}")
+        reply = await get_message(menu_messages, "SMARTCONTRACT_TEXT", language)
+        await message.answer(text=reply, reply_markup=menu_kb[language], parse_mode="HTML")
         return
     elif user_response in ["🔧Настройки", "🔧Settings"]:
         reply = await get_message(menu_messages, "MENU_SETTINGS", language)
