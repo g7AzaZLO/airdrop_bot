@@ -252,9 +252,15 @@ async def main_menu_handler(message: types.Message, state: FSMContext) -> None:
         await message.answer(text=reply, reply_markup=menu_kb[language], parse_mode="MARKDOWN")
 
     elif user_response in ["🥇Задачи", "🥇Tasks"]:
-        pass
+        reply = await get_message(menu_messages, "INFORMATION_TEXT", language, user_name=message.from_user.first_name)
+        await message.answer(text=reply, reply_markup=menu_kb[language])
+        print(f"Profile {language}")
+        return
     elif user_response in ["🔒Смартконтракт", "🔒Smartcontract"]:
-        pass
+        reply = await get_message(menu_messages, "INFORMATION_TEXT", language, user_name=message.from_user.first_name)
+        await message.answer(text=reply, reply_markup=menu_kb[language])
+        print(f"Profile {language}")
+        return
     elif user_response in ["🔧Настройки", "🔧Settings"]:
         reply = await get_message(menu_messages, "MENU_SETTINGS", language)
         await message.answer(text=reply, reply_markup=kb_menu_settings[language])
@@ -355,7 +361,7 @@ async def yes_no_reply(message: types.Message, state: FSMContext) -> None:
 async def null_state(message: types.Message, state: FSMContext) -> None:
     print("def null_state")
     user_response = message.text
-    language = get_language_for_user(message.from_user.id)
+    language = await get_language_for_user(message.from_user.id)
     if language is None: language = "ENG"
     if user_response in ["start", "Start", "Начать", "начать",
                          r"\Начать", r"\начать", r"\start", r"\Start", ]:
