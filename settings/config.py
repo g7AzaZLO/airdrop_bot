@@ -32,3 +32,6 @@ AI_KEY = os.getenv("AI_KEY")
 
 # Bot
 bot = Bot(token=BOT_TOKEN)
+
+# mongo
+DB_URI = os.getenv("DB_URI")

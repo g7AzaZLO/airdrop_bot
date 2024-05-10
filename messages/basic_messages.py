@@ -180,7 +180,14 @@ This link is already registered
 Данный пользователь уже зарегистрирован
 		"""
 	},
-	
+	"ADDRESS_ALREADY_REGISTERED_TEXT": {
+		"ENG": """
+This address is already registered
+""",
+		"RU": """
+Данный адрес уже зарегистрирован
+		"""
+	},
 	"NOT_SUB_AT_GROUP_TEXT": {
 		"ENG": """
 First, subscribe to the channel

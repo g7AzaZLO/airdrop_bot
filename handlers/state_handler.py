@@ -7,7 +7,7 @@ from messages.basic_messages import messages
 from messages.menu_messages import menu_messages
 from keyboards.small_kb import join_kb, language_choose_kb, yes_no_kb, sub_cancel_kb, social_join_kb, kb_start
 from DB.database_logic import update_language_in_db, get_language_for_user, delete_user_from_db, get_user_details, \
-    update_user_details, check_wallet_exists
+    update_user_details, check_wallet_exists, decrement_referrer_count
 from keyboards.menu_kb import menu_kb, kb_menu_settings
 from logic.telegram import check_joined_telegram_channel
 from DB.database_logic import check_is_user_already_here, add_user_to_db, add_referrer_to_user, get_referrer, \
@@ -221,21 +221,21 @@ async def main_menu_handler(message: types.Message, state: FSMContext) -> None:
     print(f"def main_menu_handler, user response {user_response}")
     language = await get_language_for_user(message.from_user.id)
     if user_response in ["😈Профиль", "😈Profile"]:
-        reply = await get_message(menu_messages, "PROFILE_MENU", language, user_name=message.from_user.first_name)
-        await message.answer(text=reply, reply_markup=menu_kb[language])
-        print(f"Profile {language}")
-        return
-    elif user_response in ["#️⃣Информация", "#️⃣Information"]:
         user = await get_user_details(message.from_user.id)
         print(user)
         user_name = message.from_user.first_name
-        num_of_refs = user[3]
-        user_address = user[1]
-        user_twi = user[5]
-        reply = await get_message(menu_messages, "INFORMATION_TEXT", language, user_name=user_name,
+        num_of_refs = user.get("NUM_OF_REFS", 0)
+        user_address = user.get("ADDR", "Not provided")
+        user_twi = user.get("TWITTER_USER", "Not provided")
+        reply = await get_message(menu_messages, "PROFILE_MENU", language, user_name=user_name,
                             refferal_number=num_of_refs,
                             address=user_address, user_twitter_link=user_twi)
         await message.answer(text=reply, reply_markup=menu_kb[language], parse_mode="MARKDOWN")
+        return
+    elif user_response in ["#️⃣Информация", "#️⃣Information"]:
+        reply = await get_message(menu_messages, "INFORMATION_TEXT", language, user_name=message.from_user.first_name)
+        await message.answer(text=reply, reply_markup=menu_kb[language])
+        print(f"Profile {language}")
         return
     elif user_response in ["👥Пригласить друга", "👥Invite Friends"]:
         ref_link = await get_refferal_link(message.from_user.id)
@@ -245,16 +245,22 @@ async def main_menu_handler(message: types.Message, state: FSMContext) -> None:
     elif user_response in ["💰Баланс", "💰Balance"]:
         user = await get_user_details(message.from_user.id)
         print(user)
-        balance = user[8]
-        balance_by_refs = user[7]
+        balance = user.get("POINTS", 0)
+        balance_by_refs = user.get("REF_POINTS", 0)
         reply = await get_message(menu_messages, "BALANCE_TEXT", language, balance=balance,
-                            user_referral_balance=balance_by_refs)
+                                  user_referral_balance=balance_by_refs)
         await message.answer(text=reply, reply_markup=menu_kb[language], parse_mode="MARKDOWN")
-        return
+
     elif user_response in ["🥇Задачи", "🥇Tasks"]:
-        pass
+        reply = await get_message(menu_messages, "INFORMATION_TEXT", language, user_name=message.from_user.first_name)
+        await message.answer(text=reply, reply_markup=menu_kb[language])
+        print(f"Profile {language}")
+        return
     elif user_response in ["🔒Смартконтракт", "🔒Smartcontract"]:
-        pass
+        reply = await get_message(menu_messages, "INFORMATION_TEXT", language, user_name=message.from_user.first_name)
+        await message.answer(text=reply, reply_markup=menu_kb[language])
+        print(f"Profile {language}")
+        return
     elif user_response in ["🔧Настройки", "🔧Settings"]:
         reply = await get_message(menu_messages, "MENU_SETTINGS", language)
         await message.answer(text=reply, reply_markup=kb_menu_settings[language])
@@ -334,6 +340,9 @@ async def yes_no_reply(message: types.Message, state: FSMContext) -> None:
     language = await get_language_for_user(message.from_user.id)
     if user_response in ["Да", "Yes"]:
         if delete:
+            refferer = await get_referrer(message.from_user.id)
+            if refferer is not None:
+                await decrement_referrer_count(refferer)
             await delete_user_from_db(message.from_user.id)
         await state.set_state(state_end1)
         if text1 is not None and kb1 is None:
@@ -355,7 +364,7 @@ async def yes_no_reply(message: types.Message, state: FSMContext) -> None:
 async def null_state(message: types.Message, state: FSMContext) -> None:
     print("def null_state")
     user_response = message.text
-    language = get_language_for_user(message.from_user.id)
+    language = await get_language_for_user(message.from_user.id)
     if language is None: language = "ENG"
     if user_response in ["start", "Start", "Начать", "начать",
                          r"\Начать", r"\начать", r"\start", r"\Start", ]:

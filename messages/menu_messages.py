@@ -45,15 +45,15 @@ p.s. Вы благополучно удалены из нашей базы да�
 		"ENG": "Please choose your language",
 		"RU": "Пожалуйста, выберите ваш язык",
 	},
-	"PROFILE_MENU": {
-		"ENG": "Your name is {user_name}",
-		"RU": "Ваше имя {user_name}"
+	"INFORMATION_TEXT": {
+		"ENG": "SOON",
+		"RU": "Скоро"
 	},
 	"MENU": {
 		"ENG": "Here is what we have for you:",
 		"RU": "Вот что у нас для Вас есть:"
 	},
-	"INFORMATION_TEXT": {
+	"PROFILE_MENU": {
 		"ENG": """
 *Name*: [{user_name}]
 *Referrals*: [{refferal_number}]
