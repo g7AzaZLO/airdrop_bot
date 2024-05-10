@@ -280,6 +280,32 @@ async def increment_referrer_count(referrer_id: int) -> None:
     except Exception as e:
         print(f"Error incrementing referral count or points for user {referrer_id}: {e}")
 
+async def decrement_referrer_count(referrer_id: int) -> None:
+    """
+    Уменьшает количество рефералов и количество очков за рефералов у пользователя-реферера в MongoDB.
+
+    Параметры:
+    - referrer_id (int): Уникальный идентификатор пользователя-реферера.
+    """
+    print("def decrement_refferer_count")
+    try:
+        user = await users_collection.find_one({"USER_ID": referrer_id})
+        if user:
+            current_ref_count = user.get("NUM_OF_REFS", 0)
+            current_ref_points = user.get("REF_POINTS", 0)
+            new_ref_count = max(0, current_ref_count - 1)  # Убедимся, что количество рефералов не отрицательное
+            new_ref_points = max(0, current_ref_points - REFERRAL_REWARD)  # Убедимся, что очки не отрицательные
+            await users_collection.update_one(
+                {"USER_ID": referrer_id},
+                {"$set": {"NUM_OF_REFS": new_ref_count, "REF_POINTS": new_ref_points}}
+            )
+            print(f"Referral count for user {referrer_id} decremented to {new_ref_count}.")
+            print(f"Referral points for user {referrer_id} decremented to {new_ref_points}.")
+        else:
+            print(f"User {referrer_id} not found in database.")
+    except Exception as e:
+        print(f"Error decrementing referral count or points for user {referrer_id}: {e}")
+
 
 # Функция получения реферера
 async def get_referrer(user_id: int) -> int:

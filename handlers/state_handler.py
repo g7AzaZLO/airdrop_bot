@@ -7,7 +7,7 @@ from messages.basic_messages import messages
 from messages.menu_messages import menu_messages
 from keyboards.small_kb import join_kb, language_choose_kb, yes_no_kb, sub_cancel_kb, social_join_kb, kb_start
 from DB.database_logic import update_language_in_db, get_language_for_user, delete_user_from_db, get_user_details, \
-    update_user_details, check_wallet_exists
+    update_user_details, check_wallet_exists, decrement_referrer_count
 from keyboards.menu_kb import menu_kb, kb_menu_settings
 from logic.telegram import check_joined_telegram_channel
 from DB.database_logic import check_is_user_already_here, add_user_to_db, add_referrer_to_user, get_referrer, \
@@ -340,6 +340,9 @@ async def yes_no_reply(message: types.Message, state: FSMContext) -> None:
     language = await get_language_for_user(message.from_user.id)
     if user_response in ["Да", "Yes"]:
         if delete:
+            refferer = await get_referrer(message.from_user.id)
+            if refferer is not None:
+                await decrement_referrer_count(refferer)
             await delete_user_from_db(message.from_user.id)
         await state.set_state(state_end1)
         if text1 is not None and kb1 is None:
