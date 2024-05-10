@@ -221,21 +221,21 @@ async def main_menu_handler(message: types.Message, state: FSMContext) -> None:
     print(f"def main_menu_handler, user response {user_response}")
     language = await get_language_for_user(message.from_user.id)
     if user_response in ["😈Профиль", "😈Profile"]:
-        reply = await get_message(menu_messages, "PROFILE_MENU", language, user_name=message.from_user.first_name)
-        await message.answer(text=reply, reply_markup=menu_kb[language])
-        print(f"Profile {language}")
-        return
-    elif user_response in ["#️⃣Информация", "#️⃣Information"]:
         user = await get_user_details(message.from_user.id)
         print(user)
         user_name = message.from_user.first_name
-        num_of_refs = user[3]
-        user_address = user[1]
-        user_twi = user[5]
-        reply = await get_message(menu_messages, "INFORMATION_TEXT", language, user_name=user_name,
+        num_of_refs = user.get("NUM_OF_REFS", 0)
+        user_address = user.get("ADDR", "Not provided")
+        user_twi = user.get("TWITTER_USER", "Not provided")
+        reply = await get_message(menu_messages, "PROFILE_MENU", language, user_name=user_name,
                             refferal_number=num_of_refs,
                             address=user_address, user_twitter_link=user_twi)
         await message.answer(text=reply, reply_markup=menu_kb[language], parse_mode="MARKDOWN")
+        return
+    elif user_response in ["#️⃣Информация", "#️⃣Information"]:
+        reply = await get_message(menu_messages, "INFORMATION_TEXT", language, user_name=message.from_user.first_name)
+        await message.answer(text=reply, reply_markup=menu_kb[language])
+        print(f"Profile {language}")
         return
     elif user_response in ["👥Пригласить друга", "👥Invite Friends"]:
         ref_link = await get_refferal_link(message.from_user.id)
@@ -245,12 +245,12 @@ async def main_menu_handler(message: types.Message, state: FSMContext) -> None:
     elif user_response in ["💰Баланс", "💰Balance"]:
         user = await get_user_details(message.from_user.id)
         print(user)
-        balance = user[8]
-        balance_by_refs = user[7]
+        balance = user.get("POINTS", 0)
+        balance_by_refs = user.get("REF_POINTS", 0)
         reply = await get_message(menu_messages, "BALANCE_TEXT", language, balance=balance,
-                            user_referral_balance=balance_by_refs)
+                                  user_referral_balance=balance_by_refs)
         await message.answer(text=reply, reply_markup=menu_kb[language], parse_mode="MARKDOWN")
-        return
+
     elif user_response in ["🥇Задачи", "🥇Tasks"]:
         pass
     elif user_response in ["🔒Смартконтракт", "🔒Smartcontract"]:
