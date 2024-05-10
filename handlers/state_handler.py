@@ -31,7 +31,8 @@ async def captcha_response_handler(message: types.Message, state: FSMContext) ->
         await message.answer(text=reply, reply_markup=menu_kb[language])
         if language not in ["ENG", "RU"]:
             await state.set_state(RegestrationState.lang_choose_state)
-            await message.answer(text="Please choose your language", reply_markup=language_choose_kb)
+            reply = get_message(messages, "LANGUAGE_CHOOSE", "ENG")
+            await message.answer(text=reply, reply_markup=language_choose_kb)
 
 
 # Handler состояния капчи в регистрации пользователя
@@ -43,7 +44,8 @@ async def captcha_response_handler_in_reg(message: types.Message, state: FSMCont
     result = await check_captcha(message)
     if result:
         await state.set_state(RegestrationState.lang_choose_state)
-        await message.answer(text="Please choose your language", reply_markup=language_choose_kb)
+        reply = get_message(messages, "LANGUAGE_CHOOSE", "ENG")
+        await message.answer(text=reply, reply_markup=language_choose_kb)
 
 
 @state_handler_router.message(RegestrationState.lang_choose_state)
@@ -58,9 +60,8 @@ async def lang_choose_response_handler_in_reg(message: types.Message, state: FSM
     elif user_response == "RU Русский":
         language = "RU"
     else:
-        await message.answer(text="That language is not on the list")
-        await message.answer(text="Please choose your language", reply_markup=language_choose_kb)
-        await state.set_state(RegestrationState.lang_choose_state)
+        reply = get_message(messages, "LANGUAGE_CHOSEN_WRONG", "ENG")
+        await message.answer(text=reply, reply_markup=language_choose_kb)
         return
     await state.set_state(RegestrationState.hello_state)
     await message.answer(
@@ -151,7 +152,7 @@ async def follow_telegram_response_handler_in_reg(message: types.Message, state:
             reply = get_message(messages, "NOT_SUB_AT_GROUP_TEXT", language)
             await message.answer(text=reply, reply_markup=social_join_kb[language])
     else:
-        reply = get_message(messages, "UKNOWN_COMMAND_TEXT", language)
+        reply = get_message(messages, "UNKNOWN_COMMAND_TEXT", language)
         await message.answer(text=reply)
         await state.set_state(RegestrationState.follow_telegram_state)
 
@@ -233,8 +234,8 @@ async def lang_choose_response_handler(message: types.Message, state: FSMContext
     elif user_response == "RU Русский":
         language = "RU"
     else:
-        await message.answer(text="That language is not on the list")
-        await message.answer(text="Please choose your language", reply_markup=language_choose_kb)
+        reply = get_message(messages, "LANGUAGE_CHOSEN_WRONG", "ENG")
+        await message.answer(text=reply, reply_markup=language_choose_kb)
         return
     await state.set_state(RegestrationState.main_menu_state)
     reply = get_message(messages, "MENU", language)
@@ -281,6 +282,7 @@ async def null_state(message: types.Message, state: FSMContext) -> None:
     print("def null_state")
     user_response = message.text
     language = get_language_for_user(message.from_user.id)
+    if language is None: language = "ENG"
     if user_response in ["start", "Start", "Начать", "начать",
                          r"\Начать", r"\начать", r"\start", r"\Start", ]:
         if check_is_user_already_here(message.from_user.id):
@@ -304,3 +306,5 @@ async def null_state(message: types.Message, state: FSMContext) -> None:
         reply = get_message(messages, "START_AGAIN_TEXT", language)
         await message.answer(text=reply, reply_markup=kb_start)
         return
+    
+
