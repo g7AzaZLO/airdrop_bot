@@ -73,7 +73,7 @@ kb_menu_settings = {
 }
 
 
-def create_numeric_keyboard(total_buttons, exclusions, language="ENG"):
+async def create_numeric_keyboard(total_buttons, exclusions, language="ENG"):
 	# Ensure valid inputs
 	if total_buttons < 1:
 		raise ValueError("Total number of buttons must be at least 1")
