@@ -6,7 +6,7 @@ class CaptchaState(StatesGroup):
     null_state = State()  # idle when the user decided to leave the bot
 
 
-class RegestrationState(StatesGroup):
+class RegistrationState(StatesGroup):
     captcha_state = State()
     lang_choose_state = State()
     hello_state = State()
@@ -19,5 +19,9 @@ class RegestrationState(StatesGroup):
     menu_settings = State()  # State for the main menu
     lang_choose_state_again = State()  # changing the language second time
     yes_no_state = State()
+    
+class TasksState(StatesGroup):
+    current_tasks_state = State()  # State for the all the tasks available
+    single_task_state = State()  # State for the all the tasks available
     
     

@@ -192,7 +192,8 @@ async def add_user_to_db(user_id: int) -> bool:
             "LANGUAGE": "ENG",
             "NUM_OF_REFS": 0,
             "REF_POINTS": 0,
-            "POINTS": 0
+            "POINTS": 0,
+            "TASKS_DONE": [],
         }
         await users_collection.insert_one(user_data)
         print(f"User {user_id} added to database with default values.")

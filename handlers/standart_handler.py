@@ -3,7 +3,7 @@ from aiogram.filters import CommandStart
 from messages.basic_messages import messages
 from logic.captcha import generate_captcha, check_captcha
 from aiogram.fsm.context import FSMContext
-from FSM.states import CaptchaState, RegestrationState
+from FSM.states import CaptchaState, RegistrationState
 from DB.database_logic import check_is_user_already_here, add_user_to_db, add_referrer_to_user
 from keyboards.menu_kb import menu_kb
 from logic.refs import get_refferer_id
@@ -53,6 +53,6 @@ async def start(message: types.Message, state: FSMContext) -> None:
         if refferer is not None:
             await add_referrer_to_user(message.from_user.id, refferer)
         await generate_captcha(message)
-        await state.set_state(RegestrationState.captcha_state)
+        await state.set_state(RegistrationState.captcha_state)
         capture_message = await get_message(messages, "CAPTCHA_MESSAGE", "ENG")
         await message.answer(text=capture_message)
