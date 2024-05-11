@@ -252,7 +252,7 @@ async def main_menu_handler(message: types.Message, state: FSMContext) -> None:
 	
 	elif user_response in ["🥇Задачи", "🥇Tasks"]:
 		# reply = await get_message(menu_messages, "INFORMATION_TEXT", language)
-		tasks_done = user.get("TASKS_DONE", 0)
+		tasks_done = user.get("TASKS_DONE", [])
 		total_buttons = TOTAL_TASKS
 		tasks_keyboard = await create_numeric_keyboard(total_buttons, tasks_done, language)  # TODO language
 		reply = "Please choose a number:"  # TODO add to the messages file
@@ -414,7 +414,7 @@ async def current_tasks_handler(message: types.Message, state: FSMContext) -> No
 	else:
 		reply = await get_message(menu_messages, "UNKNOWN_COMMAND_TEXT", language)
 		user = await get_user_details(message.from_user.id)
-		tasks_done = user.get("TASKS_DONE", 0)
+		tasks_done = user.get("TASKS_DONE", [])
 		total_buttons = TOTAL_TASKS
 		tasks_keyboard = await create_numeric_keyboard(total_buttons, tasks_done, language)  # TODO language
 		await message.answer(text=reply, reply_markup=tasks_keyboard)
@@ -428,14 +428,14 @@ async def single_task_handler(message: types.Message, state: FSMContext) -> None
 	user = await get_user_details(message.from_user.id)
 	user_response = message.text
 	if user_response in ["✅Выполнил", "✅Done"]:
-		tasks_done = user.get("TASKS_DONE", 0)
+		tasks_done = user.get("TASKS_DONE", [])
 		total_buttons = TOTAL_TASKS
 		tasks_keyboard = await create_numeric_keyboard(total_buttons, tasks_done, language)  # TODO language
 		reply = "Please choose a number:"  # TODO add to the messages file
 		await message.answer(text=reply, reply_markup=tasks_keyboard)  # TODO wrong place for keyboard
 		await state.set_state(TasksState.current_tasks_state)
 	elif user_response in ["⏪Вернуться Назад", "⏪Return Back"]:
-		tasks_done = user.get("TASKS_DONE", 0)
+		tasks_done = user.get("TASKS_DONE", [])
 		total_buttons = TOTAL_TASKS
 		tasks_keyboard = await create_numeric_keyboard(total_buttons, tasks_done, language)  # TODO language
 		reply = "We Are Back: Please choose a number:"  # TODO add to the messages file
