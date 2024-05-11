@@ -10,7 +10,7 @@ from DB.database_logic import initialize_db
 
 
 # loading the environment
-env_path = '.env'  # '..\\.env'
+env_path = '.env'  # '..\\.env.empty'
 load_dotenv(env_path)
 
 # Инициализация бота

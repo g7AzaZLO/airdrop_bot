@@ -189,7 +189,7 @@ async def add_user_to_db(user_id: int) -> bool:
             "ADDR": None,
             "REF_BY_USER": None,
             "TWITTER_USER": None,
-            "LANGUAGE": None,
+            "LANGUAGE": "ENG",
             "NUM_OF_REFS": 0,
             "REF_POINTS": 0,
             "POINTS": 0
