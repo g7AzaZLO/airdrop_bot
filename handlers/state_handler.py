@@ -5,17 +5,18 @@ from aiogram.fsm.context import FSMContext
 from handlers.standart_handler import get_message
 from messages.basic_messages import messages
 from messages.menu_messages import menu_messages
-from keyboards.small_kb import join_kb, language_choose_kb, yes_no_kb, sub_cancel_kb, social_join_kb, kb_start
+from keyboards.menu_kb import menu_kb, kb_menu_settings, create_numeric_keyboard
+from keyboards.small_kb import join_kb, language_choose_kb, yes_no_kb, sub_cancel_kb, social_join_kb, kb_start, \
+	kb_task_done_back
 from DB.database_logic import update_language_in_db, get_language_for_user, delete_user_from_db, get_user_details, \
 	update_user_details, check_wallet_exists, decrement_referrer_count
-from keyboards.menu_kb import menu_kb, kb_menu_settings, create_numeric_keyboard
 from logic.telegram import check_joined_telegram_channel
 from DB.database_logic import check_is_user_already_here, add_user_to_db, add_referrer_to_user, get_referrer, \
 	increment_referrer_count
 from logic.refs import get_refferer_id, get_refferal_link
 from logic.twitter import check_joined_twitter_channel, is_valid_twitter_link
 from logic.address import is_valid_crypto_address
-from settings.config import AIRDROP_AMOUNT, REFERRAL_REWARD
+from settings.config import AIRDROP_AMOUNT, REFERRAL_REWARD, TOTAL_TASKS
 
 state_handler_router = Router()
 
@@ -78,15 +79,15 @@ async def lang_choose_response_handler_in_reg(message: types.Message, state: FSM
 
 @state_handler_router.message(RegistrationState.hello_state)
 async def hello_response_handler_in_reg(message: types.Message, state: FSMContext) -> None:
-	print("def hello_response_handler")
+	print("def hello_response_handler_in_reg")
 	user_response = message.text
 	language = await get_language_for_user(message.from_user.id)
 	await state.update_data(user_hello_response=user_response)
-	if user_response in ["🚀 Join Airdrop", "🚀 Присоединиться к аирдропу"]:
+	if user_response in ["🚀Join Airdrop", "🚀Присоединиться к аирдропу"]:
 		await state.set_state(RegistrationState.proceed_state)
 		reply = await get_message(messages, "PROCEED_MESSAGE", language)
 		await message.answer(text=reply, reply_markup=sub_cancel_kb[language], parse_mode="MARKDOWN")
-	elif user_response in ["❌ Cancel", "❌ Отказаться"]:
+	elif user_response in ["❌Cancel", "❌Отказаться"]:
 		await state.update_data(
 			state_end1=CaptchaState.null_state,
 			state_end2=RegistrationState.hello_state,
@@ -113,11 +114,11 @@ async def proceed_response_handler_in_reg(message: types.Message, state: FSMCont
 	user_response = message.text
 	language = await get_language_for_user(message.from_user.id)
 	await state.update_data(user_proceed_response=user_response)
-	if user_response in ["✅ Согласен с правилами", "✅ Submit Details"]:
+	if user_response in ["✅Согласен с правилами", "✅Submit Details"]:
 		await state.set_state(RegistrationState.follow_telegram_state)
 		reply = await get_message(messages, "MAKE_SURE_TELEGRAM", language)
 		await message.answer(text=reply, reply_markup=social_join_kb[language])
-	elif user_response in ["❌ Cancel", "❌ Отказаться"]:
+	elif user_response in ["❌Cancel", "❌Отказаться"]:
 		await state.update_data(
 			state_end1=CaptchaState.null_state,
 			state_end2=RegistrationState.proceed_state,
@@ -142,7 +143,7 @@ async def follow_telegram_response_handler_in_reg(message: types.Message, state:
 	user_response = message.text
 	language = await get_language_for_user(message.from_user.id)
 	await state.update_data(user_follow_telegram_response=user_response)
-	if user_response in ["✅ Вступил", "✅ Joined"]:
+	if user_response in ["✅Вступил", "✅Joined"]:
 		if await check_joined_telegram_channel(message.from_user.id):
 			print("Yes, user in all telegram channel")
 			await state.set_state(RegistrationState.follow_twitter_state)
@@ -219,10 +220,10 @@ async def submit_address_response_handler_in_reg(message: types.Message, state: 
 async def main_menu_handler(message: types.Message, state: FSMContext) -> None:
 	user_response = message.text
 	user = await get_user_details(message.from_user.id)
-	print(f"def main_menu_handler, user response {user_response}, user {user}")
+	print(f"def main_menu_handler, user response {user_response}, user {message.from_user.id}")
 	language = await get_language_for_user(message.from_user.id)
 	if user_response in ["😈Профиль", "😈Profile"]:
-
+		
 		user_name = message.from_user.first_name
 		num_of_refs = user.get("NUM_OF_REFS", 0)
 		user_address = user.get("ADDR", "Not provided")
@@ -242,7 +243,7 @@ async def main_menu_handler(message: types.Message, state: FSMContext) -> None:
 		await message.answer(text=reply, reply_markup=menu_kb[language], parse_mode="MARKDOWN")
 		return
 	elif user_response in ["💰Баланс", "💰Balance"]:
-
+		
 		balance = user.get("POINTS", 0)
 		balance_by_refs = user.get("REF_POINTS", 0)
 		reply = await get_message(menu_messages, "BALANCE_TEXT", language, balance=balance,
@@ -252,12 +253,11 @@ async def main_menu_handler(message: types.Message, state: FSMContext) -> None:
 	elif user_response in ["🥇Задачи", "🥇Tasks"]:
 		# reply = await get_message(menu_messages, "INFORMATION_TEXT", language)
 		tasks_done = user.get("TASKS_DONE", 0)
-		total_buttons = 9  # TODO has to be saved somewhere
+		total_buttons = TOTAL_TASKS
 		tasks_keyboard = await create_numeric_keyboard(total_buttons, tasks_done, language)  # TODO language
 		reply = "Please choose a number:"  # TODO add to the messages file
 		await message.answer(text=reply, reply_markup=tasks_keyboard)  # TODO wrong place for keyboard
-		await state.set_state(TasksState.single_task_state)
-		return
+		await state.set_state(TasksState.current_tasks_state)
 	elif user_response in ["🔒Смартконтракт", "🔒Smartcontract"]:
 		reply = await get_message(menu_messages, "SMARTCONTRACT_TEXT", language)
 		await message.answer(text=reply, reply_markup=menu_kb[language], parse_mode="HTML")
@@ -390,4 +390,55 @@ async def null_state(message: types.Message, state: FSMContext) -> None:
 	else:
 		reply = await get_message(messages, "START_AGAIN_TEXT", language)
 		await message.answer(text=reply, reply_markup=kb_start)
+		return
+
+
+@state_handler_router.message(TasksState.current_tasks_state)
+async def current_tasks_handler(message: types.Message, state: FSMContext) -> None:
+	print(f"def current_tasks_handler, task #{message.text}")
+	# reply = await get_message(menu_messages, "INFORMATION_TEXT", language)
+	
+	language = await get_language_for_user(message.from_user.id)
+	user_response = message.text
+	if user_response not in ["⏪Вернуться Назад", "⏪Return Back"]:
+		reply = "Here is your task....... Have you done it?"
+		await message.answer(text=reply, reply_markup=kb_task_done_back[language])
+		await state.set_state(TasksState.single_task_state)
+	elif user_response in ["⏪Вернуться Назад", "⏪Return Back"]:
+		await state.set_state(RegistrationState.main_menu_state)
+		reply = await get_message(messages, "MENU", language)
+		await message.answer(text=reply, reply_markup=menu_kb[language], parse_mode="MARKDOWN")
+	else:
+		reply = await get_message(menu_messages, "UNKNOWN_COMMAND_TEXT", language)
+		user = await get_user_details(message.from_user.id)
+		tasks_done = user.get("TASKS_DONE", 0)
+		total_buttons = TOTAL_TASKS
+		tasks_keyboard = await create_numeric_keyboard(total_buttons, tasks_done, language)  # TODO language
+		await message.answer(text=reply, reply_markup=tasks_keyboard)
+		return
+
+
+@state_handler_router.message(TasksState.single_task_state)
+async def single_task_handler(message: types.Message, state: FSMContext) -> None:
+	print(f"def single_task_handler")
+	language = await get_language_for_user(message.from_user.id)
+	user = await get_user_details(message.from_user.id)
+	user_response = message.text
+	if user_response in ["✅Выполнил", "✅Done"]:
+		tasks_done = user.get("TASKS_DONE", 0)
+		total_buttons = TOTAL_TASKS
+		tasks_keyboard = await create_numeric_keyboard(total_buttons, tasks_done, language)  # TODO language
+		reply = "Please choose a number:"  # TODO add to the messages file
+		await message.answer(text=reply, reply_markup=tasks_keyboard)  # TODO wrong place for keyboard
+		await state.set_state(TasksState.current_tasks_state)
+	elif user_response in ["⏪Вернуться Назад", "⏪Return Back"]:
+		tasks_done = user.get("TASKS_DONE", 0)
+		total_buttons = TOTAL_TASKS
+		tasks_keyboard = await create_numeric_keyboard(total_buttons, tasks_done, language)  # TODO language
+		reply = "We Are Back: Please choose a number:"  # TODO add to the messages file
+		await message.answer(text=reply, reply_markup=tasks_keyboard)  # TODO wrong place for keyboard
+		await state.set_state(TasksState.current_tasks_state)
+	else:
+		reply = await get_message(menu_messages, "UNKNOWN_COMMAND_TEXT", language)
+		await message.answer(text=reply, reply_markup=kb_task_done_back[language])
 		return
