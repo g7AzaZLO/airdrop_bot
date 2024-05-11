@@ -400,7 +400,10 @@ async def current_tasks_handler(message: types.Message, state: FSMContext) -> No
 	
 	language = await get_language_for_user(message.from_user.id)
 	user_response = message.text
-	if user_response not in ["⏪Вернуться Назад", "⏪Return Back"]:
+	if user_response not in ["⏪Вернуться Назад", "⏪Return Back"]: # TODO
+		# HERE WE NEED TO MAKE SURE THAT THE REPLY IS IN THE LIST OF TASKS
+		# здесь нужно проверить, что ответ пользователя есть в списке заданий,
+		# пока ее устроит любой ответ
 		reply = "Here is your task....... Have you done it?"
 		await message.answer(text=reply, reply_markup=kb_task_done_back[language])
 		await state.set_state(TasksState.single_task_state)
