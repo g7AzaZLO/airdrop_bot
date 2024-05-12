@@ -9,21 +9,21 @@ tasks = {
         "protection": None
     },
     "task2": {
-        "image": "task2.png",
+        "image": "",
         "description": "Сделайте репост нашего поста в Twitter",
         "points": 100,
         "type": "twitter_retweet",
         "protection": "bot_check"
     },
     "task3": {
-        "image": "task3.png",
+        "image": "",
         "description": "Оставьте комментарий в Twitter",
         "points": 150,
         "type": "twitter_comment",
         "protection": "screen_check"
     },
     "task4": {
-        "image": "task4.png",
+        "image": "",
         "description": "Оставьте комментарий в Telegram",
         "points": 200,
         "type": "telegram_comment",
