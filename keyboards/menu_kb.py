@@ -74,30 +74,43 @@ kb_menu_settings = {
 
 
 async def create_numeric_keyboard(total_buttons, exclusions, language):
-    # Ensure valid inputs
-    if total_buttons < 1:
-        raise ValueError("Total number of buttons must be at least 1")
-    
-    if any(x > total_buttons or x < 1 for x in exclusions):
-        raise ValueError("Exclusions contain invalid button numbers")
-    
-    if len(exclusions) >= total_buttons:
-        raise ValueError("Number of exclusions must be less than the total number of buttons")
-
-    # Generate list of all button numbers and then remove the exclusions
-    button_numbers = set(range(1, total_buttons + 1)) - set(exclusions)
-
-    # Determine the button prefix based on language
-    prefix = "Задание #" if language == "RU" else "Task #"
-
-    # Create buttons with language-specific labels
-    keyboard_buttons = [KeyboardButton(text=f"{prefix}{num}") for num in sorted(button_numbers)]
-
-    # Add the "Return Back" button in the appropriate language
-    return_back_text = "⏪Вернуться Назад" if language == "RU" else "⏪Return Back"
-    keyboard_buttons.append(KeyboardButton(text=return_back_text))
-
-    # Organize buttons in rows of three
-    keyboard = [keyboard_buttons[i:i + 3] for i in range(0, len(keyboard_buttons), 3)]
-    
-    return ReplyKeyboardMarkup(keyboard=keyboard, resize_keyboard=True)
+	# Ensure valid inputs
+	if total_buttons < 1:
+		raise ValueError("Total number of buttons must be at least 1")
+	
+	if any(x > total_buttons or x < 1 for x in exclusions):
+		raise ValueError("Exclusions contain invalid button numbers")
+	
+	if len(exclusions) >= total_buttons:
+		raise ValueError("Number of exclusions must be less than the total number of buttons")
+	
+	# Generate list of all button numbers and then remove the exclusions
+	button_numbers = set(range(1, total_buttons + 1)) - set(exclusions)
+	
+	# Determine the button prefix based on language
+	prefix = "Задание #" if language == "RU" else "Task #"
+	
+	# Create buttons with language-specific labels
+	keyboard_buttons = [KeyboardButton(text=f"{prefix}{num}") for num in sorted(button_numbers)]
+	
+	# Prepare special buttons
+	return_back_text = "⏪Вернуться Назад" if language == "RU" else "⏪Return Back"
+	achievements_text = "🏆Достижения" if language == "RU" else "🏆Achievements"
+	special_buttons = [KeyboardButton(text=return_back_text), KeyboardButton(text=achievements_text)]
+	
+	# Organize buttons in rows of three until the last row
+	keyboard = [keyboard_buttons[i:i + 3] for i in range(0, len(keyboard_buttons) - (len(keyboard_buttons) % 3), 3)]
+	
+	# Add the last row of buttons (if any)
+	last_buttons_row = keyboard_buttons[len(keyboard_buttons) - (len(keyboard_buttons) % 3):]
+	if len(last_buttons_row) < 3:
+		# If there is space in the last row, add to it
+		last_buttons_row.extend(special_buttons[:3 - len(last_buttons_row)])
+		keyboard.append(last_buttons_row)
+		special_buttons = special_buttons[3 - len(last_buttons_row):]
+	
+	# Ensure special buttons are on a new row if no space is available
+	if special_buttons:
+		keyboard.append(special_buttons)
+	
+	return ReplyKeyboardMarkup(keyboard=keyboard, resize_keyboard=True)

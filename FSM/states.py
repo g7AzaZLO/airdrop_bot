@@ -23,5 +23,6 @@ class RegistrationState(StatesGroup):
 class TasksState(StatesGroup):
     current_tasks_state = State()  # State for the all the tasks available
     single_task_state = State()  # State for the all the tasks available
+    achievements_state = State()  # State for the all the tasks available
     
     

@@ -103,3 +103,18 @@ kb_task_done_back = {
         resize_keyboard=True
     )
 }
+
+kb_tasks_back = {
+    "RU": ReplyKeyboardMarkup(
+        keyboard=[
+            [KeyboardButton(text="⏪Вернуться Назад")]
+        ],
+        resize_keyboard=True
+    ),
+    "ENG": ReplyKeyboardMarkup(
+        keyboard=[
+            [KeyboardButton(text="⏪Return Back")]
+        ],
+        resize_keyboard=True
+    )
+}
