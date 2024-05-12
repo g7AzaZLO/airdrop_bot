@@ -18,7 +18,7 @@ from logic.refs import get_refferer_id, get_refferal_link
 from logic.twitter import check_joined_twitter_channel, is_valid_twitter_link
 from logic.address import is_valid_crypto_address
 from logic.task import get_all_points, get_num_of_tasks
-from settings.config import AIRDROP_AMOUNT, REFERRAL_REWARD
+from settings.config import AIRDROP_AMOUNT
 
 state_handler_router = Router()
 
