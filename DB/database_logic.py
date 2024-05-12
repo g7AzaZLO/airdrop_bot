@@ -281,6 +281,7 @@ async def increment_referrer_count(referrer_id: int) -> None:
     except Exception as e:
         print(f"Error incrementing referral count or points for user {referrer_id}: {e}")
 
+
 async def decrement_referrer_count(referrer_id: int) -> None:
     """
     Уменьшает количество рефералов и количество очков за рефералов у пользователя-реферера в MongoDB.
@@ -348,4 +349,32 @@ async def check_wallet_exists(wallet_address: str) -> bool:
         return result is None
     except Exception as e:
         print(f"Error checking wallet address in MongoDB: {e}")
+        return False
+
+
+async def mark_task_as_done(user_id: int, task_index: int) -> bool:
+    """
+    Добавляет индекс выполненного задания в список выполненных заданий пользователя в MongoDB.
+
+    Параметры:
+    - user_id (int): Уникальный идентификатор пользователя.
+    - task_index (int): Индекс выполненного задания.
+
+    Возвращает:
+    - True, если обновление прошло успешно.
+    - False, если в процессе обновления произошла ошибка.
+    """
+    try:
+        result = await users_collection.update_one(
+            {"USER_ID": user_id},
+            {"$addToSet": {"TASKS_DONE": task_index}}
+        )
+        if result.modified_count > 0:
+            print(f"Task {task_index} marked as done for user {user_id}.")
+            return True
+        else:
+            print(f"Task {task_index} was already marked as done or user {user_id} not found.")
+            return False
+    except Exception as e:
+        print(f"Error marking task {task_index} as done for user {user_id}: {e}")
         return False

@@ -5,6 +5,7 @@ from settings.config import bot
 from handlers.standart_handler import standard_handler_router
 from handlers.state_handler import state_handler_router
 from handlers.game_commands import setup_game_routes
+from logic.task import task_router
 from dotenv import load_dotenv
 from DB.database_logic import initialize_db
 
@@ -18,6 +19,7 @@ dp = Dispatcher()
 
 dp.include_router(standard_handler_router)
 dp.include_router(state_handler_router)
+dp.include_router(task_router)
 setup_game_routes(dp)
 
 

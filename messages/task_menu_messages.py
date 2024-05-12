@@ -23,6 +23,10 @@ Please choose a number:
         "ENG": "(Rewrite) We Are Back: Please choose a number:",
         "RU": "(Переписать) Мы вернулись, пожалуйста выберите номер:"
     },
+    "TASK_SEND_TO_CHECK_TEXT": {
+        "ENG": "You've submitted the assignment for review ",
+        "RU": "Вы отправили задание на проверку"
+    }
 }
 # tasks_done_points=tasks_done_points,
 # 		                          tasks_total_points=tasks_total_points
