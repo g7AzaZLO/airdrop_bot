@@ -17,7 +17,8 @@ from DB.database_logic import check_is_user_already_here, add_user_to_db, add_re
 from logic.refs import get_refferer_id, get_refferal_link
 from logic.twitter import check_joined_twitter_channel, is_valid_twitter_link
 from logic.address import is_valid_crypto_address
-from settings.config import AIRDROP_AMOUNT, REFERRAL_REWARD, TOTAL_TASKS
+from logic.task import get_all_points, get_num_of_tasks
+from settings.config import AIRDROP_AMOUNT, REFERRAL_REWARD
 
 state_handler_router = Router()
 
@@ -254,9 +255,9 @@ async def main_menu_handler(message: types.Message, state: FSMContext) -> None:
     elif user_response in ["🥇Задачи", "🥇Tasks"]:
         # reply = await get_message(menu_messages, "INFORMATION_TEXT", language)
         tasks_done = user.get("TASKS_DONE", [])
-        total_buttons = TOTAL_TASKS
+        total_buttons = await get_num_of_tasks()
         tasks_done_points = "NO CODE FOR POINTS FOR TASKS"  # TODO
-        tasks_total_points = "NO CODE FOR POINTS FOR ALL TASKS"  # TODO
+        tasks_total_points = await get_all_points()
         tasks_keyboard = await create_numeric_keyboard(total_buttons, tasks_done, language)
         reply = await get_message(task_menu_messages, "CHOOSE_NUMBER_TASK_TEXT", language,
                                   tasks_done_points=tasks_done_points,
@@ -414,7 +415,7 @@ async def current_tasks_handler(message: types.Message, state: FSMContext) -> No
         await state.set_state(TasksState.single_task_state)
     elif user_response in ["⏪Вернуться Назад", "⏪Return Back"]:
         await state.set_state(RegistrationState.main_menu_state)
-        reply = await get_message(messages, "MENU", language)
+        reply = await get_message(menu_messages, "MENU", language)
         await message.answer(text=reply, reply_markup=menu_kb[language], parse_mode="MARKDOWN")
     elif user_response in ["🏆Достижения", "🏆Achievements"]:
         await state.set_state(TasksState.achievements_state)
@@ -426,7 +427,7 @@ async def current_tasks_handler(message: types.Message, state: FSMContext) -> No
         reply = await get_message(menu_messages, "UNKNOWN_COMMAND_TEXT", language)
         user = await get_user_details(message.from_user.id)
         tasks_done = user.get("TASKS_DONE", [])
-        total_buttons = TOTAL_TASKS
+        total_buttons = await get_num_of_tasks()
         tasks_keyboard = await create_numeric_keyboard(total_buttons, tasks_done, language)
         await message.answer(text=reply, reply_markup=tasks_keyboard)
         return
@@ -440,14 +441,14 @@ async def single_task_handler(message: types.Message, state: FSMContext) -> None
     user_response = message.text
     if user_response in ["✅Выполнил", "✅Done"]:
         tasks_done = user.get("TASKS_DONE", [])
-        total_buttons = TOTAL_TASKS
+        total_buttons = await get_num_of_tasks()
         tasks_keyboard = await create_numeric_keyboard(total_buttons, tasks_done, language)
         reply = await get_message(task_menu_messages, "CHOOSE_NUMBER_TASK_TEXT", language)
         await message.answer(text=reply, reply_markup=tasks_keyboard)
         await state.set_state(TasksState.current_tasks_state)
     elif user_response in ["⏪Вернуться Назад", "⏪Return Back"]:
         tasks_done = user.get("TASKS_DONE", [])
-        total_buttons = TOTAL_TASKS
+        total_buttons = await get_num_of_tasks()
         tasks_keyboard = await create_numeric_keyboard(total_buttons, tasks_done, language)
         reply = await get_message(task_menu_messages, "WE_ARE_BACK_CHOOSE_TEXT", language)
         await message.answer(text=reply, reply_markup=tasks_keyboard)
@@ -466,7 +467,7 @@ async def achievements_handler(message: types.Message, state: FSMContext) -> Non
     user = await get_user_details(message.from_user.id)
     if user_response in ["⏪Вернуться Назад", "⏪Return Back"]:
         tasks_done = user.get("TASKS_DONE", [])
-        total_buttons = TOTAL_TASKS
+        total_buttons = await get_num_of_tasks()
         tasks_keyboard = await create_numeric_keyboard(total_buttons, tasks_done, language)
         reply = await get_message(task_menu_messages, "WE_ARE_BACK_CHOOSE_TEXT", language)
         await message.answer(text=reply, reply_markup=tasks_keyboard)
