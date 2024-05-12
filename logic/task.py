@@ -25,15 +25,19 @@ async def get_num_of_tasks() -> int:
     return len(tasks)
 
 
-async def get_index_of_num(user_response: str, language: str) -> int | None:
-    print("def get_index_of_num")
-    if language == "RU":
-        index = user_response[9:]
-    elif language == "ENG":
-        index = user_response[6:]
-    else:
+async def get_index_by_text_task(user_response: str, language: str) -> int | None:
+    try:
+        print("def get_index_of_num")
+        if language == "RU":
+            index = user_response[9:]
+        elif language == "ENG":
+            index = user_response[6:]
+        else:
+            return None
+        print("get_index_by_text_task ==== "+index)
+        return int(index)
+    except Exception as e:
         return None
-    return int(index)
 
 
 async def return_task_info(message: types.Message, task: str) -> None:
