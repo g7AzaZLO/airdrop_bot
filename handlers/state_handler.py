@@ -13,11 +13,12 @@ from DB.database_logic import update_language_in_db, get_language_for_user, dele
     update_user_details, check_wallet_exists, decrement_referrer_count, mark_task_as_done
 from logic.telegram import check_joined_telegram_channel
 from DB.database_logic import check_is_user_already_here, add_user_to_db, add_referrer_to_user, get_referrer, \
-    increment_referrer_count
+    increment_referrer_count, add_points_to_user
 from logic.refs import get_refferer_id, get_refferal_link
 from logic.twitter import check_joined_twitter_channel, is_valid_twitter_link
 from logic.address import is_valid_crypto_address
-from logic.task import get_all_points, get_num_of_tasks, get_index_by_text_task, get_protection_from_task
+from logic.task import get_all_points, get_num_of_tasks, get_index_by_text_task, get_protection_from_task, \
+    calculate_total_points, get_points_from_task, send_task_info
 from tasks.task_dict import protection_fot_admins
 from settings.config import AIRDROP_AMOUNT
 
@@ -257,11 +258,11 @@ async def main_menu_handler(message: types.Message, state: FSMContext) -> None:
         # reply = await get_message(menu_messages, "INFORMATION_TEXT", language)
         tasks_done = user.get("TASKS_DONE", [])
         total_buttons = await get_num_of_tasks()
-        tasks_done_points = "NO CODE FOR POINTS FOR TASKS"  # TODO
+        task_done_points = await calculate_total_points(tasks_done)
         tasks_total_points = await get_all_points()
         tasks_keyboard = await create_numeric_keyboard(total_buttons, tasks_done, language)
         reply = await get_message(task_menu_messages, "CHOOSE_NUMBER_TASK_TEXT", language,
-                                  tasks_done_points=tasks_done_points,
+                                  tasks_done_points=task_done_points,
                                   tasks_total_points=tasks_total_points)
         await message.answer(text=reply, reply_markup=tasks_keyboard)
         await state.set_state(TasksState.current_tasks_state)
@@ -415,6 +416,7 @@ async def current_tasks_handler(message: types.Message, state: FSMContext) -> No
         reply = await get_message(task_menu_messages, "TASK_DONE_BACK_TEXT", language)
         await message.answer(text=reply, reply_markup=kb_task_done_back[language])
         await state.update_data(num_of_task=user_response)
+        await send_task_info(message, index_task)
         await state.set_state(TasksState.single_task_state)
     elif user_response in ["⏪Вернуться Назад", "⏪Return Back"]:
         await state.set_state(RegistrationState.main_menu_state)
@@ -424,7 +426,9 @@ async def current_tasks_handler(message: types.Message, state: FSMContext) -> No
         await state.set_state(TasksState.achievements_state)
         user = await get_user_details(message.from_user.id)
         tasks_done = user.get("TASKS_DONE", [])
-        reply = await get_message(task_menu_messages, "ACHIEVEMENTS", language, tasks_done=tasks_done)
+        points_done = await calculate_total_points(tasks_done)
+        reply = await get_message(task_menu_messages, "ACHIEVEMENTS", language, tasks_done=tasks_done,
+                                  points_done=points_done)
         await message.answer(text=reply, reply_markup=kb_tasks_back[language], parse_mode="MARKDOWN")
     else:
         reply = await get_message(menu_messages, "UNKNOWN_COMMAND_TEXT", language)
@@ -447,16 +451,19 @@ async def single_task_handler(message: types.Message, state: FSMContext) -> None
     print(index_task)
     if user_response in ["✅Выполнил", "✅Done"]:
         if await get_protection_from_task(index_task) not in protection_fot_admins:
+            points = await get_points_from_task(index_task)
+            await add_points_to_user(message.from_user.id, points)
+
             task_marked = await mark_task_as_done(message.from_user.id, index_task)
             tasks_done = user.get("TASKS_DONE", [])
             if task_marked:
                 tasks_done.append(index_task)
-            task_done_points = "NOT READY" #TODO
+            task_done_points = await calculate_total_points(tasks_done)
             total_buttons = await get_num_of_tasks()
             tasks_keyboard = await create_numeric_keyboard(total_buttons, tasks_done, language)
             tasks_total_points = await get_all_points()
             reply = await get_message(task_menu_messages, "CHOOSE_NUMBER_TASK_TEXT", language,
-                                      tasks_done_points="NOT READY", tasks_total_points=tasks_total_points)
+                                      tasks_done_points=task_done_points, tasks_total_points=tasks_total_points)
             await message.answer(text=reply, reply_markup=tasks_keyboard)
             await state.set_state(TasksState.current_tasks_state)
         else:
