@@ -73,7 +73,18 @@ kb_menu_settings = {
 }
 
 
-async def create_numeric_keyboard(total_buttons, exclusions, language):
+async def create_numeric_keyboard(total_buttons: int, exclusions: list, language: str) -> ReplyKeyboardMarkup:
+	"""
+	Создает клавиатуру с числовыми кнопками и специальными кнопками управления на основе заданных параметров.
+
+	Параметры:
+	- total_buttons (int): Общее количество кнопок.
+	- exclusions (list): Список номеров кнопок, которые должны быть исключены.
+	- language (str): Язык для текстов кнопок ("RU" для русского, "EN" для английского).
+
+	Возвращает:
+	- ReplyKeyboardMarkup: Объект клавиатуры с созданными кнопками.
+	"""
 	# Ensure valid inputs
 	if total_buttons < 1:
 		raise ValueError("Total number of buttons must be at least 1")
