@@ -255,8 +255,8 @@ async def main_menu_handler(message: types.Message, state: FSMContext) -> None:
 		# reply = await get_message(menu_messages, "INFORMATION_TEXT", language)
 		tasks_done = user.get("TASKS_DONE", [])
 		total_buttons = TOTAL_TASKS
-		tasks_done_points = "NO CODE FOR POINTS FOR TASKS"
-		tasks_total_points = "NO CODE FOR POINTS FOR ALL TASKS"
+		tasks_done_points = "NO CODE FOR POINTS FOR TASKS"  # TODO
+		tasks_total_points = "NO CODE FOR POINTS FOR ALL TASKS"  # TODO
 		tasks_keyboard = await create_numeric_keyboard(total_buttons, tasks_done, language)
 		reply = await get_message(task_menu_messages, "CHOOSE_NUMBER_TASK_TEXT", language,
 		                          tasks_done_points=tasks_done_points,
