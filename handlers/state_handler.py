@@ -10,14 +10,15 @@ from keyboards.menu_kb import menu_kb, kb_menu_settings, create_numeric_keyboard
 from keyboards.small_kb import join_kb, language_choose_kb, yes_no_kb, sub_cancel_kb, social_join_kb, kb_start, \
     kb_task_done_back, kb_tasks_back
 from DB.database_logic import update_language_in_db, get_language_for_user, delete_user_from_db, get_user_details, \
-    update_user_details, check_wallet_exists, decrement_referrer_count
+    update_user_details, check_wallet_exists, decrement_referrer_count, mark_task_as_done
 from logic.telegram import check_joined_telegram_channel
 from DB.database_logic import check_is_user_already_here, add_user_to_db, add_referrer_to_user, get_referrer, \
     increment_referrer_count
 from logic.refs import get_refferer_id, get_refferal_link
 from logic.twitter import check_joined_twitter_channel, is_valid_twitter_link
 from logic.address import is_valid_crypto_address
-from logic.task import get_all_points, get_num_of_tasks
+from logic.task import get_all_points, get_num_of_tasks, get_index_of_num, get_protection_from_task
+from tasks.task_dict import protection_fot_admins
 from settings.config import AIRDROP_AMOUNT
 
 state_handler_router = Router()
@@ -412,6 +413,7 @@ async def current_tasks_handler(message: types.Message, state: FSMContext) -> No
         # пока ее устроит любой ответ
         reply = await get_message(task_menu_messages, "TASK_DONE_BACK_TEXT", language)
         await message.answer(text=reply, reply_markup=kb_task_done_back[language])
+        await state.update_data(num_of_task=user_response)
         await state.set_state(TasksState.single_task_state)
     elif user_response in ["⏪Вернуться Назад", "⏪Return Back"]:
         await state.set_state(RegistrationState.main_menu_state)
@@ -433,19 +435,34 @@ async def current_tasks_handler(message: types.Message, state: FSMContext) -> No
         return
 
 
+# TODO клавиатура почему то сразу не обновляется(не убирается кнопка свыполненой задачей). Чтобы обновилось надо сначала
+#  выйти в главное меню и вернутся в таск, тогда кнопка пропадет
 @state_handler_router.message(TasksState.single_task_state)
 async def single_task_handler(message: types.Message, state: FSMContext) -> None:
     print(f"def single_task_handler")
     language = await get_language_for_user(message.from_user.id)
     user = await get_user_details(message.from_user.id)
     user_response = message.text
+    task_text = await state.get_data()
+    index_task = await get_index_of_num(task_text["num_of_task"], language)
+    print(index_task)
     if user_response in ["✅Выполнил", "✅Done"]:
-        tasks_done = user.get("TASKS_DONE", [])
-        total_buttons = await get_num_of_tasks()
-        tasks_keyboard = await create_numeric_keyboard(total_buttons, tasks_done, language)
-        reply = await get_message(task_menu_messages, "CHOOSE_NUMBER_TASK_TEXT", language)
-        await message.answer(text=reply, reply_markup=tasks_keyboard)
-        await state.set_state(TasksState.current_tasks_state)
+        if await get_protection_from_task(index_task) not in protection_fot_admins:
+            await mark_task_as_done(message.from_user.id, index_task)
+            tasks_done = user.get("TASKS_DONE", []) #TODO: почему то присылает пустой, хотя туда в прошлой строчке заносится индекс
+            total_buttons = await get_num_of_tasks()
+            tasks_keyboard = await create_numeric_keyboard(total_buttons, tasks_done, language)
+            tasks_total_points = await get_all_points()
+            reply = await get_message(task_menu_messages, "CHOOSE_NUMBER_TASK_TEXT", language,
+                                      tasks_done_points="NOT READY", tasks_total_points=tasks_total_points)
+            await message.answer(text=reply, reply_markup=tasks_keyboard)
+            await state.set_state(TasksState.current_tasks_state)
+        else:
+            reply = await get_message(task_menu_messages,"TASK_SEND_TO_CHECK_TEXT", language)
+            await message.answer(text=reply)
+            await state.set_state(TasksState.current_tasks_state)
+            # TODO: отправка админам на проверку
+            pass
     elif user_response in ["⏪Вернуться Назад", "⏪Return Back"]:
         tasks_done = user.get("TASKS_DONE", [])
         total_buttons = await get_num_of_tasks()
