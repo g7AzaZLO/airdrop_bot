@@ -24,5 +24,7 @@ class TasksState(StatesGroup):
     current_tasks_state = State()  # State for the all the tasks available
     single_task_state = State()  # State for the all the tasks available
     achievements_state = State()  # State for the all the tasks available
+    screen_check_state = State()  # Новое состояние для отправки фото на проверку
+    waiting_for_approval = State()  # Новое состояние ожидания проверки
     
     

@@ -1,4 +1,6 @@
-from aiogram import types, Router
+from aiogram import types, Router, F
+from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
+
 from FSM.states import CaptchaState, RegistrationState, TasksState
 from logic.captcha import generate_captcha, check_captcha
 from aiogram.fsm.context import FSMContext
@@ -20,7 +22,8 @@ from logic.address import is_valid_crypto_address
 from logic.task import get_all_points, get_num_of_tasks, get_index_by_text_task, get_protection_from_task, \
     calculate_total_points, get_points_from_task, send_task_info
 from tasks.task_dict import protection_fot_admins
-from settings.config import AIRDROP_AMOUNT
+from settings.config import AIRDROP_AMOUNT, ADMINS_IDS
+from aiogram.fsm.storage.memory import MemoryStorage
 
 state_handler_router = Router()
 
@@ -418,8 +421,8 @@ async def current_tasks_handler(message: types.Message, state: FSMContext) -> No
         tasks_total_points = await get_all_points()
         tasks_keyboard = await create_numeric_keyboard(total_buttons, tasks_done, language)
         reply2 = await get_message(task_menu_messages, "CHOOSE_NUMBER_TASK_TEXT", language,
-                                  tasks_done_points=task_done_points,
-                                  tasks_total_points=tasks_total_points)
+                                   tasks_done_points=task_done_points,
+                                   tasks_total_points=tasks_total_points)
         await message.answer(text=reply1 + reply2, reply_markup=tasks_keyboard)
         await state.set_state(TasksState.current_tasks_state)
         return
@@ -463,7 +466,6 @@ async def single_task_handler(message: types.Message, state: FSMContext) -> None
         if await get_protection_from_task(index_task) not in protection_fot_admins:
             points = await get_points_from_task(index_task)
             await add_points_to_user(message.from_user.id, points)
-
             task_marked = await mark_task_as_done(message.from_user.id, index_task)
             tasks_done = user.get("TASKS_DONE", [])
             if task_marked:
@@ -477,14 +479,8 @@ async def single_task_handler(message: types.Message, state: FSMContext) -> None
             await message.answer(text=reply, reply_markup=tasks_keyboard)
             await state.set_state(TasksState.current_tasks_state)
         else:
-            reply = await get_message(task_menu_messages, "TASK_SEND_TO_CHECK_TEXT", language)
-            total_buttons = await get_num_of_tasks()
-            tasks_done = user.get("TASKS_DONE", [])
-            tasks_keyboard = await create_numeric_keyboard(total_buttons, tasks_done, language)
-            await message.answer(text=reply, reply_markup=tasks_keyboard)
-            await state.set_state(TasksState.current_tasks_state)
-            # TODO: отправка админам на проверку
-            pass
+            await message.answer(text="Пришлите скриншот для проверки")
+            await state.set_state(TasksState.screen_check_state)  # Устанавливаем новое состояние для отправки фото
     elif user_response in ["⏪Вернуться Назад", "⏪Return Back"]:
         tasks_done = user.get("TASKS_DONE", [])
         total_buttons = await get_num_of_tasks()
@@ -515,3 +511,72 @@ async def achievements_handler(message: types.Message, state: FSMContext) -> Non
         reply = await get_message(menu_messages, "UNKNOWN_COMMAND_TEXT", language)
         await message.answer(text=reply, reply_markup=kb_task_done_back[language])
         return
+
+
+@state_handler_router.message(TasksState.screen_check_state, F.photo)
+async def handle_screen_check(message: types.Message, state: FSMContext) -> None:
+    screenshot = message.photo[-1] if message.photo else None
+    user_id = message.from_user.id
+    task_text = await state.get_data()
+    index_task = await get_index_by_text_task(task_text["num_of_task"], await get_language_for_user(user_id))
+    points = await get_points_from_task(index_task)
+    user = await get_user_details(message.from_user.id)
+    language = await get_language_for_user(user_id)
+    if screenshot:
+        inline_kb = InlineKeyboardMarkup(inline_keyboard=[
+            [InlineKeyboardButton(text="✅ Да", callback_data=f"approve_{user_id}_{index_task}_{points}")],
+            [InlineKeyboardButton(text="❌ Нет", callback_data=f"reject_{user_id}_{index_task}")]
+        ])
+        for admin_id in ADMINS_IDS:
+            if not admin_id:
+                print(f"Пропущен пустой ID администратора: {admin_id}")
+                continue
+            try:
+                admin_id_int = int(admin_id)
+                await message.bot.send_photo(chat_id=admin_id_int, photo=screenshot.file_id,
+                                             caption=f"Пользователь {user_id} отправил скриншот для задания {index_task}. Начислить {points} очков?",
+                                             reply_markup=inline_kb)
+            except ValueError:
+                print(f"Некорректный ID администратора: {admin_id}")
+            except Exception as e:
+                print(f"Не удалось отправить сообщение администратору с ID {admin_id}: {e}")
+        tasks_done = user.get("TASKS_DONE", [])
+        total_buttons = await get_num_of_tasks()
+        tasks_keyboard = await create_numeric_keyboard(total_buttons, tasks_done, language)
+        reply = await get_message(task_menu_messages, "WE_ARE_BACK_CHOOSE_TEXT", language)
+        await message.answer(text=reply, reply_markup=tasks_keyboard)
+        await message.answer("Ваш скриншот отправлен на проверку.", reply_markup=tasks_keyboard)
+        await state.set_state(TasksState.current_tasks_state)
+    else:
+        await message.answer("Пожалуйста, отправьте скриншот.")
+
+
+@state_handler_router.callback_query(lambda callback_query: callback_query.data.startswith("approve_"))
+async def approve_task(callback_query: types.CallbackQuery, state: FSMContext):
+    if callback_query.from_user.id not in ADMINS_IDS:
+        await callback_query.answer("У вас нет прав для выполнения этого действия.", show_alert=True)
+        return
+
+    data = callback_query.data.split("_")
+    user_id = int(data[1])
+    index_task = int(data[2])
+    points = int(data[3])
+
+    await add_points_to_user(user_id, points)
+    await mark_task_as_done(user_id, index_task)
+    await callback_query.message.bot.send_message(chat_id=user_id, text="Ваше задание выполнено, очки начислены.")
+    await callback_query.answer("Задание подтверждено.", show_alert=True)
+
+
+@state_handler_router.callback_query(lambda callback_query: callback_query.data.startswith("reject_"))
+async def reject_task(callback_query: types.CallbackQuery, state: FSMContext):
+    if callback_query.from_user.id not in ADMINS_IDS:
+        await callback_query.answer("У вас нет прав для выполнения этого действия.", show_alert=True)
+        return
+
+    data = callback_query.data.split("_")
+    user_id = int(data[1])
+    index_task = int(data[2])
+
+    await callback_query.message.bot.send_message(chat_id=user_id, text="Ваше задание не выполнено, попробуйте снова.")
+    await callback_query.answer("Задание отклонено.", show_alert=True)
