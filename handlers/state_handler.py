@@ -401,7 +401,6 @@ async def null_state(message: types.Message, state: FSMContext) -> None:
         return
 
 
-# TODO: сделать проверку чтобы нельзя было дважды открывать задание. Сейчас после удаления кнопки с клавиатуры, если прописать задание руками, то открывается это задание
 @state_handler_router.message(TasksState.current_tasks_state)
 async def current_tasks_handler(message: types.Message, state: FSMContext) -> None:
     print(f"def current_tasks_handler, task #{message.text}")
@@ -412,7 +411,7 @@ async def current_tasks_handler(message: types.Message, state: FSMContext) -> No
     print("index task == " + str(index_task))
     user = await get_user_details(message.from_user.id)
     tasks_done = user.get("TASKS_DONE", [])
-    if index_task-1 in tasks_done:
+    if index_task is not None and index_task in tasks_done:
         reply1 = await get_message(task_menu_messages, "TASK_DONE_ALREADY", language)
         total_buttons = await get_num_of_tasks()
         task_done_points = await calculate_total_points(tasks_done)
@@ -423,7 +422,8 @@ async def current_tasks_handler(message: types.Message, state: FSMContext) -> No
                                   tasks_total_points=tasks_total_points)
         await message.answer(text=reply1 + reply2, reply_markup=tasks_keyboard)
         await state.set_state(TasksState.current_tasks_state)
-    if index_task-1 in range(await get_num_of_tasks()):
+        return
+    elif index_task is not None and index_task in range(await get_num_of_tasks()):
         reply = await get_message(task_menu_messages, "TASK_DONE_BACK_TEXT", language)
         await message.answer(text=reply, reply_markup=kb_task_done_back[language])
         await state.update_data(num_of_task=user_response)
@@ -459,7 +459,6 @@ async def single_task_handler(message: types.Message, state: FSMContext) -> None
     user_response = message.text
     task_text = await state.get_data()
     index_task = await get_index_by_text_task(task_text["num_of_task"], language)
-    print(index_task)
     if user_response in ["✅Выполнил", "✅Done"]:
         if await get_protection_from_task(index_task) not in protection_fot_admins:
             points = await get_points_from_task(index_task)
