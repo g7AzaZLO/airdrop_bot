@@ -378,3 +378,31 @@ async def mark_task_as_done(user_id: int, task_index: int) -> bool:
     except Exception as e:
         print(f"Error marking task {task_index} as done for user {user_id}: {e}")
         return False
+
+
+async def add_points_to_user(user_id: int, points: int) -> bool:
+    """
+    Добавляет указанное количество очков к POINTS пользователя в базе данных.
+
+    Параметры:
+    - user_id (int): Уникальный идентификатор пользователя.
+    - points (int): Количество очков для добавления.
+
+    Возвращает:
+    - True, если обновление прошло успешно.
+    - False, если в процессе обновления произошла ошибка.
+    """
+    try:
+        result = await users_collection.update_one(
+            {"USER_ID": user_id},
+            {"$inc": {"POINTS": points}}
+        )
+        if result.modified_count > 0:
+            print(f"Added {points} points to user {user_id}.")
+            return True
+        else:
+            print(f"User {user_id} not found or no points added.")
+            return False
+    except Exception as e:
+        print(f"Error adding points to user {user_id}: {e}")
+        return False
