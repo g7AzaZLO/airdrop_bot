@@ -1,5 +1,6 @@
 from aiogram import types, Router
-from FSM.states import CaptchaState, RegistrationState, TasksState
+from FSM.states import CaptchaState, RegistrationState, TasksState, state_messages, state_keyboards,\
+    get_clean_state_identifier, state_menus
 from logic.captcha import generate_captcha, check_captcha
 from aiogram.fsm.context import FSMContext
 from handlers.standart_handler import get_message
@@ -10,7 +11,8 @@ from keyboards.menu_kb import menu_kb, kb_menu_settings, create_numeric_keyboard
 from keyboards.small_kb import join_kb, language_choose_kb, yes_no_kb, sub_cancel_kb, social_join_kb, kb_start, \
     kb_task_done_back, kb_tasks_back
 from DB.database_logic import update_language_in_db, get_language_for_user, delete_user_from_db, get_user_details, \
-    update_user_details, check_wallet_exists, decrement_referrer_count, mark_task_as_done
+    update_user_details, check_wallet_exists, decrement_referrer_count, mark_task_as_done, get_state_for_user,\
+    set_user_state
 from logic.telegram import check_joined_telegram_channel
 from DB.database_logic import check_is_user_already_here, add_user_to_db, add_referrer_to_user, get_referrer, \
     increment_referrer_count, add_points_to_user
@@ -33,15 +35,23 @@ async def captcha_response_handler(message: types.Message, state: FSMContext) ->
     await state.update_data(user_captcha_response=user_response)
     result = await check_captcha(message)
     if result:
-        # await state.clear()
-        await state.set_state(RegistrationState.main_menu_state)
+        user_id = message.from_user.id
         language = await get_language_for_user(message.from_user.id)
-        reply = await get_message(menu_messages, "MENU", language)
-        await message.answer(text=reply, reply_markup=menu_kb[language])
-        if language not in ["ENG", "RU"]:
-            await state.set_state(RegistrationState.lang_choose_state)
-            reply = await get_message(menu_messages, "LANGUAGE_CHOOSE", "ENG")
-            await message.answer(text=reply, reply_markup=language_choose_kb)
+        current_state = await get_state_for_user(user_id)
+        current_state_str = get_clean_state_identifier(current_state)
+        current_keyboard = state_keyboards[(current_state_str, language)]
+        current_reply_messages = state_menus[current_state_str]
+        current_reply = await get_message(current_reply_messages, state_messages[current_state_str], language)
+        # await state.clear()
+        await state.set_state(current_state)
+        # await state.set_state(RegistrationState.main_menu_state)
+        # language = await get_language_for_user(message.from_user.id)
+        # await message.answer(text=reply, reply_markup=menu_kb[language])
+        await message.answer(text=current_reply, reply_markup=current_keyboard)
+        # if language not in ["ENG", "RU"]:
+        #     await state.set_state(RegistrationState.lang_choose_state)
+        #     reply = await get_message(menu_messages, "LANGUAGE_CHOOSE", "ENG")
+        #     await message.answer(text=reply, reply_markup=language_choose_kb)
 
 
 # Handler состояния капчи в регистрации пользователя
@@ -73,6 +83,7 @@ async def lang_choose_response_handler_in_reg(message: types.Message, state: FSM
         await message.answer(text=reply, reply_markup=language_choose_kb)
         return
     await state.set_state(RegistrationState.hello_state)
+    await set_user_state(user_id, get_clean_state_identifier(RegistrationState.hello_state))
     await message.answer(
         text=(await get_message(messages, "WELCOME_MESSAGE", language, user_name=message.from_user.first_name)),
         reply_markup=join_kb[language],
@@ -89,6 +100,7 @@ async def hello_response_handler_in_reg(message: types.Message, state: FSMContex
     await state.update_data(user_hello_response=user_response)
     if user_response in ["🚀Join Airdrop", "🚀Присоединиться к аирдропу"]:
         await state.set_state(RegistrationState.proceed_state)
+        await set_user_state(message.from_user.id, get_clean_state_identifier(RegistrationState.proceed_state))
         reply = await get_message(messages, "PROCEED_MESSAGE", language)
         await message.answer(text=reply, reply_markup=sub_cancel_kb[language], parse_mode="MARKDOWN")
     elif user_response in ["❌Cancel", "❌Отказаться"]:
@@ -120,6 +132,7 @@ async def proceed_response_handler_in_reg(message: types.Message, state: FSMCont
     await state.update_data(user_proceed_response=user_response)
     if user_response in ["✅Согласен с правилами", "✅Submit Details"]:
         await state.set_state(RegistrationState.follow_telegram_state)
+        await set_user_state(message.from_user.id, get_clean_state_identifier(RegistrationState.follow_telegram_state))
         reply = await get_message(messages, "MAKE_SURE_TELEGRAM", language)
         await message.answer(text=reply, reply_markup=social_join_kb[language])
     elif user_response in ["❌Cancel", "❌Отказаться"]:
@@ -151,10 +164,13 @@ async def follow_telegram_response_handler_in_reg(message: types.Message, state:
         if await check_joined_telegram_channel(message.from_user.id):
             print("Yes, user in all telegram channel")
             await state.set_state(RegistrationState.follow_twitter_state)
-            reply1 = await get_message(messages, "FOLLOW_TWITTER_TEXT", language)
-            reply2 = await get_message(messages, "GET_TWITTER_LINK_TEXT", language)
-            await message.answer(text=reply1, reply_markup=types.ReplyKeyboardRemove())
-            await message.answer(text=reply2)
+            await set_user_state(message.from_user.id,
+                                 get_clean_state_identifier(RegistrationState.follow_twitter_state))
+            reply = await get_message(messages, "FOLLOW_TWITTER_TEXT", language)
+            # reply2 = await get_message(messages, "GET_TWITTER_LINK_TEXT", language)
+            await message.answer(text=reply, reply_markup=types.ReplyKeyboardRemove())
+            # await message.answer(text=reply1, reply_markup=types.ReplyKeyboardRemove())
+            # await message.answer(text=reply2)
         else:
             print("NO HE ISNT HERE")
             await state.set_state(RegistrationState.follow_telegram_state)
@@ -177,6 +193,8 @@ async def follow_twitter_response_handler_in_reg(message: types.Message, state: 
             print("all ok")
             await update_user_details(message.from_user.id, TWITTER_USER=user_response)
             await state.set_state(RegistrationState.submit_address_state)
+            await set_user_state(message.from_user.id,
+                                 get_clean_state_identifier(RegistrationState.submit_address_state))
             reply = await get_message(messages, "SUBMIT_ADDRESS_TEXT", language)
             await message.answer(text=reply, reply_markup=types.ReplyKeyboardRemove(), parse_mode="MARKDOWN")
         else:
@@ -203,6 +221,8 @@ async def submit_address_response_handler_in_reg(message: types.Message, state: 
             await update_user_details(message.from_user.id, ADDR=user_response, NUM_OF_REFS=0, REF_POINTS=0,
                                       POINTS=AIRDROP_AMOUNT)
             await state.set_state(RegistrationState.main_menu_state)
+            await set_user_state(message.from_user.id,
+                                 get_clean_state_identifier(RegistrationState.main_menu_state))
             ref_link = await get_refferal_link(message.from_user.id)
             reply = await get_message(messages, "JOINED_TEXT", language, referral_link=ref_link)
             await message.answer(text=reply, reply_markup=menu_kb[language], parse_mode="MARKDOWN")

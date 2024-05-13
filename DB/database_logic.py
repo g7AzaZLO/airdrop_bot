@@ -2,7 +2,7 @@ import motor.motor_asyncio
 from bson.objectid import ObjectId
 from settings.config import REFERRAL_REWARD
 from DB.mongo import users_collection
-
+from FSM.states import get_state_from_string
 
 # Функция инициализации базы данных
 async def initialize_db() -> None:
@@ -194,6 +194,7 @@ async def add_user_to_db(user_id: int) -> bool:
             "REF_POINTS": 0,
             "POINTS": 0,
             "TASKS_DONE": [],
+            "STATE": "RegistrationState.lang_choose_state"
         }
         await users_collection.insert_one(user_data)
         print(f"User {user_id} added to database with default values.")
@@ -222,7 +223,7 @@ async def get_language_for_user(user_id: int) -> str:
             return user["LANGUAGE"]
         else:
             print(f"Language for user {user_id} not found.")
-            return None
+            return "ENG"
     except Exception as e:
         print(f"Error retrieving language for user {user_id}: {e}")
         return None
@@ -406,3 +407,48 @@ async def add_points_to_user(user_id: int, points: int) -> bool:
     except Exception as e:
         print(f"Error adding points to user {user_id}: {e}")
         return False
+
+
+async def set_user_state(user_id: int, state: str):
+    """
+    Set the user's state in the database.
+
+    Parameters:
+    - user_id (int): The user's unique identifier.
+    - state (str): The state to set for the user.
+    - state_context (FSMContext): The FSM context to manipulate state data.
+    """
+    try:
+        # Additionally, save or update the state in the MongoDB
+        await users_collection.update_one(
+            {"USER_ID": user_id},
+            {"$set": {"STATE": state}},
+            upsert=True
+        )
+    except Exception as e:
+        print(f"Error setting state for user {user_id}: {e}")
+        
+
+async def get_state_for_user(user_id: int) -> str:
+    """
+    Returns the state of a user by the given user identifier.
+
+    Parameters:
+    - user_id (int): The unique identifier of the user.
+
+    Returns:
+    - str: The state of the user if found.
+    - None, if the user is not found or an error occurred.
+    """
+    print("def get_state_for_user")
+    try:
+        user = await users_collection.find_one({"USER_ID": user_id}, {"STATE": 1, "_id": 0})
+        if user and "STATE" in user:
+            print(f"State for user {user_id} is {user['STATE']}.")
+            return get_state_from_string(user["STATE"])
+        else:
+            print(f"State for user {user_id} not found.")
+            return None
+    except Exception as e:
+        print(f"Error retrieving state for user {user_id}: {e}")
+        return None
