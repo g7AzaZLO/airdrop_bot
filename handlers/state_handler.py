@@ -410,9 +410,20 @@ async def current_tasks_handler(message: types.Message, state: FSMContext) -> No
     user_response = message.text
     index_task = await get_index_by_text_task(user_response, language)
     print("index task == " + str(index_task))
-    print(index_task in range(0, await get_num_of_tasks()))
-    if user_response not in ["⏪Вернуться Назад", "⏪Return Back", "🏆Достижения",
-                             "🏆Achievements"] and index_task in range(1, await get_num_of_tasks() + 1):
+    user = await get_user_details(message.from_user.id)
+    tasks_done = user.get("TASKS_DONE", [])
+    if index_task-1 in tasks_done:
+        reply1 = await get_message(task_menu_messages, "TASK_DONE_ALREADY", language)
+        total_buttons = await get_num_of_tasks()
+        task_done_points = await calculate_total_points(tasks_done)
+        tasks_total_points = await get_all_points()
+        tasks_keyboard = await create_numeric_keyboard(total_buttons, tasks_done, language)
+        reply2 = await get_message(task_menu_messages, "CHOOSE_NUMBER_TASK_TEXT", language,
+                                  tasks_done_points=task_done_points,
+                                  tasks_total_points=tasks_total_points)
+        await message.answer(text=reply1 + reply2, reply_markup=tasks_keyboard)
+        await state.set_state(TasksState.current_tasks_state)
+    if index_task-1 in range(await get_num_of_tasks()):
         reply = await get_message(task_menu_messages, "TASK_DONE_BACK_TEXT", language)
         await message.answer(text=reply, reply_markup=kb_task_done_back[language])
         await state.update_data(num_of_task=user_response)

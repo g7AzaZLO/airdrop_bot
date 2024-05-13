@@ -7,6 +7,9 @@ HERE WE NEED TO ADD SOMETHING ABOUT ACHIEVEMENTS {tasks_done}, u get {points_don
         "RU": """
 СЮДА НУЖНО БУДЕТ ДОБАВИТЬ КАКУЮ-ТО ТЕМУ С АЧИВКАМИ {tasks_done}, заработано {points_done} очков (ЗАВЕРШЕНО)
         """},
+    "TASK_DONE_ALREADY": {
+        "ENG": "You have already done this task.\n",
+        "RU": "Вы уже выполнили эту задачу.\n"},
     "TASK_DONE_BACK_TEXT": {
         "ENG": "Here is your task....... Have you done it?",
         "RU": "Вот ваше задание, вы выполнили его?"},
