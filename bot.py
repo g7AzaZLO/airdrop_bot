@@ -24,10 +24,12 @@ dp.include_router(state_handler_router)
 dp.include_router(task_router)
 setup_game_routes(dp)
 
+
 async def main() -> None:
     await initialize_db()
     await bot.delete_webhook(drop_pending_updates=True)
     await dp.start_polling(bot)
+
 
 if __name__ == '__main__':
     asyncio.run(main())

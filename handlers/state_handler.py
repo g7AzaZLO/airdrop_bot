@@ -512,6 +512,9 @@ async def achievements_handler(message: types.Message, state: FSMContext) -> Non
         return
 
 
+# TODO все таки нужно убирвть кнопку после отправки задания на проверку, чтобы юзер не мог повторно ничего отправлять пока не пройдет проверка.
+# TODO Либо ставить защиту что юзер не может отправить новый скрин пока не проверен старый
+
 # TODO нужно избавиться от двойного отказа двемя разными админами
 @state_handler_router.message(TasksState.screen_check_state, F.photo)
 async def handle_screen_check(message: types.Message, state: FSMContext) -> None:
@@ -577,6 +580,7 @@ async def approve_task(callback_query: types.CallbackQuery):
     # Удаляем сообщение с кнопками после подтверждения
     await callback_query.message.delete()
 
+
 @state_handler_router.callback_query(lambda callback_query: callback_query.data.startswith("reject_"))
 async def reject_task(callback_query: types.CallbackQuery):
     if callback_query.from_user.id not in ADMINS_IDS:
@@ -599,4 +603,3 @@ async def reject_task(callback_query: types.CallbackQuery):
 
     # Удаляем сообщение с кнопками после отказа
     await callback_query.message.delete()
-
