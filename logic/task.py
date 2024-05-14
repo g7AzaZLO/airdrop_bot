@@ -1,8 +1,6 @@
-from aiogram import types, Router, Bot
-from aiogram.types import InputFile
+from aiogram import types, Router
 from DB.database_logic import get_language_for_user
 from tasks.task_dict import tasks
-from settings.config import ADMINS_IDS, bot
 
 task_router = Router()
 

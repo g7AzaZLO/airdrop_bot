@@ -512,6 +512,7 @@ async def achievements_handler(message: types.Message, state: FSMContext) -> Non
         return
 
 
+# TODO нужно избавиться от двойного отказа двемя разными админами
 @state_handler_router.message(TasksState.screen_check_state, F.photo)
 async def handle_screen_check(message: types.Message, state: FSMContext) -> None:
     screenshot = message.photo[-1] if message.photo else None
