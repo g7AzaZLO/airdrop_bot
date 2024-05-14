@@ -23,7 +23,6 @@ from logic.task import get_all_points, get_num_of_tasks, get_index_by_text_task,
     calculate_total_points, get_points_from_task, send_task_info
 from tasks.task_dict import protection_fot_admins
 from settings.config import AIRDROP_AMOUNT, ADMINS_IDS
-from aiogram.fsm.storage.memory import MemoryStorage
 
 state_handler_router = Router()
 
@@ -552,7 +551,7 @@ async def handle_screen_check(message: types.Message, state: FSMContext) -> None
 
 
 @state_handler_router.callback_query(lambda callback_query: callback_query.data.startswith("approve_"))
-async def approve_task(callback_query: types.CallbackQuery, state: FSMContext):
+async def approve_task(callback_query: types.CallbackQuery):
     if callback_query.from_user.id not in ADMINS_IDS:
         await callback_query.answer("У вас нет прав для выполнения этого действия.", show_alert=True)
         return
@@ -562,14 +561,23 @@ async def approve_task(callback_query: types.CallbackQuery, state: FSMContext):
     index_task = int(data[2])
     points = int(data[3])
 
+    # Проверка, было ли задание уже обработано
+    task_data = await get_user_details(user_id)
+    tasks_done = task_data.get("TASKS_DONE", [])
+    if index_task in tasks_done:
+        await callback_query.answer("Это задание уже было обработано.", show_alert=True)
+        return
+
     await add_points_to_user(user_id, points)
     await mark_task_as_done(user_id, index_task)
     await callback_query.message.bot.send_message(chat_id=user_id, text="Ваше задание выполнено, очки начислены.")
     await callback_query.answer("Задание подтверждено.", show_alert=True)
 
+    # Удаляем сообщение с кнопками после подтверждения
+    await callback_query.message.delete()
 
 @state_handler_router.callback_query(lambda callback_query: callback_query.data.startswith("reject_"))
-async def reject_task(callback_query: types.CallbackQuery, state: FSMContext):
+async def reject_task(callback_query: types.CallbackQuery):
     if callback_query.from_user.id not in ADMINS_IDS:
         await callback_query.answer("У вас нет прав для выполнения этого действия.", show_alert=True)
         return
@@ -578,5 +586,16 @@ async def reject_task(callback_query: types.CallbackQuery, state: FSMContext):
     user_id = int(data[1])
     index_task = int(data[2])
 
+    # Проверка, было ли задание уже обработано
+    task_data = await get_user_details(user_id)
+    tasks_done = task_data.get("TASKS_DONE", [])
+    if index_task in tasks_done:
+        await callback_query.answer("Это задание уже было обработано.", show_alert=True)
+        return
+
     await callback_query.message.bot.send_message(chat_id=user_id, text="Ваше задание не выполнено, попробуйте снова.")
     await callback_query.answer("Задание отклонено.", show_alert=True)
+
+    # Удаляем сообщение с кнопками после отказа
+    await callback_query.message.delete()
+
