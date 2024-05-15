@@ -1,4 +1,4 @@
-from aiogram import types, Router, F
+from aiogram import types, Router
 from FSM.states import CaptchaState, RegistrationState, TasksState, state_messages, state_keyboards, \
     get_clean_state_identifier, state_menus, AdminMessageState
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
@@ -724,5 +724,5 @@ async def handle_admin_message(message: types.Message, state: FSMContext):
             print(f"Не удалось отправить сообщение пользователю с ID {user['USER_ID']}: {e}")
 
     await state.set_state(RegistrationState.main_menu_state)
-    reply = await get_message(other_messages,"MESSAGE_SENT_TEXT", language)
+    reply = await get_message(other_messages, "MESSAGE_SENT_TEXT", language)
     await message.answer(text=reply)
