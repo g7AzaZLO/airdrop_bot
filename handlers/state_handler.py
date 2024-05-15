@@ -14,7 +14,7 @@ from keyboards.small_kb import join_kb, language_choose_kb, yes_no_kb, sub_cance
     kb_task_done_back, kb_tasks_back
 from DB.database_logic import update_language_in_db, get_language_for_user, delete_user_from_db, get_user_details, \
     update_user_details, check_wallet_exists, decrement_referrer_count, mark_task_as_done, get_state_for_user, \
-    set_user_state
+    set_user_state, remove_task_from_await, mark_task_as_await
 from logic.telegram import check_joined_telegram_channel
 from DB.database_logic import check_is_user_already_here, add_user_to_db, add_referrer_to_user, get_referrer, \
     increment_referrer_count, add_points_to_user
@@ -282,8 +282,7 @@ async def main_menu_handler(message: types.Message, state: FSMContext) -> None:
         total_buttons = await get_num_of_tasks()
         task_done_points = await calculate_total_points(tasks_done)
         tasks_total_points = await get_all_points()
-        data = await state.get_data()
-        tasks_await = data.get('tasks_await', [])
+        tasks_await = user.get("TASKS_AWAIT", [])
         tasks_keyboard = await create_numeric_keyboard(total_buttons, tasks_done + tasks_await, language)
         reply = await get_message(task_menu_messages, "CHOOSE_NUMBER_TASK_TEXT", language,
                                   tasks_done_points=task_done_points,
@@ -435,15 +434,12 @@ async def current_tasks_handler(message: types.Message, state: FSMContext) -> No
     print("index task == " + str(index_task))
     user = await get_user_details(message.from_user.id)
     tasks_done = user.get("TASKS_DONE", [])
-    data = await state.get_data()
-    tasks_await = data.get('tasks_await', [])
+    tasks_await = user.get("TASKS_AWAIT", [])
     if index_task is not None and index_task in tasks_done:
         reply1 = await get_message(task_menu_messages, "TASK_DONE_ALREADY", language)
         total_buttons = await get_num_of_tasks()
         task_done_points = await calculate_total_points(tasks_done)
         tasks_total_points = await get_all_points()
-        data = await state.get_data()
-        tasks_await = data.get('tasks_await', [])
         tasks_keyboard = await create_numeric_keyboard(total_buttons, tasks_done + tasks_await, language)
         reply2 = await get_message(task_menu_messages, "CHOOSE_NUMBER_TASK_TEXT", language,
                                    tasks_done_points=task_done_points,
@@ -456,8 +452,6 @@ async def current_tasks_handler(message: types.Message, state: FSMContext) -> No
         total_buttons = await get_num_of_tasks()
         task_done_points = await calculate_total_points(tasks_done)
         tasks_total_points = await get_all_points()
-        data = await state.get_data()
-        tasks_await = data.get('tasks_await', [])
         tasks_keyboard = await create_numeric_keyboard(total_buttons, tasks_done + tasks_await, language)
         reply2 = await get_message(task_menu_messages, "CHOOSE_NUMBER_TASK_TEXT", language,
                                    tasks_done_points=task_done_points,
@@ -488,8 +482,7 @@ async def current_tasks_handler(message: types.Message, state: FSMContext) -> No
         user = await get_user_details(message.from_user.id)
         tasks_done = user.get("TASKS_DONE", [])
         total_buttons = await get_num_of_tasks()
-        data = await state.get_data()
-        tasks_await = data.get('tasks_await', [])
+        tasks_await = user.get("TASKS_AWAIT", [])
         tasks_keyboard = await create_numeric_keyboard(total_buttons, tasks_done + tasks_await, language)
         await message.answer(text=reply, reply_markup=tasks_keyboard)
         return
@@ -514,8 +507,7 @@ async def single_task_handler(message: types.Message, state: FSMContext) -> None
                 tasks_done.append(index_task)
             task_done_points = await calculate_total_points(tasks_done)
             total_buttons = await get_num_of_tasks()
-            data = await state.get_data()
-            tasks_await = data.get('tasks_await', [])
+            tasks_await = user.get("TASKS_AWAIT", [])
             tasks_keyboard = await create_numeric_keyboard(total_buttons, tasks_done + tasks_await, language)
             tasks_total_points = await get_all_points()
             reply = await get_message(task_menu_messages, "CHOOSE_NUMBER_TASK_TEXT", language,
@@ -526,11 +518,11 @@ async def single_task_handler(message: types.Message, state: FSMContext) -> None
             reply = await get_message(other_messages, "SEND_PIC_TO_CHECK_TEXT", language)
             await message.answer(text=reply)
             await state.set_state(TasksState.screen_check_state)  # Устанавливаем новое состояние для отправки фото
+            await mark_task_as_await(message.from_user.id, index_task)
     elif user_response in ["⏪Вернуться Назад", "⏪Return Back"]:
         tasks_done = user.get("TASKS_DONE", [])
         total_buttons = await get_num_of_tasks()
-        data = await state.get_data()
-        tasks_await = data.get('tasks_await', [])
+        tasks_await = user.get("TASKS_AWAIT", [])
         tasks_keyboard = await create_numeric_keyboard(total_buttons, tasks_done + tasks_await, language)
         reply = await get_message(task_menu_messages, "WE_ARE_BACK_CHOOSE_TEXT", language)
         await message.answer(text=reply, reply_markup=tasks_keyboard)
@@ -550,8 +542,7 @@ async def achievements_handler(message: types.Message, state: FSMContext) -> Non
     if user_response in ["⏪Вернуться Назад", "⏪Return Back"]:
         tasks_done = user.get("TASKS_DONE", [])
         total_buttons = await get_num_of_tasks()
-        data = await state.get_data()
-        tasks_await = data.get('tasks_await', [])
+        tasks_await = user.get("TASKS_AWAIT", [])
         tasks_keyboard = await create_numeric_keyboard(total_buttons, tasks_done + tasks_await, language)
         reply = await get_message(task_menu_messages, "WE_ARE_BACK_CHOOSE_TEXT", language)
         await message.answer(text=reply, reply_markup=tasks_keyboard)
@@ -572,17 +563,9 @@ async def handle_screen_check(message: types.Message, state: FSMContext) -> None
     user = await get_user_details(message.from_user.id)
     language = await get_language_for_user(user_id)
 
-    data = await state.get_data()
-    tasks = data.get('tasks_await', [])
-    if index_task not in tasks:
-        tasks.append(index_task)
-        await state.update_data(tasks_await=tasks)
     
     if screenshot:
-        inline_kb = InlineKeyboardMarkup(inline_keyboard=[
-            [InlineKeyboardButton(text="✅ Да", callback_data=f"approve_{user_id}_{index_task}_{points}")],
-            [InlineKeyboardButton(text="❌ Нет", callback_data=f"reject_{user_id}_{index_task}")]
-        ])
+
         admin_messages = []
         for admin_id in ADMINS_IDS:
             if not admin_id:
@@ -590,9 +573,6 @@ async def handle_screen_check(message: types.Message, state: FSMContext) -> None
                 continue
             try:
                 admin_id_int = int(admin_id)
-                # sent_message = await message.bot.send_photo(chat_id=admin_id_int, photo=screenshot.file_id,
-                #                              caption=f"Пользователь {user_id} отправил скриншот для задания {index_task}. Начислить {points} очков?",
-                #                              reply_markup=inline_kb)
                 sent_message = await message.bot.send_photo(
                     chat_id=admin_id_int,
                     photo=screenshot.file_id,
@@ -603,10 +583,10 @@ async def handle_screen_check(message: types.Message, state: FSMContext) -> None
                 inline_kb = InlineKeyboardMarkup(inline_keyboard=[
                     [InlineKeyboardButton(text="✅ Да",
                                           callback_data=f"approve_{user_id}_{index_task}_{points}_"
-                                                        f"{admin_id_int}_{sent_message.message_id}")],
+                                                        f"{sent_message.message_id}")],
                     [InlineKeyboardButton(text="❌ Нет",
                                           callback_data=f"reject_{user_id}_{index_task}_"
-                                                        f"{admin_id_int}_{sent_message.message_id}")]
+                                                        f"{sent_message.message_id}")]
                 ])
                 await message.bot.edit_message_reply_markup(chat_id=admin_id_int, message_id=sent_message.message_id,
                                                             reply_markup=inline_kb)
@@ -619,8 +599,7 @@ async def handle_screen_check(message: types.Message, state: FSMContext) -> None
         
         tasks_done = user.get("TASKS_DONE", [])
         total_buttons = await get_num_of_tasks()
-        data = await state.get_data()
-        tasks_await = data.get('tasks_await', [])
+        tasks_await = user.get("TASKS_AWAIT", [])
         tasks_keyboard = await create_numeric_keyboard(total_buttons, tasks_done + tasks_await, language)
         reply = await get_message(task_menu_messages, "WE_ARE_BACK_CHOOSE_TEXT", language)
         await message.answer(text=reply, reply_markup=tasks_keyboard)
@@ -633,7 +612,7 @@ async def handle_screen_check(message: types.Message, state: FSMContext) -> None
 
 
 @state_handler_router.callback_query(lambda callback_query: callback_query.data.startswith("approve_"))
-async def approve_task(callback_query: types.CallbackQuery, state: FSMContext):
+async def approve_task(callback_query: types.CallbackQuery):
     user_id = callback_query.from_user.id
     language = await get_language_for_user(user_id)
     if callback_query.from_user.id not in ADMINS_IDS:
@@ -645,28 +624,27 @@ async def approve_task(callback_query: types.CallbackQuery, state: FSMContext):
     user_id = int(data[1])
     index_task = int(data[2])
     points = int(data[3])
-    admin_id = int(data[4])
-    message_id = int(data[5])
-    tasks_data = await state.get_data()
-    tasks = tasks_data.get('tasks_await', [])
-    if index_task in tasks:
-        tasks.remove(index_task)
-        await state.update_data(tasks_await=tasks)
+    message_id = int(data[4])
+    user = await get_user_details(user_id)
+
         # Delete messages sent to other admins
-        admin_messages = tasks_data.get('admin_messages', [])
-        for admin_id, message_id in zip(ADMINS_IDS, admin_messages):
+        # admin_messages = tasks_data.get('admin_messages', [])
+    tasks_await = user.get("TASKS_AWAIT", [])
+    if index_task in tasks_await:
+        await remove_task_from_await(user_id, index_task)
+        for admin_id in ADMINS_IDS:
             try:
                 await callback_query.message.bot.delete_message(chat_id=admin_id, message_id=message_id)
             except Exception as e:
                 print(f"Failed to delete message {message_id} for admin {admin_id}: {e}")
-
+    
         # Проверка, было ли задание уже обработано
-        task_data = await get_user_details(user_id)
-        tasks_done = task_data.get("TASKS_DONE", [])
+        
+        tasks_done = user.get("TASKS_DONE", [])
         if index_task in tasks_done:
             await callback_query.answer("Это задание уже было обработано.", show_alert=True)
             return
-
+    
         await add_points_to_user(user_id, points)
         await mark_task_as_done(user_id, index_task)
         reply = await get_message(other_messages, "TASK_DONE_TEXT", language, index_task=index_task)
@@ -674,14 +652,14 @@ async def approve_task(callback_query: types.CallbackQuery, state: FSMContext):
         reply2 = await get_message(other_messages, "TASK_CONFIRMED_TEXT", language)
         await callback_query.answer(text=reply2, show_alert=True)
 
-        # Удаляем сообщение с кнопками после подтверждения
-        # await callback_query.message.delete()
-    # else:
-    #     return
+    # Удаляем сообщение с кнопками после подтверждения
+    # await callback_query.message.delete()
+    else:
+        return
 
 
 @state_handler_router.callback_query(lambda callback_query: callback_query.data.startswith("reject_"))
-async def reject_task(callback_query: types.CallbackQuery, state: FSMContext):
+async def reject_task(callback_query: types.CallbackQuery):
     user_id = callback_query.from_user.id
     language = await get_language_for_user(user_id)
     if callback_query.from_user.id not in ADMINS_IDS:
@@ -693,24 +671,24 @@ async def reject_task(callback_query: types.CallbackQuery, state: FSMContext):
     data = callback_query.data.split("_")
     user_id = int(data[1])
     index_task = int(data[2])
-    
-    tasks_data = await state.get_data()
-    tasks = tasks_data.get('tasks_await', [])
-    if index_task in tasks:
-        tasks.remove(index_task)
-        await state.update_data(tasks_await=tasks)
-        
-        # Delete messages sent to other admins
-        admin_messages = tasks_data.get('admin_messages', [])
-        for admin_id, message_id in zip(ADMINS_IDS, admin_messages):
+    message_id = int(data[3])
+    user = await get_user_details(user_id)
+    tasks_await = user.get("TASKS_AWAIT", [])
+    if index_task in tasks_await:
+        await remove_task_from_await(user_id, index_task)
+        # await state.update_data(tasks_await=tasks)
+        #
+        #     # Delete messages sent to other admins
+        #     admin_messages = tasks_data.get('admin_messages', [])
+        for admin_id in ADMINS_IDS:
             try:
                 await callback_query.message.bot.delete_message(chat_id=admin_id, message_id=message_id)
             except Exception as e:
                 print(f"Failed to delete message {message_id} for admin {admin_id}: {e}")
-        
+    
         # Проверка, было ли задание уже обработано
-        task_data = await get_user_details(user_id)
-        tasks_done = task_data.get("TASKS_DONE", [])
+    
+        tasks_done = user.get("TASKS_DONE", [])
         if index_task in tasks_done:
             reply = await get_message(other_messages,"ALREADY_PROCESSED",language)
             await callback_query.answer(text=reply,
@@ -721,8 +699,9 @@ async def reject_task(callback_query: types.CallbackQuery, state: FSMContext):
                                                       text=reply)
         reply2= await get_message(other_messages, "TASK_REJECTED_TEXT", language)
         await callback_query.answer(text=reply2, show_alert=True)
-
+    
         # Удаляем сообщение с кнопками после отказа
         # await callback_query.message.delete()
     else:
         return
+

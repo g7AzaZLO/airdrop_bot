@@ -194,6 +194,7 @@ async def add_user_to_db(user_id: int) -> bool:
             "REF_POINTS": 0,
             "POINTS": 0,
             "TASKS_DONE": [],
+            "TASKS_AWAIT": [],
             "STATE": "RegistrationState.lang_choose_state"
         }
         await users_collection.insert_one(user_data)
@@ -380,7 +381,55 @@ async def mark_task_as_done(user_id: int, task_index: int) -> bool:
         print(f"Error marking task {task_index} as done for user {user_id}: {e}")
         return False
 
+async def mark_task_as_await(user_id: int, task_index: int) -> bool:
+    """
+    Добавляет индекс выполненного задания в список выполненных заданий пользователя в MongoDB.
 
+    Параметры:
+    - user_id (int): Уникальный идентификатор пользователя.
+    - task_index (int): Индекс выполненного задания.
+
+    Возвращает:
+    - True, если обновление прошло успешно.
+    - False, если в процессе обновления произошла ошибка.
+    """
+    try:
+        result = await users_collection.update_one(
+            {"USER_ID": user_id},
+            {"$addToSet": {"TASKS_AWAIT": task_index}}
+        )
+        if result.modified_count > 0:
+            print(f"Task {task_index} marked as await for user {user_id}.")
+            return True
+        else:
+            print(f"Task {task_index} was already marked as await or user {user_id} not found.")
+            return False
+    except Exception as e:
+        print(f"Error marking task {task_index} as await for user {user_id}: {e}")
+        return False
+
+
+async def remove_task_from_await(user_id: int, task_index: int) -> bool:
+    """
+    Removes the index of the pending task from the user's pending tasks list in MongoDB.
+    Returns:
+    - True if the update was successful.
+    - False if there was an error during the update.
+    """
+    try:
+        result = await users_collection.update_one(
+            {"USER_ID": user_id},
+            {"$pull": {"TASKS_AWAIT": task_index}}
+        )
+        if result.modified_count > 0:
+            print(f"Task {task_index} removed from pending tasks for user {user_id}.")
+            return True
+        else:
+            print(f"Task {task_index} was not found in pending tasks or user {user_id} not found.")
+            return False
+    except Exception as e:
+        print(f"Error removing task {task_index} from pending tasks for user {user_id}: {e}")
+        return False
 async def add_points_to_user(user_id: int, points: int) -> bool:
     """
     Добавляет указанное количество очков к POINTS пользователя в базе данных.

@@ -42,7 +42,6 @@ async def get_message(messages: dict, message_key: str, language: str, **kwargs)
 async def start(message: types.Message, state: FSMContext) -> None:
     print("Processing /start command...")
     user_id = message.from_user.id
-    await state.update_data(tasks_await=[])
     if await check_is_user_already_here(user_id):
         print("User already in db")
         await generate_captcha(message)
