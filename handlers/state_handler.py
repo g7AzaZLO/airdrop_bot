@@ -1,6 +1,6 @@
-from aiogram import types, Router, F
+from aiogram import types, Router
 from FSM.states import CaptchaState, RegistrationState, TasksState, state_messages, state_keyboards, \
-    get_clean_state_identifier, state_menus
+    get_clean_state_identifier, state_menus, AdminMessageState
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from logic.captcha import generate_captcha, check_captcha
 from aiogram.fsm.context import FSMContext
@@ -14,7 +14,8 @@ from keyboards.small_kb import join_kb, language_choose_kb, yes_no_kb, sub_cance
     kb_task_done_back, kb_tasks_back
 from DB.database_logic import update_language_in_db, get_language_for_user, delete_user_from_db, get_user_details, \
     update_user_details, check_wallet_exists, decrement_referrer_count, mark_task_as_done, get_state_for_user, \
-    set_user_state, remove_task_from_await, mark_task_as_await
+    set_user_state, remove_task_from_await, mark_task_as_await, delete_admin_message, insert_admin_messages, \
+    get_admin_messages_dict, get_all_users
 from logic.telegram import check_joined_telegram_channel
 from DB.database_logic import check_is_user_already_here, add_user_to_db, add_referrer_to_user, get_referrer, \
     increment_referrer_count, add_points_to_user
@@ -27,11 +28,6 @@ from tasks.task_dict import protection_fot_admins
 from settings.config import AIRDROP_AMOUNT, ADMINS_IDS
 
 state_handler_router = Router()
-
-
-# TODO: add this to DB
-admin_messages_dict = {}
-
 
 
 # Handler состояния капчи в CaptchaState
@@ -49,16 +45,8 @@ async def captcha_response_handler(message: types.Message, state: FSMContext) ->
         current_keyboard = state_keyboards[(current_state_str, language)]
         current_reply_messages = state_menus[current_state_str]
         current_reply = await get_message(current_reply_messages, state_messages[current_state_str], language)
-        # await state.clear()
         await state.set_state(current_state)
-        # await state.set_state(RegistrationState.main_menu_state)
-        # language = await get_language_for_user(message.from_user.id)
-        # await message.answer(text=reply, reply_markup=menu_kb[language])
         await message.answer(text=current_reply, reply_markup=current_keyboard)
-        # if language not in ["ENG", "RU"]:
-        #     await state.set_state(RegistrationState.lang_choose_state)
-        #     reply = await get_message(menu_messages, "LANGUAGE_CHOOSE", "ENG")
-        #     await message.answer(text=reply, reply_markup=language_choose_kb)
 
 
 # Handler состояния капчи в регистрации пользователя
@@ -174,10 +162,7 @@ async def follow_telegram_response_handler_in_reg(message: types.Message, state:
             await set_user_state(message.from_user.id,
                                  get_clean_state_identifier(RegistrationState.follow_twitter_state))
             reply = await get_message(messages, "FOLLOW_TWITTER_TEXT", language)
-            # reply2 = await get_message(messages, "GET_TWITTER_LINK_TEXT", language)
             await message.answer(text=reply, reply_markup=types.ReplyKeyboardRemove())
-            # await message.answer(text=reply1, reply_markup=types.ReplyKeyboardRemove())
-            # await message.answer(text=reply2)
         else:
             print("NO HE ISNT HERE")
             await state.set_state(RegistrationState.follow_telegram_state)
@@ -282,7 +267,6 @@ async def main_menu_handler(message: types.Message, state: FSMContext) -> None:
         await message.answer(text=reply, reply_markup=menu_kb[language], parse_mode="MARKDOWN")
 
     elif user_response in ["🥇Задачи", "🥇Tasks"]:
-        # reply = await get_message(menu_messages, "INFORMATION_TEXT", language)
         tasks_done = user.get("TASKS_DONE", [])
         total_buttons = await get_num_of_tasks()
         task_done_points = await calculate_total_points(tasks_done)
@@ -522,7 +506,7 @@ async def single_task_handler(message: types.Message, state: FSMContext) -> None
         else:
             reply = await get_message(other_messages, "SEND_PIC_TO_CHECK_TEXT", language)
             await message.answer(text=reply)
-            await state.set_state(TasksState.screen_check_state)  # Устанавливаем новое состояние для отправки фото
+            await state.set_state(TasksState.screen_check_state)
             await mark_task_as_await(message.from_user.id, index_task)
     elif user_response in ["⏪Вернуться Назад", "⏪Return Back"]:
         tasks_done = user.get("TASKS_DONE", [])
@@ -556,14 +540,18 @@ async def achievements_handler(message: types.Message, state: FSMContext) -> Non
         reply = await get_message(menu_messages, "UNKNOWN_COMMAND_TEXT", language)
         await message.answer(text=reply, reply_markup=kb_task_done_back[language])
         return
-    
-    
 
 
-
-@state_handler_router.message(TasksState.screen_check_state, F.photo)
+@state_handler_router.message(TasksState.screen_check_state)
 async def handle_screen_check(message: types.Message, state: FSMContext) -> None:
-    screenshot = message.photo[-1] if message.photo else None
+    if message.photo:
+        screenshot = message.photo[-1]
+    else:
+        language = await get_language_for_user(message.from_user.id)
+        reply = await get_message(other_messages, "SEND_PIC_TO_CHECK_TEXT", language)
+        await message.answer(text=reply)
+        await state.set_state(TasksState.screen_check_state)
+        return
     user_id = message.from_user.id
     task_text = await state.get_data()
     index_task = await get_index_by_text_task(task_text["num_of_task"], await get_language_for_user(user_id))
@@ -571,7 +559,6 @@ async def handle_screen_check(message: types.Message, state: FSMContext) -> None
     user = await get_user_details(message.from_user.id)
     language = await get_language_for_user(user_id)
 
-    
     if screenshot:
         inline_kb = InlineKeyboardMarkup(inline_keyboard=[
             [InlineKeyboardButton(text="✅ Да",
@@ -593,7 +580,7 @@ async def handle_screen_check(message: types.Message, state: FSMContext) -> None
                             f" Начислить {points} очков?"
                 )
                 # Update the message with the keyboard that includes the message ID
-                
+
                 await message.bot.edit_message_reply_markup(chat_id=admin_id_int, message_id=sent_message.message_id,
                                                             reply_markup=inline_kb)
                 admin_messages[admin_id_int] = sent_message.message_id
@@ -601,7 +588,7 @@ async def handle_screen_check(message: types.Message, state: FSMContext) -> None
                 print(f"Некорректный ID администратора: {admin_id}")
             except Exception as e:
                 print(f"Не удалось отправить сообщение администратору с ID {admin_id}: {e}")
-        admin_messages_dict[index_task] = admin_messages
+        await insert_admin_messages({index_task: admin_messages})
         tasks_done = user.get("TASKS_DONE", [])
         total_buttons = await get_num_of_tasks()
         tasks_await = user.get("TASKS_AWAIT", [])
@@ -624,11 +611,12 @@ async def approve_task(callback_query: types.CallbackQuery):
         reply = await get_message(other_messages, "NO_PERMISSION_TEXT", language)
         await callback_query.answer(text=reply, show_alert=True)
         return
-    
+
     data = callback_query.data.split("_")
     user_id = int(data[1])
     index_task = int(data[2])
     points = int(data[3])
+    admin_messages_dict = await get_admin_messages_dict()
     admin_messages = admin_messages_dict.get(index_task, {})
     user = await get_user_details(user_id)
     tasks_await = user.get("TASKS_AWAIT", [])
@@ -639,25 +627,15 @@ async def approve_task(callback_query: types.CallbackQuery):
                 await callback_query.message.bot.delete_message(chat_id=admin_id, message_id=message_id)
             except Exception as e:
                 print(f"Failed to delete message {message_id} for admin {admin_id}: {e}")
-                
+
         if index_task in admin_messages_dict:
-            del admin_messages_dict[index_task]    #
-        # # Проверка, было ли задание уже обработано
-        #
-        # tasks_done = user.get("TASKS_DONE", [])
-        # if index_task in tasks_done:
-        #     await callback_query.answer("Это задание уже было обработано.", show_alert=True)
-        #     return
-    
+            await delete_admin_message(index_task)
         await add_points_to_user(user_id, points)
         await mark_task_as_done(user_id, index_task)
         reply = await get_message(other_messages, "TASK_DONE_TEXT", language, index_task=index_task)
         await callback_query.message.bot.send_message(chat_id=user_id, text=reply)
         reply2 = await get_message(other_messages, "TASK_CONFIRMED_TEXT", language)
         await callback_query.answer(text=reply2, show_alert=True)
-
-    # Удаляем сообщение с кнопками после подтверждения
-    # await callback_query.message.delete()
     else:
         return
 
@@ -675,8 +653,8 @@ async def reject_task(callback_query: types.CallbackQuery):
     data = callback_query.data.split("_")
     user_id = int(data[1])
     index_task = int(data[2])
-    admin_messages = admin_messages_dict.get(index_task,
-                                             {})
+    admin_messages_dict = await get_admin_messages_dict()
+    admin_messages = admin_messages_dict.get(index_task, {})
     user = await get_user_details(user_id)
     tasks_await = user.get("TASKS_AWAIT", [])
     if index_task in tasks_await:
@@ -688,23 +666,63 @@ async def reject_task(callback_query: types.CallbackQuery):
             except Exception as e:
                 print(f"Failed to delete message {message_id} for admin {admin_id}: {e}")
         if index_task in admin_messages_dict:
-            del admin_messages_dict[index_task]    #
-        # Проверка, было ли задание уже обработано
-    
-        # tasks_done = user.get("TASKS_DONE", [])
-        # if index_task in tasks_done:
-        #     reply = await get_message(other_messages,"ALREADY_PROCESSED",language)
-        #     await callback_query.answer(text=reply,
-        #                                 show_alert=True)
-        #     return
+            await delete_admin_message(index_task)
         reply = await get_message(other_messages, "TRY_AGAIN_TEXT", language)
         await callback_query.message.bot.send_message(chat_id=user_id,
                                                       text=reply)
-        reply2= await get_message(other_messages, "TASK_REJECTED_TEXT", language)
+        reply2 = await get_message(other_messages, "TASK_REJECTED_TEXT", language)
         await callback_query.answer(text=reply2, show_alert=True)
-    
-        # Удаляем сообщение с кнопками после отказа
-        # await callback_query.message.delete()
     else:
         return
 
+
+@state_handler_router.message(AdminMessageState.waiting_for_message)
+async def handle_admin_message(message: types.Message, state: FSMContext):
+    user_id = message.from_user.id
+    language = await get_language_for_user(user_id)
+    if message.from_user.id not in ADMINS_IDS:
+        reply = await get_message(other_messages, "NO_PERMISSION_TEXT", language)
+        await message.answer(text=reply)
+        return
+
+    content_type = message.content_type
+    user_message = message.text if content_type == types.ContentType.TEXT else (message.caption or "")
+
+    if content_type == types.ContentType.TEXT:
+        reply = await get_message(other_messages, "SEND_MESSAGE_TEXT", language, message=user_message)
+        await message.answer(text=reply)
+    elif content_type == types.ContentType.PHOTO:
+        reply = await get_message(other_messages, "SEND_PHOTO_TEXT", language)
+        await message.answer(text=reply)
+    elif content_type == types.ContentType.VIDEO:
+        reply = await get_message(other_messages, "SEND_VIDEO_TEXT", language)
+        await message.answer(text=reply)
+    elif content_type == types.ContentType.ANIMATION:
+        reply = await get_message(other_messages, "SEND_GIF_TEXT", language)
+        await message.answer(text=reply)
+
+    # Получение всех пользователей из базы данных
+    all_users = await get_all_users()
+
+    for user in all_users:
+        try:
+            if content_type == types.ContentType.TEXT:
+                await message.bot.send_message(chat_id=user["USER_ID"], text=user_message, parse_mode="Markdown")
+            elif content_type == types.ContentType.PHOTO:
+                photo = message.photo[-1].file_id
+                await message.bot.send_photo(chat_id=user["USER_ID"], photo=photo, caption=user_message,
+                                             parse_mode="Markdown")
+            elif content_type == types.ContentType.VIDEO:
+                video = message.video.file_id
+                await message.bot.send_video(chat_id=user["USER_ID"], video=video, caption=user_message,
+                                             parse_mode="Markdown")
+            elif content_type == types.ContentType.ANIMATION:
+                animation = message.animation.file_id
+                await message.bot.send_animation(chat_id=user["USER_ID"], animation=animation, caption=user_message,
+                                                 parse_mode="Markdown")
+        except Exception as e:
+            print(f"Не удалось отправить сообщение пользователю с ID {user['USER_ID']}: {e}")
+
+    await state.set_state(RegistrationState.main_menu_state)
+    reply = await get_message(other_messages, "MESSAGE_SENT_TEXT", language)
+    await message.answer(text=reply)

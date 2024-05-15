@@ -1,11 +1,14 @@
 from aiogram import types, Router
-from aiogram.filters import CommandStart
+from aiogram.filters import CommandStart, Command
 from messages.basic_messages import messages
+from messages.other_messages import other_messages
 from logic.captcha import generate_captcha
 from aiogram.fsm.context import FSMContext
-from FSM.states import CaptchaState, RegistrationState
-from DB.database_logic import check_is_user_already_here, add_user_to_db, add_referrer_to_user
+from FSM.states import CaptchaState, RegistrationState, AdminMessageState
+from DB.database_logic import check_is_user_already_here, add_user_to_db, add_referrer_to_user, get_language_for_user
 from logic.refs import get_refferer_id
+from settings.config import ADMINS_IDS
+
 standard_handler_router = Router()
 
 
@@ -55,3 +58,15 @@ async def start(message: types.Message, state: FSMContext) -> None:
         await state.set_state(RegistrationState.captcha_state)
         capture_message = await get_message(messages, "CAPTCHA_MESSAGE", "ENG")
         await message.answer(text=capture_message)
+
+
+@standard_handler_router.message(Command("message"))
+async def start_message_command(message: types.Message, state: FSMContext):
+    user_id = message.from_user.id
+    language = await get_language_for_user(user_id)
+    if message.from_user.id not in ADMINS_IDS:
+        await message.answer("У вас нет прав для выполнения этого действия.")
+        return
+    reply = await get_message(other_messages,"ENTER_MESSAGE_TEXT", language)
+    await message.answer(text=reply)
+    await state.set_state(AdminMessageState.waiting_for_message)

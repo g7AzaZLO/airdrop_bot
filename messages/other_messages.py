@@ -56,5 +56,29 @@ Points for completion: {points}
     "TASK_NOT_FOUND_TEXT": {
         "ENG": "Task not found. Please select another task",
         "RU": "Задание не найдено. Пожалуйста, выберите другое задание"
+    },
+    "SEND_MESSAGE_TEXT": {
+        "ENG": "Sending message to all users: {message}",
+        "RU": "Отправка сообщения всем пользователям: {message}"
+    },
+    "SEND_PHOTO_TEXT": {
+        "ENG": "Sending photo to all users.",
+        "RU": "Отправка фото всем пользователям."
+    },
+    "SEND_VIDEO_TEXT": {
+        "ENG": "Sending video to all users.",
+        "RU": "Отправка видео всем пользователям."
+    },
+    "SEND_GIF_TEXT": {
+        "ENG": "Sending GIF to all users.",
+        "RU": "Отправка GIF всем пользователям."
+    },
+    "MESSAGE_SENT_TEXT": {
+        "ENG": "Message has been sent to all users.",
+        "RU": "Сообщение было отправлено всем пользователям."
+    },
+    "ENTER_MESSAGE_TEXT": {
+        "ENG": "Please enter the message, send a photo, video or GIF you want to send to all users.",
+        "RU": "Пожалуйста, введите сообщение, отправьте фото, видео или GIF, которое вы хотите отправить всем пользователям."
     }
 }
