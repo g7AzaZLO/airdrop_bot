@@ -34,6 +34,10 @@ class TasksState(StatesGroup):
     waiting_for_approval = State()  # Новое состояние ожидания проверки
 
 
+class AdminMessageState(StatesGroup):
+    waiting_for_message = State()
+
+
 state_messages = {
     'RegistrationState:lang_choose_state': "LANGUAGE_CHOOSE",
     'RegistrationState:hello_state': "WELCOME_MESSAGE",
