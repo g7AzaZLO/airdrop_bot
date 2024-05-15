@@ -14,7 +14,8 @@ from keyboards.small_kb import join_kb, language_choose_kb, yes_no_kb, sub_cance
     kb_task_done_back, kb_tasks_back
 from DB.database_logic import update_language_in_db, get_language_for_user, delete_user_from_db, get_user_details, \
     update_user_details, check_wallet_exists, decrement_referrer_count, mark_task_as_done, get_state_for_user, \
-    set_user_state, remove_task_from_await, mark_task_as_await
+    set_user_state, remove_task_from_await, mark_task_as_await, delete_admin_message, insert_admin_messages, \
+    get_admin_messages_dict
 from logic.telegram import check_joined_telegram_channel
 from DB.database_logic import check_is_user_already_here, add_user_to_db, add_referrer_to_user, get_referrer, \
     increment_referrer_count, add_points_to_user
@@ -27,9 +28,6 @@ from tasks.task_dict import protection_fot_admins
 from settings.config import AIRDROP_AMOUNT, ADMINS_IDS
 
 state_handler_router = Router()
-
-# TODO: add this to DB
-admin_messages_dict = {}
 
 
 # Handler состояния капчи в CaptchaState
@@ -520,7 +518,7 @@ async def single_task_handler(message: types.Message, state: FSMContext) -> None
         else:
             reply = await get_message(other_messages, "SEND_PIC_TO_CHECK_TEXT", language)
             await message.answer(text=reply)
-            await state.set_state(TasksState.screen_check_state)  # Устанавливаем новое состояние для отправки фото
+            await state.set_state(TasksState.screen_check_state)
             await mark_task_as_await(message.from_user.id, index_task)
     elif user_response in ["⏪Вернуться Назад", "⏪Return Back"]:
         tasks_done = user.get("TASKS_DONE", [])
@@ -556,9 +554,16 @@ async def achievements_handler(message: types.Message, state: FSMContext) -> Non
         return
 
 
-@state_handler_router.message(TasksState.screen_check_state, F.photo)
+@state_handler_router.message(TasksState.screen_check_state)
 async def handle_screen_check(message: types.Message, state: FSMContext) -> None:
-    screenshot = message.photo[-1] if message.photo else None
+    if message.photo:
+        screenshot = message.photo[-1]
+    else:
+        language = await get_language_for_user(message.from_user.id)
+        reply = await get_message(other_messages, "SEND_PIC_TO_CHECK_TEXT", language)
+        await message.answer(text=reply)
+        await state.set_state(TasksState.screen_check_state)
+        return
     user_id = message.from_user.id
     task_text = await state.get_data()
     index_task = await get_index_by_text_task(task_text["num_of_task"], await get_language_for_user(user_id))
@@ -595,7 +600,7 @@ async def handle_screen_check(message: types.Message, state: FSMContext) -> None
                 print(f"Некорректный ID администратора: {admin_id}")
             except Exception as e:
                 print(f"Не удалось отправить сообщение администратору с ID {admin_id}: {e}")
-        admin_messages_dict[index_task] = admin_messages
+        await insert_admin_messages({index_task: admin_messages})
         tasks_done = user.get("TASKS_DONE", [])
         total_buttons = await get_num_of_tasks()
         tasks_await = user.get("TASKS_AWAIT", [])
@@ -623,6 +628,7 @@ async def approve_task(callback_query: types.CallbackQuery):
     user_id = int(data[1])
     index_task = int(data[2])
     points = int(data[3])
+    admin_messages_dict = await get_admin_messages_dict()
     admin_messages = admin_messages_dict.get(index_task, {})
     user = await get_user_details(user_id)
     tasks_await = user.get("TASKS_AWAIT", [])
@@ -635,7 +641,8 @@ async def approve_task(callback_query: types.CallbackQuery):
                 print(f"Failed to delete message {message_id} for admin {admin_id}: {e}")
 
         if index_task in admin_messages_dict:
-            del admin_messages_dict[index_task]  #
+            await delete_admin_message(index_task)
+            # del admin_messages_dict[index_task]  #
         # # Проверка, было ли задание уже обработано
         #
         # tasks_done = user.get("TASKS_DONE", [])
@@ -669,8 +676,8 @@ async def reject_task(callback_query: types.CallbackQuery):
     data = callback_query.data.split("_")
     user_id = int(data[1])
     index_task = int(data[2])
-    admin_messages = admin_messages_dict.get(index_task,
-                                             {})
+    admin_messages_dict = await get_admin_messages_dict()
+    admin_messages = admin_messages_dict.get(index_task, {})
     user = await get_user_details(user_id)
     tasks_await = user.get("TASKS_AWAIT", [])
     if index_task in tasks_await:
@@ -682,7 +689,8 @@ async def reject_task(callback_query: types.CallbackQuery):
             except Exception as e:
                 print(f"Failed to delete message {message_id} for admin {admin_id}: {e}")
         if index_task in admin_messages_dict:
-            del admin_messages_dict[index_task]  #
+            await delete_admin_message(index_task)
+            # del admin_messages_dict[index_task]  #
         # Проверка, было ли задание уже обработано
 
         # tasks_done = user.get("TASKS_DONE", [])

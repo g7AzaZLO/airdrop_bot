@@ -1,5 +1,5 @@
 from settings.config import REFERRAL_REWARD, tasks_init
-from DB.mongo import users_collection, tasks_collection
+from DB.mongo import users_collection, tasks_collection, admin_messages_collection
 from FSM.states import get_state_from_string
 
 
@@ -26,6 +26,25 @@ async def insert_tasks():
     for task_id, task_data in tasks_init.items():
         task_data["_id"] = task_id
         await tasks_collection.update_one({"_id": task_id}, {"$set": task_data}, upsert=True)
+
+
+async def delete_admin_message(task_id):
+    await admin_messages_collection.delete_one({"_id": task_id})
+
+
+async def get_admin_messages_dict():
+    admin_messages_cursor = admin_messages_collection.find()
+    admin_messages_list = await admin_messages_cursor.to_list(length=None)  # Преобразуем курсор в список
+    admin_messages_dict = {message["_id"]: message for message in admin_messages_list}
+    return admin_messages_dict
+
+
+async def insert_admin_messages(admin_messages):
+    for task_id, message_data in admin_messages.items():
+        message_data["_id"] = task_id
+        # Преобразуем ключи в строки
+        message_data = {str(k): v for k, v in message_data.items()}
+        await admin_messages_collection.update_one({"_id": task_id}, {"$set": message_data}, upsert=True)
 
 
 async def get_all_tasks():

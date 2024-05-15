@@ -9,3 +9,4 @@ client = motor.motor_asyncio.AsyncIOMotorClient(DB_URI)
 db = client[DATABASE_NAME]
 users_collection = db['users']
 tasks_collection = db['tasks']
+admin_messages_collection = db["admin_messages"]
