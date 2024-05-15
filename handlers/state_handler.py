@@ -581,10 +581,10 @@ async def handle_screen_check(message: types.Message, state: FSMContext) -> None
         await state.update_data(tasks_await=tasks)
     
     if screenshot:
-        inline_kb = InlineKeyboardMarkup(inline_keyboard=[
-            [InlineKeyboardButton(text="✅ Да", callback_data=f"approve_{user_id}_{index_task}_{points}")],
-            [InlineKeyboardButton(text="❌ Нет", callback_data=f"reject_{user_id}_{index_task}")]
-        ])
+        # inline_kb = InlineKeyboardMarkup(inline_keyboard=[
+        #     [InlineKeyboardButton(text="✅ Да", callback_data=f"approve_{user_id}_{index_task}_{points}")],
+        #     [InlineKeyboardButton(text="❌ Нет", callback_data=f"reject_{user_id}_{index_task}")]
+        # ])
         admin_messages = []
         for admin_id in ADMINS_IDS:
             if not admin_id:
@@ -592,9 +592,26 @@ async def handle_screen_check(message: types.Message, state: FSMContext) -> None
                 continue
             try:
                 admin_id_int = int(admin_id)
-                sent_message = await message.bot.send_photo(chat_id=admin_id_int, photo=screenshot.file_id,
-                                             caption=f"Пользователь {user_id} отправил скриншот для задания {index_task}. Начислить {points} очков?",
-                                             reply_markup=inline_kb)
+                # sent_message = await message.bot.send_photo(chat_id=admin_id_int, photo=screenshot.file_id,
+                #                              caption=f"Пользователь {user_id} отправил скриншот для задания {index_task}. Начислить {points} очков?",
+                #                              reply_markup=inline_kb)
+                sent_message = await message.bot.send_photo(
+                    chat_id=admin_id_int,
+                    photo=screenshot.file_id,
+                    caption=f"Пользователь {user_id} отправил скриншот для задания {index_task}."
+                            f" Начислить {points} очков?"
+                )
+                # Update the message with the keyboard that includes the message ID
+                inline_kb = InlineKeyboardMarkup(inline_keyboard=[
+                    [InlineKeyboardButton(text="✅ Да",
+                                          callback_data=f"approve_{user_id}_{index_task}_{points}_"
+                                                        f"{admin_id_int}_{sent_message.message_id}")],
+                    [InlineKeyboardButton(text="❌ Нет",
+                                          callback_data=f"reject_{user_id}_{index_task}_"
+                                                        f"{admin_id_int}_{sent_message.message_id}")]
+                ])
+                await message.bot.edit_message_reply_markup(chat_id=admin_id_int, message_id=sent_message.message_id,
+                                                            reply_markup=inline_kb)
                 admin_messages.append(sent_message.message_id)
             except ValueError:
                 print(f"Некорректный ID администратора: {admin_id}")
@@ -625,13 +642,15 @@ async def approve_task(callback_query: types.CallbackQuery, state: FSMContext):
     user_id = int(data[1])
     index_task = int(data[2])
     points = int(data[3])
-    data = await state.get_data()
-    tasks = data.get('tasks_await', [])
+    admin_id = int(data[4])
+    message_id = int(data[5])
+    tasks_data = await state.get_data()
+    tasks = tasks_data.get('tasks_await', [])
     if index_task in tasks:
         tasks.remove(index_task)
         await state.update_data(tasks_await=tasks)
         # Delete messages sent to other admins
-        admin_messages = data.get('admin_messages', [])
+        admin_messages = tasks_data.get('admin_messages', [])
         for admin_id, message_id in zip(ADMINS_IDS, admin_messages):
             try:
                 await callback_query.message.bot.delete_message(chat_id=admin_id, message_id=message_id)
@@ -652,8 +671,8 @@ async def approve_task(callback_query: types.CallbackQuery, state: FSMContext):
     
         # Удаляем сообщение с кнопками после подтверждения
         # await callback_query.message.delete()
-    else:
-        return
+    # else:
+    #     return
 
 
 @state_handler_router.callback_query(lambda callback_query: callback_query.data.startswith("reject_"))
@@ -666,14 +685,14 @@ async def reject_task(callback_query: types.CallbackQuery, state: FSMContext):
     user_id = int(data[1])
     index_task = int(data[2])
     
-    data = await state.get_data()
-    tasks = data.get('tasks_await', [])
+    tasks_data = await state.get_data()
+    tasks = tasks_data.get('tasks_await', [])
     if index_task in tasks:
         tasks.remove(index_task)
         await state.update_data(tasks_await=tasks)
         
         # Delete messages sent to other admins
-        admin_messages = data.get('admin_messages', [])
+        admin_messages = tasks_data.get('admin_messages', [])
         for admin_id, message_id in zip(ADMINS_IDS, admin_messages):
             try:
                 await callback_query.message.bot.delete_message(chat_id=admin_id, message_id=message_id)
@@ -686,10 +705,10 @@ async def reject_task(callback_query: types.CallbackQuery, state: FSMContext):
         if index_task in tasks_done:
             await callback_query.answer("Это задание уже было обработано.", show_alert=True)  # TODO: messages 2 languages
             return
-    
+        
         await callback_query.message.bot.send_message(chat_id=user_id, text="Ваше задание не выполнено, попробуйте снова.")  # TODO: messages 2 languages
         await callback_query.answer("Задание отклонено.", show_alert=True)  # TODO: messages 2 languages
-    
+        
         # Удаляем сообщение с кнопками после отказа
         # await callback_query.message.delete()
     else:
