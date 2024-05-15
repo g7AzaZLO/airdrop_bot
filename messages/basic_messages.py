@@ -14,37 +14,7 @@ messages = {
 		"referral_link": "https://t.me/Rcrvynjibot"
 		
 	},
-	"YES_NO": {
-		"ENG": "Are you sure?",
-		"RU": "Вы уверены?",
-	},
-	"CANCEL_JOINING": {
-		"ENG": """
-We are sorry to see you go. Please come back anytime.
-Thank you for your support!
-p.s. You are safely deleted from our database.
-        """,
-		"RU": """
-Нам жаль, что вы уходите. Пожалуйста, заходите в любое время.
-Спасибо за вашу поддержку!
-p.s. Вы благополучно удалены из нашей базы данных.
-        """,
-	},
-	"LANGUAGE_CHOSEN_WRONG": {
-		"ENG": "That language is not on the list.\nPlease choose your language",
-	},
-	"LANGUAGE_CHOOSE": {
-		"ENG": "Please choose your language",
-		"RU": "Пожалуйста, выберите ваш язык",
-	},
-	"PROFILE_MENU": {
-		"ENG": "Your name is {user_name}",
-		"RU": "Ваше имя {user_name}"
-	},
-	"MENU": {
-		"ENG": "Here is what we have for you:",
-		"RU": "Вот что у нас для Вас есть:"
-	},
+	
 	"CAPTCHA_MESSAGE": {
 		"ENG": "Please type in the numbers on the image",
 		"RU": "Пожалуйста, введите числа на картинке"
@@ -119,18 +89,25 @@ _ВНИМАНИЕ: Пользователи которые читерят буд
 	"FOLLOW_TWITTER_TEXT": {
 		"ENG": """
 🔹 Follow our Twitter page
-{twitter_links}
+{twitter_links}\n
+
+Type in the link to your Twitter profile to proceed.
+Example:
+https://twitter.com/example
 			""",
 		"RU": """
 🔹 Подпишись на наш Твиттер
-{twitter_links}
+{twitter_links}\n
+
+Введите ссылку на ваш профиль Твиттера, чтобы продолжить.
+Пример:
+https://twitter.com/example
 			"""
 	},
 	
 	"GET_TWITTER_LINK_TEXT": {
 		"ENG": """
 Type in the link to your Twitter profile to proceed.
-
 Example: 
 https://twitter.com/example
 """,
@@ -210,7 +187,14 @@ This link is already registered
 Данный пользователь уже зарегистрирован
 		"""
 	},
-	
+	"ADDRESS_ALREADY_REGISTERED_TEXT": {
+		"ENG": """
+This address is already registered
+""",
+		"RU": """
+Данный адрес уже зарегистрирован
+		"""
+	},
 	"NOT_SUB_AT_GROUP_TEXT": {
 		"ENG": """
 First, subscribe to the channel
@@ -220,14 +204,7 @@ First, subscribe to the channel
 		"""
 	},
 	
-	"UNKNOWN_COMMAND_TEXT": {
-		"ENG": """
-Unknown command, please choose from the menu.
-""",
-		"RU": """
-Неизвестная команда, пожалуйста выберите команду из меню
-		"""
-	},
+	
 	"START_AGAIN_TEXT": {
 		"ENG": """
 Please, type /start or click the button below to begin

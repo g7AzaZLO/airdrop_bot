@@ -1,32 +1,30 @@
-import sqlite3
 import re
-from settings.config import DATABASE_FILE
+from DB.mongo import users_collection
 
 
 async def check_joined_twitter_channel(user_twitter_link: str) -> bool:
     """
-    Проверяет, существует ли запись с указанной ссылкой на Twitter в базе данных.
+    Проверяет, существует ли запись с указанной ссылкой на Twitter в базе данных MongoDB.
 
     Параметры:
     - user_twitter_link (str): Ссылка на профиль пользователя в Twitter.
 
     Возвращает:
-    - True, если ссылка существует в базе данных.
-    - False, если ссылка не найдена в базе данных или произошла ошибка.
+    - True, если ссылка не существует в базе данных.
+    - False, если ссылка найдена в базе данных или произошла ошибка.
     """
+    print("def check_joined_twitter_channel")
     try:
-        conn = sqlite3.connect(DATABASE_FILE)
-        cursor = conn.cursor()
-        # Выполняем SQL-запрос для проверки наличия ссылки
-        cursor.execute("SELECT 1 FROM users WHERE TWITTER_USER = ?", (user_twitter_link,))
-        result = cursor.fetchone()
-        conn.close()
-
-        # Проверяем, если результат не пустой, значит запись найдена
-        return result is None
+        result = await users_collection.find_one({"TWITTER_USER": user_twitter_link})
+        if result:
+            print(f"Twitter link {user_twitter_link} found in database.")
+            return False
+        else:
+            print(f"Twitter link {user_twitter_link} not found in database.")
+            return True
     except Exception as e:
-        print(f"Error checking Twitter link in database: {e}")
-        return False
+        print(f"Error checking Twitter link in MongoDB: {e}")
+        return True
 
 
 def is_valid_twitter_link(twitter_link: str) -> bool:
