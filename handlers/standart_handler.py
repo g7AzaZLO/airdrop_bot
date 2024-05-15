@@ -1,4 +1,4 @@
-from aiogram import types, Router
+from aiogram import types, Router, F
 from aiogram.filters import CommandStart, Command
 from messages.basic_messages import messages
 from messages.other_messages import other_messages
@@ -37,7 +37,7 @@ async def get_message(messages: dict, message_key: str, language: str, **kwargs)
 
 
 # Handler под команду /start
-@standard_handler_router.message(CommandStart())
+@standard_handler_router.message(CommandStart(), F.chat.type == "private")
 async def start(message: types.Message, state: FSMContext) -> None:
     print("Processing /start command...")
     user_id = message.from_user.id
@@ -60,7 +60,7 @@ async def start(message: types.Message, state: FSMContext) -> None:
         await message.answer(text=capture_message)
 
 
-@standard_handler_router.message(Command("message"))
+@standard_handler_router.message(Command("message"), F.chat.type == "private")
 async def start_message_command(message: types.Message, state: FSMContext):
     user_id = message.from_user.id
     language = await get_language_for_user(user_id)
