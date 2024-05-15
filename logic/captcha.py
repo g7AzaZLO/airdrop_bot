@@ -24,10 +24,10 @@ async def check_captcha(message: types.Message) -> bool:
             # Generate a CAPTCHA if it's not already there, perhaps in case of error or restart
             await generate_captcha(message)
             return False
-    
+
         captcha_text = captcha_data[user_id]
         user_input = message.text
-    
+
         if captcha_text != user_input:
             await message.reply("Incorrect CAPTCHA, please try again.")
             await generate_captcha(message)

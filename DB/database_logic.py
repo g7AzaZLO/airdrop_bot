@@ -1,8 +1,7 @@
-import motor.motor_asyncio
-from bson.objectid import ObjectId
 from settings.config import REFERRAL_REWARD
 from DB.mongo import users_collection
 from FSM.states import get_state_from_string
+
 
 # Функция инициализации базы данных
 async def initialize_db() -> None:
@@ -96,31 +95,7 @@ async def update_user_details(user_id: int, **kwargs) -> bool:
         return False
 
 
-# Функция получения данных пользователя
-# async def get_user_details(user_id: int) -> dict | None:
-#     """
-#     Возвращает детали пользователя по заданному идентификатору.
-#
-#     Параметры:
-#     - user_id (int): Уникальный идентификатор пользователя.
-#
-#     Возвращает:
-#     - dict: Словарь с деталями пользователя, если пользователь найден.
-#     - None, если пользователь не найден или произошла ошибка.
-#     """
-#     try:
-#         user = await users_collection.find_one({"USER_ID": user_id})
-#         if user:
-#             print(f"User details retrieved for user {user_id}.")
-#             return user
-#         else:
-#             print(f"User {user_id} not found in database.")
-#             return None
-#     except Exception as e:
-#         print(f"Error retrieving user details for user {user_id}: {e}")
-#         return None
-
-async def get_user_details(user_id: int) -> dict:
+async def get_user_details(user_id: int) -> dict | None:
     """
     Возвращает детали пользователя по заданному идентификатору.
 
@@ -205,7 +180,7 @@ async def add_user_to_db(user_id: int) -> bool:
         return False
 
 
-async def get_language_for_user(user_id: int) -> str:
+async def get_language_for_user(user_id: int) -> str | None:
     """
     Возвращает язык пользователя по заданному идентификатору.
 
@@ -312,7 +287,7 @@ async def decrement_referrer_count(referrer_id: int) -> None:
 
 
 # Функция получения реферера
-async def get_referrer(user_id: int) -> int:
+async def get_referrer(user_id: int) -> int | None:
     """
     Возвращает идентификатор реферера для указанного пользователя.
 
@@ -381,6 +356,7 @@ async def mark_task_as_done(user_id: int, task_index: int) -> bool:
         print(f"Error marking task {task_index} as done for user {user_id}: {e}")
         return False
 
+
 async def mark_task_as_await(user_id: int, task_index: int) -> bool:
     """
     Добавляет индекс выполненного задания в список выполненных заданий пользователя в MongoDB.
@@ -430,6 +406,8 @@ async def remove_task_from_await(user_id: int, task_index: int) -> bool:
     except Exception as e:
         print(f"Error removing task {task_index} from pending tasks for user {user_id}: {e}")
         return False
+
+
 async def add_points_to_user(user_id: int, points: int) -> bool:
     """
     Добавляет указанное количество очков к POINTS пользователя в базе данных.
@@ -476,9 +454,9 @@ async def set_user_state(user_id: int, state: str):
         )
     except Exception as e:
         print(f"Error setting state for user {user_id}: {e}")
-        
 
-async def get_state_for_user(user_id: int) -> str:
+
+async def get_state_for_user(user_id: int) -> str | None:
     """
     Returns the state of a user by the given user identifier.
 

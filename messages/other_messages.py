@@ -38,5 +38,23 @@ other_messages = {
     "TASK_REJECTED_TEXT": {
         "ENG": "Assignment denied",
         "RU": "Задание отклонено"
+    },
+    "NOT_DESC_TEXT": {
+        "ENG": "Description not available",
+        "RU": "Описание недоступно"
+    },
+    "TASK_TEXT": {
+        "ENG": """
+Task: {description}
+Points for completion: {points}
+        """,
+        "RU": """
+Задание: {description}
+Баллов за выполнение: {points}
+        """
+    },
+    "TASK_NOT_FOUND_TEXT": {
+        "ENG": "Task not found. Please select another task",
+        "RU": "Задание не найдено. Пожалуйста, выберите другое задание"
     }
 }

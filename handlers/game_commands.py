@@ -51,32 +51,3 @@ async def roll(message: types.Message) -> None:
 	response_message = messages_roll[random_key].format(result=result, low=low, high=high)
 	# Send the formatted response back to the user
 	await message.reply(response_message)
-	
-# from settings.config import BOT_TOKEN, AI_KEY
-# import requests
-# def get_crypto_joke():
-#     prompt = "Tell me a funny joke about cryptocurrency and the $TIME coin."
-#     headers = {
-#         'Authorization': f'Bearer {AI_KEY}',  # Replace with your actual OpenAI API key
-#         'Content-Type': 'application/json',
-#     }
-#     data = {
-#         'model': 'text-davinci-003',  # Updated to a newer model
-#         'prompt': prompt,
-#         'max_tokens': 150,
-#         'temperature': 0.7  # Adjust this for more creative output
-#     }
-#
-#     url = 'https://api.openai.com/v1/engines/text-davinci-003/completions'
-#
-#     try:
-#         response = requests.post(url, headers=headers, json=data)
-#         response.raise_for_status()  # Raises an exception for HTTP error codes
-#         joke = response.json()['choices'][0]['text'].strip()
-#         return joke
-#     except requests.RequestException as e:
-#         return f"An error occurred: {e}"
-#
-#
-# print(get_crypto_joke())
-# exit()

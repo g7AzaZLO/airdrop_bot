@@ -4,6 +4,8 @@ from keyboards.menu_kb import menu_kb
 from messages.menu_messages import menu_messages
 from messages.basic_messages import messages
 from aiogram import types
+
+
 class CaptchaState(StatesGroup):
     wait_captcha_state = State()
     null_state = State()  # idle when the user decided to leave the bot
@@ -17,7 +19,7 @@ class RegistrationState(StatesGroup):
     follow_telegram_state = State()
     follow_twitter_state = State()
     submit_address_state = State()
-    
+
     main_menu_state = State()  # State for the main menu
     menu_settings = State()  # State for the main menu
     lang_choose_state_again = State()  # changing the language second time
@@ -30,7 +32,6 @@ class TasksState(StatesGroup):
     achievements_state = State()  # State for the all the tasks available
     screen_check_state = State()  # Новое состояние для отправки фото на проверку
     waiting_for_approval = State()  # Новое состояние ожидания проверки
-
 
 
 state_messages = {
@@ -76,10 +77,11 @@ def get_state_from_string(state_string):
         # Assuming the class is defined in the current module or properly imported
         module = globals()  # Gets a dictionary of global symbol table
         state_class = module.get(class_name)  # Get the class by name
-        
+
         if state_class:
             return getattr(state_class, state_name, None)  # Get the state from the class
     return None
+
 
 def get_clean_state_identifier(state):
     full_str = str(state)
@@ -87,4 +89,3 @@ def get_clean_state_identifier(state):
     # We need to remove the "<State '" prefix and "'>" suffix.
     clean_identifier = full_str.split("'")[1]  # This splits the string by single quotes and takes the second element
     return clean_identifier
-
