@@ -1,5 +1,4 @@
 from aiogram import types, Router
-from aiogram.types import InputFile
 from DB.database_logic import get_language_for_user
 from tasks.task_dict import tasks
 
@@ -126,7 +125,7 @@ async def send_task_info(message: types.Message, task_index: int):
     tasks_list = list(tasks.values())
     if task_index >= 0 and task_index < len(tasks_list):
         task = tasks_list[task_index]
-    
+
         description = task["description"].get(language, "Description not available.")
         points = task["points"]
         image_path = task.get("image", "")
@@ -136,7 +135,7 @@ async def send_task_info(message: types.Message, task_index: int):
             f"Task: {description}\n"
             f"Points for completion: {points}\n"
         )
-    
+
         # Send image (if specified) and message text
         if image_path:
             await message.answer_photo(photo=types.FSInputFile(path="tasks/" + image_path), caption=message_text)
@@ -144,4 +143,3 @@ async def send_task_info(message: types.Message, task_index: int):
             await message.answer(text=message_text)
     else:
         await message.answer("Task not found. Please select another task.")
-
