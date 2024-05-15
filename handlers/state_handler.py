@@ -29,6 +29,11 @@ from settings.config import AIRDROP_AMOUNT, ADMINS_IDS
 state_handler_router = Router()
 
 
+# TODO: add this to DB
+admin_messages_dict = {}
+
+
+
 # Handler состояния капчи в CaptchaState
 @state_handler_router.message(CaptchaState.wait_captcha_state)
 async def captcha_response_handler(message: types.Message, state: FSMContext) -> None:
@@ -551,6 +556,9 @@ async def achievements_handler(message: types.Message, state: FSMContext) -> Non
         reply = await get_message(menu_messages, "UNKNOWN_COMMAND_TEXT", language)
         await message.answer(text=reply, reply_markup=kb_task_done_back[language])
         return
+    
+    
+
 
 
 @state_handler_router.message(TasksState.screen_check_state, F.photo)
@@ -565,8 +573,13 @@ async def handle_screen_check(message: types.Message, state: FSMContext) -> None
 
     
     if screenshot:
-
-        admin_messages = []
+        inline_kb = InlineKeyboardMarkup(inline_keyboard=[
+            [InlineKeyboardButton(text="✅ Да",
+                                  callback_data=f"approve_{user_id}_{index_task}_{points}")],
+            [InlineKeyboardButton(text="❌ Нет",
+                                  callback_data=f"reject_{user_id}_{index_task}")]
+        ])
+        admin_messages = {}
         for admin_id in ADMINS_IDS:
             if not admin_id:
                 print(f"Пропущен пустой ID администратора: {admin_id}")
@@ -580,23 +593,15 @@ async def handle_screen_check(message: types.Message, state: FSMContext) -> None
                             f" Начислить {points} очков?"
                 )
                 # Update the message with the keyboard that includes the message ID
-                inline_kb = InlineKeyboardMarkup(inline_keyboard=[
-                    [InlineKeyboardButton(text="✅ Да",
-                                          callback_data=f"approve_{user_id}_{index_task}_{points}_"
-                                                        f"{sent_message.message_id}")],
-                    [InlineKeyboardButton(text="❌ Нет",
-                                          callback_data=f"reject_{user_id}_{index_task}_"
-                                                        f"{sent_message.message_id}")]
-                ])
+                
                 await message.bot.edit_message_reply_markup(chat_id=admin_id_int, message_id=sent_message.message_id,
                                                             reply_markup=inline_kb)
-                admin_messages.append(sent_message.message_id)
+                admin_messages[admin_id_int] = sent_message.message_id
             except ValueError:
                 print(f"Некорректный ID администратора: {admin_id}")
             except Exception as e:
                 print(f"Не удалось отправить сообщение администратору с ID {admin_id}: {e}")
-        await state.update_data(admin_messages=admin_messages)
-        
+        admin_messages_dict[index_task] = admin_messages
         tasks_done = user.get("TASKS_DONE", [])
         total_buttons = await get_num_of_tasks()
         tasks_await = user.get("TASKS_AWAIT", [])
@@ -619,31 +624,30 @@ async def approve_task(callback_query: types.CallbackQuery):
         reply = await get_message(other_messages, "NO_PERMISSION_TEXT", language)
         await callback_query.answer(text=reply, show_alert=True)
         return
-
+    
     data = callback_query.data.split("_")
     user_id = int(data[1])
     index_task = int(data[2])
     points = int(data[3])
-    message_id = int(data[4])
+    admin_messages = admin_messages_dict.get(index_task, {})
     user = await get_user_details(user_id)
-
-        # Delete messages sent to other admins
-        # admin_messages = tasks_data.get('admin_messages', [])
     tasks_await = user.get("TASKS_AWAIT", [])
     if index_task in tasks_await:
         await remove_task_from_await(user_id, index_task)
-        for admin_id in ADMINS_IDS:
+        for admin_id, message_id in admin_messages.items():
             try:
                 await callback_query.message.bot.delete_message(chat_id=admin_id, message_id=message_id)
             except Exception as e:
                 print(f"Failed to delete message {message_id} for admin {admin_id}: {e}")
-    
-        # Проверка, было ли задание уже обработано
-        
-        tasks_done = user.get("TASKS_DONE", [])
-        if index_task in tasks_done:
-            await callback_query.answer("Это задание уже было обработано.", show_alert=True)
-            return
+                
+        if index_task in admin_messages_dict:
+            del admin_messages_dict[index_task]    #
+        # # Проверка, было ли задание уже обработано
+        #
+        # tasks_done = user.get("TASKS_DONE", [])
+        # if index_task in tasks_done:
+        #     await callback_query.answer("Это задание уже было обработано.", show_alert=True)
+        #     return
     
         await add_points_to_user(user_id, points)
         await mark_task_as_done(user_id, index_task)
@@ -671,29 +675,28 @@ async def reject_task(callback_query: types.CallbackQuery):
     data = callback_query.data.split("_")
     user_id = int(data[1])
     index_task = int(data[2])
-    message_id = int(data[3])
+    admin_messages = admin_messages_dict.get(index_task,
+                                             {})
     user = await get_user_details(user_id)
     tasks_await = user.get("TASKS_AWAIT", [])
     if index_task in tasks_await:
         await remove_task_from_await(user_id, index_task)
-        # await state.update_data(tasks_await=tasks)
-        #
-        #     # Delete messages sent to other admins
-        #     admin_messages = tasks_data.get('admin_messages', [])
-        for admin_id in ADMINS_IDS:
+
+        for admin_id, message_id in admin_messages.items():
             try:
                 await callback_query.message.bot.delete_message(chat_id=admin_id, message_id=message_id)
             except Exception as e:
                 print(f"Failed to delete message {message_id} for admin {admin_id}: {e}")
-    
+        if index_task in admin_messages_dict:
+            del admin_messages_dict[index_task]    #
         # Проверка, было ли задание уже обработано
     
-        tasks_done = user.get("TASKS_DONE", [])
-        if index_task in tasks_done:
-            reply = await get_message(other_messages,"ALREADY_PROCESSED",language)
-            await callback_query.answer(text=reply,
-                                        show_alert=True)
-            return
+        # tasks_done = user.get("TASKS_DONE", [])
+        # if index_task in tasks_done:
+        #     reply = await get_message(other_messages,"ALREADY_PROCESSED",language)
+        #     await callback_query.answer(text=reply,
+        #                                 show_alert=True)
+        #     return
         reply = await get_message(other_messages, "TRY_AGAIN_TEXT", language)
         await callback_query.message.bot.send_message(chat_id=user_id,
                                                       text=reply)
