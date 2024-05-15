@@ -1,5 +1,5 @@
 from aiogram import types, Router, F
-from FSM.states import CaptchaState, RegistrationState, TasksState, state_messages, state_keyboards,\
+from FSM.states import CaptchaState, RegistrationState, TasksState, state_messages, state_keyboards, \
     get_clean_state_identifier, state_menus
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from logic.captcha import generate_captcha, check_captcha
@@ -8,11 +8,12 @@ from handlers.standart_handler import get_message
 from messages.basic_messages import messages
 from messages.menu_messages import menu_messages
 from messages.task_menu_messages import task_menu_messages
+from messages.other_messages import other_messages
 from keyboards.menu_kb import menu_kb, kb_menu_settings, create_numeric_keyboard
 from keyboards.small_kb import join_kb, language_choose_kb, yes_no_kb, sub_cancel_kb, social_join_kb, kb_start, \
     kb_task_done_back, kb_tasks_back
 from DB.database_logic import update_language_in_db, get_language_for_user, delete_user_from_db, get_user_details, \
-    update_user_details, check_wallet_exists, decrement_referrer_count, mark_task_as_done, get_state_for_user,\
+    update_user_details, check_wallet_exists, decrement_referrer_count, mark_task_as_done, get_state_for_user, \
     set_user_state
 from logic.telegram import check_joined_telegram_channel
 from DB.database_logic import check_is_user_already_here, add_user_to_db, add_referrer_to_user, get_referrer, \
@@ -451,7 +452,7 @@ async def current_tasks_handler(message: types.Message, state: FSMContext) -> No
         await state.set_state(TasksState.current_tasks_state)
         return
     elif index_task in tasks_await:
-        reply1 = 'Это задание уже было отправлено на проверку.'  # TODO: 2 languages into messages
+        reply1 = await get_message(other_messages, "TASK_ALREADY_SEND_TEXT", language)
         total_buttons = await get_num_of_tasks()
         task_done_points = await calculate_total_points(tasks_done)
         tasks_total_points = await get_all_points()
@@ -522,7 +523,8 @@ async def single_task_handler(message: types.Message, state: FSMContext) -> None
             await message.answer(text=reply, reply_markup=tasks_keyboard)
             await state.set_state(TasksState.current_tasks_state)
         else:
-            await message.answer(text="Пришлите скриншот для проверки")  # TODO: messages 2 languages
+            reply = await get_message(other_messages, "SEND_PIC_TO_CHECK_TEXT", language)
+            await message.answer(text=reply)
             await state.set_state(TasksState.screen_check_state)  # Устанавливаем новое состояние для отправки фото
     elif user_response in ["⏪Вернуться Назад", "⏪Return Back"]:
         tasks_done = user.get("TASKS_DONE", [])
@@ -560,10 +562,6 @@ async def achievements_handler(message: types.Message, state: FSMContext) -> Non
         return
 
 
-# TODO все таки нужно убирвть кнопку после отправки задания на проверку, чтобы юзер не мог повторно ничего отправлять пока не пройдет проверка.
-# TODO Либо ставить защиту что юзер не может отправить новый скрин пока не проверен старый
-
-# TODO нужно избавиться от двойного отказа двемя разными админами
 @state_handler_router.message(TasksState.screen_check_state, F.photo)
 async def handle_screen_check(message: types.Message, state: FSMContext) -> None:
     screenshot = message.photo[-1] if message.photo else None
@@ -579,7 +577,7 @@ async def handle_screen_check(message: types.Message, state: FSMContext) -> None
     if index_task not in tasks:
         tasks.append(index_task)
         await state.update_data(tasks_await=tasks)
-    
+
     if screenshot:
         inline_kb = InlineKeyboardMarkup(inline_keyboard=[
             [InlineKeyboardButton(text="✅ Да", callback_data=f"approve_{user_id}_{index_task}_{points}")],
@@ -593,15 +591,15 @@ async def handle_screen_check(message: types.Message, state: FSMContext) -> None
             try:
                 admin_id_int = int(admin_id)
                 sent_message = await message.bot.send_photo(chat_id=admin_id_int, photo=screenshot.file_id,
-                                             caption=f"Пользователь {user_id} отправил скриншот для задания {index_task}. Начислить {points} очков?",
-                                             reply_markup=inline_kb)
+                                                            caption=f"Пользователь {user_id} отправил скриншот для задания {index_task}. Начислить {points} очков?",
+                                                            reply_markup=inline_kb)
                 admin_messages.append(sent_message.message_id)
             except ValueError:
                 print(f"Некорректный ID администратора: {admin_id}")
             except Exception as e:
                 print(f"Не удалось отправить сообщение администратору с ID {admin_id}: {e}")
         await state.update_data(admin_messages=admin_messages)
-        
+
         tasks_done = user.get("TASKS_DONE", [])
         total_buttons = await get_num_of_tasks()
         data = await state.get_data()
@@ -609,16 +607,21 @@ async def handle_screen_check(message: types.Message, state: FSMContext) -> None
         tasks_keyboard = await create_numeric_keyboard(total_buttons, tasks_done + tasks_await, language)
         reply = await get_message(task_menu_messages, "WE_ARE_BACK_CHOOSE_TEXT", language)
         await message.answer(text=reply, reply_markup=tasks_keyboard)
-        await message.answer("Ваш скриншот отправлен на проверку.", reply_markup=tasks_keyboard)  # TODO: messages 2 languages
+        reply2 = await get_message(other_messages, "YOUR_PIC_SEND_TEXT", language)
+        await message.answer(text=reply2, reply_markup=tasks_keyboard)
         await state.set_state(TasksState.current_tasks_state)
     else:
-        await message.answer("Пожалуйста, отправьте скриншот.")  # TODO: messages 2 languages
+        reply = await get_message(other_messages, "PLS_SEND_PIC_TEXT", language)
+        await message.answer(text=reply)
 
 
 @state_handler_router.callback_query(lambda callback_query: callback_query.data.startswith("approve_"))
 async def approve_task(callback_query: types.CallbackQuery, state: FSMContext):
+    user_id = callback_query.from_user.id
+    language = await get_language_for_user(user_id)
     if callback_query.from_user.id not in ADMINS_IDS:
-        await callback_query.answer("У вас нет прав для выполнения этого действия.", show_alert=True)  # TODO: messages 2 languages
+        reply = await get_message(other_messages, "NO_PERMISSION_TEXT", language)
+        await callback_query.answer(text=reply, show_alert=True)
         return
 
     data = callback_query.data.split("_")
@@ -644,12 +647,14 @@ async def approve_task(callback_query: types.CallbackQuery, state: FSMContext):
         if index_task in tasks_done:
             await callback_query.answer("Это задание уже было обработано.", show_alert=True)
             return
-    
+
         await add_points_to_user(user_id, points)
         await mark_task_as_done(user_id, index_task)
-        await callback_query.message.bot.send_message(chat_id=user_id, text="Ваше задание выполнено, очки начислены.")  # TODO: messages 2 languages
-        await callback_query.answer("Задание подтверждено.", show_alert=True)  # TODO: messages 2 languages
-    
+        reply = await get_message(other_messages, "TASK_DONE_TEXT", language, index_task=index_task)
+        await callback_query.message.bot.send_message(chat_id=user_id, text=reply)
+        reply2 = await get_message(other_messages, "TASK_CONFIRMED_TEXT", language)
+        await callback_query.answer(text=reply2, show_alert=True)
+
         # Удаляем сообщение с кнопками после подтверждения
         # await callback_query.message.delete()
     else:
@@ -658,20 +663,24 @@ async def approve_task(callback_query: types.CallbackQuery, state: FSMContext):
 
 @state_handler_router.callback_query(lambda callback_query: callback_query.data.startswith("reject_"))
 async def reject_task(callback_query: types.CallbackQuery, state: FSMContext):
+    user_id = callback_query.from_user.id
+    language = await get_language_for_user(user_id)
     if callback_query.from_user.id not in ADMINS_IDS:
-        await callback_query.answer("У вас нет прав для выполнения этого действия.", show_alert=True)  # TODO: messages 2 languages
+        reply = await get_message(other_messages, "NO_PERMISSION_TEXT", language)
+        await callback_query.answer(text=reply,
+                                    show_alert=True)
         return
 
     data = callback_query.data.split("_")
     user_id = int(data[1])
     index_task = int(data[2])
-    
+
     data = await state.get_data()
     tasks = data.get('tasks_await', [])
     if index_task in tasks:
         tasks.remove(index_task)
         await state.update_data(tasks_await=tasks)
-        
+
         # Delete messages sent to other admins
         admin_messages = data.get('admin_messages', [])
         for admin_id, message_id in zip(ADMINS_IDS, admin_messages):
@@ -679,17 +688,21 @@ async def reject_task(callback_query: types.CallbackQuery, state: FSMContext):
                 await callback_query.message.bot.delete_message(chat_id=admin_id, message_id=message_id)
             except Exception as e:
                 print(f"Failed to delete message {message_id} for admin {admin_id}: {e}")
-        
+
         # Проверка, было ли задание уже обработано
         task_data = await get_user_details(user_id)
         tasks_done = task_data.get("TASKS_DONE", [])
         if index_task in tasks_done:
-            await callback_query.answer("Это задание уже было обработано.", show_alert=True)  # TODO: messages 2 languages
+            reply = await get_message(other_messages,"ALREADY_PROCESSED",language)
+            await callback_query.answer(text=reply,
+                                        show_alert=True)
             return
-    
-        await callback_query.message.bot.send_message(chat_id=user_id, text="Ваше задание не выполнено, попробуйте снова.")  # TODO: messages 2 languages
-        await callback_query.answer("Задание отклонено.", show_alert=True)  # TODO: messages 2 languages
-    
+        reply = await get_message(other_messages, "TRY_AGAIN_TEXT", language)
+        await callback_query.message.bot.send_message(chat_id=user_id,
+                                                      text=reply)
+        reply2= await get_message(other_messages, "TASK_REJECTED_TEXT", language)
+        await callback_query.answer(text=reply2, show_alert=True)
+
         # Удаляем сообщение с кнопками после отказа
         # await callback_query.message.delete()
     else:
