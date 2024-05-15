@@ -28,7 +28,7 @@ async def insert_tasks():
         await tasks_collection.update_one({"_id": task_id}, {"$set": task_data}, upsert=True)
 
 
-async def delete_admin_message(task_id):
+async def delete_admin_message(task_id: int):
     await admin_messages_collection.delete_one({"_id": task_id})
 
 
@@ -39,7 +39,7 @@ async def get_admin_messages_dict():
     return admin_messages_dict
 
 
-async def insert_admin_messages(admin_messages):
+async def insert_admin_messages(admin_messages: dict) -> None:
     for task_id, message_data in admin_messages.items():
         message_data["_id"] = task_id
         # Преобразуем ключи в строки
@@ -511,3 +511,9 @@ async def get_state_for_user(user_id: int) -> str | None:
     except Exception as e:
         print(f"Error retrieving state for user {user_id}: {e}")
         return None
+
+
+async def get_all_users() -> list:
+    users_cursor = users_collection.find()
+    users_list = await users_cursor.to_list(length=None)
+    return users_list
