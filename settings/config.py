@@ -35,3 +35,46 @@ bot = Bot(token=BOT_TOKEN)
 
 # mongo
 DB_URI = os.getenv("DB_URI")
+
+tasks_init = {
+    1: {
+        "image": "task1.png",
+        "description": {
+            "RU": "Подпишитесь на наш канал Telegram",
+            "ENG": "Subscribe to our Telegram channel"
+        },
+        "points": 50,
+        "type": "telegram_sub",
+        "protection": None
+    },
+    2: {
+        "image": "",
+        "description": {
+            "RU": "Сделайте репост нашего поста в Twitter",
+            "ENG": "Retweet our post on Twitter"
+        },
+        "points": 100,
+        "type": "twitter_retweet",
+        "protection": None
+    },
+    3: {
+        "image": "",
+        "description": {
+            "RU": "Оставьте комментарий в Twitter",
+            "ENG": "Leave a comment on Twitter"
+        },
+        "points": 150,
+        "type": "twitter_comment",
+        "protection": "screen_check"
+    },
+    4: {
+        "image": "",
+        "description": {
+            "RU": "Оставьте комментарий в Telegram",
+            "ENG": "Leave a comment on Telegram"
+        },
+        "points": 200,
+        "type": "telegram_comment",
+        "protection": "screen_check"
+    }
+}

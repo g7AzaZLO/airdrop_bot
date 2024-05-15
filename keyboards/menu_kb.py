@@ -94,7 +94,7 @@ async def create_numeric_keyboard(total_buttons: int, exclusions: list, language
 	if any(x > total_buttons or x < 1 for x in exclusions):
 		raise ValueError("Exclusions contain invalid button numbers")
 	
-	if len(exclusions) >= total_buttons:
+	if len(exclusions) > total_buttons:
 		raise ValueError("Number of exclusions must be less than the total number of buttons")
 	
 	# Generate list of all button numbers and then remove the exclusions

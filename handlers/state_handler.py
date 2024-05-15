@@ -28,10 +28,8 @@ from settings.config import AIRDROP_AMOUNT, ADMINS_IDS
 
 state_handler_router = Router()
 
-
 # TODO: add this to DB
 admin_messages_dict = {}
-
 
 
 # Handler состояния капчи в CaptchaState
@@ -556,9 +554,6 @@ async def achievements_handler(message: types.Message, state: FSMContext) -> Non
         reply = await get_message(menu_messages, "UNKNOWN_COMMAND_TEXT", language)
         await message.answer(text=reply, reply_markup=kb_task_done_back[language])
         return
-    
-    
-
 
 
 @state_handler_router.message(TasksState.screen_check_state, F.photo)
@@ -571,7 +566,6 @@ async def handle_screen_check(message: types.Message, state: FSMContext) -> None
     user = await get_user_details(message.from_user.id)
     language = await get_language_for_user(user_id)
 
-    
     if screenshot:
         inline_kb = InlineKeyboardMarkup(inline_keyboard=[
             [InlineKeyboardButton(text="✅ Да",
@@ -593,7 +587,7 @@ async def handle_screen_check(message: types.Message, state: FSMContext) -> None
                             f" Начислить {points} очков?"
                 )
                 # Update the message with the keyboard that includes the message ID
-                
+
                 await message.bot.edit_message_reply_markup(chat_id=admin_id_int, message_id=sent_message.message_id,
                                                             reply_markup=inline_kb)
                 admin_messages[admin_id_int] = sent_message.message_id
@@ -624,7 +618,7 @@ async def approve_task(callback_query: types.CallbackQuery):
         reply = await get_message(other_messages, "NO_PERMISSION_TEXT", language)
         await callback_query.answer(text=reply, show_alert=True)
         return
-    
+
     data = callback_query.data.split("_")
     user_id = int(data[1])
     index_task = int(data[2])
@@ -639,16 +633,16 @@ async def approve_task(callback_query: types.CallbackQuery):
                 await callback_query.message.bot.delete_message(chat_id=admin_id, message_id=message_id)
             except Exception as e:
                 print(f"Failed to delete message {message_id} for admin {admin_id}: {e}")
-                
+
         if index_task in admin_messages_dict:
-            del admin_messages_dict[index_task]    #
+            del admin_messages_dict[index_task]  #
         # # Проверка, было ли задание уже обработано
         #
         # tasks_done = user.get("TASKS_DONE", [])
         # if index_task in tasks_done:
         #     await callback_query.answer("Это задание уже было обработано.", show_alert=True)
         #     return
-    
+
         await add_points_to_user(user_id, points)
         await mark_task_as_done(user_id, index_task)
         reply = await get_message(other_messages, "TASK_DONE_TEXT", language, index_task=index_task)
@@ -688,9 +682,9 @@ async def reject_task(callback_query: types.CallbackQuery):
             except Exception as e:
                 print(f"Failed to delete message {message_id} for admin {admin_id}: {e}")
         if index_task in admin_messages_dict:
-            del admin_messages_dict[index_task]    #
+            del admin_messages_dict[index_task]  #
         # Проверка, было ли задание уже обработано
-    
+
         # tasks_done = user.get("TASKS_DONE", [])
         # if index_task in tasks_done:
         #     reply = await get_message(other_messages,"ALREADY_PROCESSED",language)
@@ -700,11 +694,10 @@ async def reject_task(callback_query: types.CallbackQuery):
         reply = await get_message(other_messages, "TRY_AGAIN_TEXT", language)
         await callback_query.message.bot.send_message(chat_id=user_id,
                                                       text=reply)
-        reply2= await get_message(other_messages, "TASK_REJECTED_TEXT", language)
+        reply2 = await get_message(other_messages, "TASK_REJECTED_TEXT", language)
         await callback_query.answer(text=reply2, show_alert=True)
-    
+
         # Удаляем сообщение с кнопками после отказа
         # await callback_query.message.delete()
     else:
         return
-

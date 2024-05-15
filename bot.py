@@ -6,8 +6,9 @@ from handlers.state_handler import state_handler_router
 from handlers.game_commands import setup_game_routes
 from logic.task import task_router
 from dotenv import load_dotenv
-from DB.database_logic import initialize_db
+from DB.database_logic import initialize_db, get_all_tasks, insert_tasks
 from aiogram.fsm.storage.memory import MemoryStorage
+from tasks.task_dict import update_tasks
 
 # Загрузка переменных окружения
 env_path = '.env'
@@ -25,8 +26,18 @@ dp.include_router(task_router)
 setup_game_routes(dp)
 
 
+async def change_tasks():
+    while True:
+        new_tasks = await get_all_tasks()
+        print("Tasks have been updated.")
+        await update_tasks(new_tasks)
+        await asyncio.sleep(60)  # 10 минут = 600 секунд
+
+
 async def main() -> None:
     await initialize_db()
+    await insert_tasks()
+    asyncio.create_task(change_tasks())
     await bot.delete_webhook(drop_pending_updates=True)
     await dp.start_polling(bot)
 

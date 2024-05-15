@@ -84,6 +84,7 @@ async def get_num_of_tasks() -> int:
     - int: Количество существующих заданий.
     """
     print("def get_num_of_tasks")
+    print(len(tasks))
     return len(tasks)
 
 
@@ -132,7 +133,7 @@ async def send_task_info(message: types.Message, task_index: int):
         points = task["points"]
         image_path = task.get("image", "")
         # Format message text
-        message_text = await get_message(other_messages, "TASK_TEXT", language)
+        message_text = await get_message(other_messages, "TASK_TEXT", language, description=description, points=points)
 
         # Send image (if specified) and message text
         if image_path:

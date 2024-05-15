@@ -1,5 +1,5 @@
-from settings.config import REFERRAL_REWARD
-from DB.mongo import users_collection
+from settings.config import REFERRAL_REWARD, tasks_init
+from DB.mongo import users_collection, tasks_collection
 from FSM.states import get_state_from_string
 
 
@@ -20,6 +20,19 @@ async def initialize_db() -> None:
             print("Database initialized successfully with indexes on USER_ID")
     except Exception as e:
         print(f"Error initializing database: {e}")
+
+
+async def insert_tasks():
+    for task_id, task_data in tasks_init.items():
+        task_data["_id"] = task_id
+        await tasks_collection.update_one({"_id": task_id}, {"$set": task_data}, upsert=True)
+
+
+async def get_all_tasks():
+    tasks_cursor = tasks_collection.find()
+    tasks_list = await tasks_cursor.to_list(length=None)  # Преобразуем курсор в список
+    tasks_dict = {task["_id"]: task for task in tasks_list}
+    return tasks_dict
 
 
 # Функция удаления пользователя из базы данных
