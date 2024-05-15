@@ -2,11 +2,14 @@
 task_menu_messages = {
     "ACHIEVEMENTS": {
         "ENG": """
-HERE WE NEED TO ADD SOMETHING ABOUT ACHIEVEMENTS {tasks_done} (DONE)
+HERE WE NEED TO ADD SOMETHING ABOUT ACHIEVEMENTS {tasks_done}, u get {points_done} points(DONE)
         """,
         "RU": """
-СЮДА НУЖНО БУДЕТ ДОБАВИТЬ КАКУЮ-ТО ТЕМУ С АЧИВКАМИ {tasks_done} (ЗАВЕРШЕНО)
+СЮДА НУЖНО БУДЕТ ДОБАВИТЬ КАКУЮ-ТО ТЕМУ С АЧИВКАМИ {tasks_done}, заработано {points_done} очков (ЗАВЕРШЕНО)
         """},
+    "TASK_DONE_ALREADY": {
+        "ENG": "You have already done this task.\n",
+        "RU": "Вы уже выполнили эту задачу.\n"},
     "TASK_DONE_BACK_TEXT": {
         "ENG": "Here is your task....... Have you done it?",
         "RU": "Вот ваше задание, вы выполнили его?"},
@@ -23,6 +26,8 @@ Please choose a number:
         "ENG": "(Rewrite) We Are Back: Please choose a number:",
         "RU": "(Переписать) Мы вернулись, пожалуйста выберите номер:"
     },
+    "TASK_SEND_TO_CHECK_TEXT": {
+        "ENG": "You've submitted the assignment for review ",
+        "RU": "Вы отправили задание на проверку"
+    }
 }
-# tasks_done_points=tasks_done_points,
-# 		                          tasks_total_points=tasks_total_points

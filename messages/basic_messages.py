@@ -89,18 +89,25 @@ _ВНИМАНИЕ: Пользователи которые читерят буд
 	"FOLLOW_TWITTER_TEXT": {
 		"ENG": """
 🔹 Follow our Twitter page
-{twitter_links}
+{twitter_links}\n
+
+Type in the link to your Twitter profile to proceed.
+Example:
+https://twitter.com/example
 			""",
 		"RU": """
 🔹 Подпишись на наш Твиттер
-{twitter_links}
+{twitter_links}\n
+
+Введите ссылку на ваш профиль Твиттера, чтобы продолжить.
+Пример:
+https://twitter.com/example
 			"""
 	},
 	
 	"GET_TWITTER_LINK_TEXT": {
 		"ENG": """
 Type in the link to your Twitter profile to proceed.
-
 Example: 
 https://twitter.com/example
 """,
