@@ -73,7 +73,6 @@ kb_menu_settings = {
 }
 
 
-# TODO багуется!!! Дублируются кнопки вернуться назад и достижения
 async def create_numeric_keyboard(total_buttons: int, exclusions: list, language: str) -> ReplyKeyboardMarkup:
 	"""
 	Создает клавиатуру с числовыми кнопками и специальными кнопками управления на основе заданных параметров.

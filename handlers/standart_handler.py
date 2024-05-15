@@ -41,7 +41,8 @@ async def get_message(messages: dict, message_key: str, language: str, **kwargs)
 @standard_handler_router.message(CommandStart())
 async def start(message: types.Message, state: FSMContext) -> None:
     print("Processing /start command...")
-    if await check_is_user_already_here(message.from_user.id):
+    user_id = message.from_user.id
+    if await check_is_user_already_here(user_id):
         print("User already in db")
         await generate_captcha(message)
         await state.set_state(CaptchaState.wait_captcha_state)
@@ -50,33 +51,33 @@ async def start(message: types.Message, state: FSMContext) -> None:
         # Запуск меню после капчи
     else:
         print("User not in db")
-        await add_user_to_db(message.from_user.id)
+        await add_user_to_db(user_id)
         refferer = await get_refferer_id(message.text)
         if refferer is not None:
-            await add_referrer_to_user(message.from_user.id, refferer)
+            await add_referrer_to_user(user_id, refferer)
         await generate_captcha(message)
         await state.set_state(RegistrationState.captcha_state)
         capture_message = await get_message(messages, "CAPTCHA_MESSAGE", "ENG")
         await message.answer(text=capture_message)
 
 
-@standard_handler_router.message(Command('menu'), Command('Menu'))
-async def menu(message: types.Message, state: FSMContext) -> None:
-    print("Processing /menu command...")
-    language = await get_language_for_user(message.from_user.id)
-    if await check_is_user_already_here(message.from_user.id):
-        print("User already in db")
-        await state.set_state(RegistrationState.main_menu_state)
-        reply = await get_message(menu_messages, "MENU", language)
-        await message.answer(text=reply, reply_markup=menu_kb[language])
-        # Запуск меню после капчи
-    else:
-        print("User not in db")
-        await add_user_to_db(message.from_user.id)
-        refferer = await get_refferer_id(message.text)
-        if refferer is not None:
-            await add_referrer_to_user(message.from_user.id, refferer)
-        await generate_captcha(message)
-        await state.set_state(RegistrationState.captcha_state)
-        capture_message = await get_message(messages, "CAPTCHA_MESSAGE", "ENG")
-        await message.answer(text=capture_message)
+# @standard_handler_router.message(Command('menu'), Command('Menu'))
+# async def menu(message: types.Message, state: FSMContext) -> None:
+#     print("Processing /menu command...")
+#     language = await get_language_for_user(message.from_user.id)
+#     if await check_is_user_already_here(message.from_user.id):
+#         print("User already in db")
+#         await state.set_state(RegistrationState.main_menu_state)
+#         reply = await get_message(menu_messages, "MENU", language)
+#         await message.answer(text=reply, reply_markup=menu_kb[language])
+#         # Запуск меню после капчи
+#     else:
+#         print("User not in db")
+#         await add_user_to_db(message.from_user.id)
+#         refferer = await get_refferer_id(message.text)
+#         if refferer is not None:
+#             await add_referrer_to_user(message.from_user.id, refferer)
+#         await generate_captcha(message)
+#         await state.set_state(RegistrationState.captcha_state)
+#         capture_message = await get_message(messages, "CAPTCHA_MESSAGE", "ENG")
+#         await message.answer(text=capture_message)
