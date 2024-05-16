@@ -26,8 +26,8 @@ Please choose a task number:
         """
     },
     "WE_ARE_BACK_CHOOSE_TEXT": {
-        "ENG": "We are back! Please choose a task number:",
-        "RU": "Мы вернулись! Пожалуйста, выберите номер задания:"
+        "ENG": "We are back again! Please choose a task number:",
+        "RU": "Мы снова вернулись! Пожалуйста, выберите номер задания:"
     },
     "TASK_SEND_TO_CHECK_TEXT": {
         "ENG": "You have submitted the assignment for review.",
