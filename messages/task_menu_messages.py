@@ -4,7 +4,7 @@ task_menu_messages = {
 Congratulations! You have completed {tasks_done} tasks and earned {points_done} points.
         """,
         "RU": """
-Поздравляем! Вы выполнили [{tasks_done} заданий и заработали {points_done} очков.
+Поздравляем! Вы выполнили {tasks_done} заданий и заработали {points_done} очков.
         """
     },
     "TASK_DONE_ALREADY": {
