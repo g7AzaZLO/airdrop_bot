@@ -12,206 +12,189 @@ messages = {
 		"twitter_links": TWITTER_LINKS,
 		"airdrop_network": AIRDROP_NETWORK,
 		"referral_link": "https://t.me/Rcrvynjibot"
-		
 	},
 	
 	"CAPTCHA_MESSAGE": {
-		"ENG": "Please type in the numbers on the image",
-		"RU": "Пожалуйста, введите числа на картинке"
+		"ENG": "Please type in the numbers on the image.",
+		"RU": "Пожалуйста, введите числа на картинке."
 	},
 	
 	"WELCOME_MESSAGE": {
 		"ENG": """
-Hello, {user_name}! I am your friendly {coin_name} Airdrop bot
+Hello, {user_name}! I am your friendly {coin_name} Airdrop bot.
 
-Total tokens allocated to airdrop:  *50,000,000 ${coin_symbol}*
+Total tokens allocated to airdrop: *50,000,000 ${coin_symbol}*
 
-⭐️ For Joining - Get *{airdrop_amount}* point
-⭐️ For each referral - Get *{referral_reward}* point
+⭐️ For joining you get *{airdrop_amount}* points
+⭐️ For each referral you get *{referral_reward}* points
 
-📘_By Participating you are agreeing to the {coin_name} (Airdrop) Program Terms and Conditions. Please see pinned post for more information.
-Click "🚀 Join Airdrop" to proceed_
-	        """,
+📘 _By participating, you agree to the {coin_name} Airdrop Program Terms and Conditions. Please see the pinned post for more information.
+
+Click "🚀 Join Airdrop" to proceed._
+        """,
 		"RU": """
-Привет, {user_name}! Я твой дружелюбный {coin_name} аирдроп бот
+Привет, {user_name}! Я твой дружелюбный {coin_name} аирдроп бот.
 
-Общее количество токенов, выделенных для аирдропа:  *50,000,000 ${coin_symbol}*
+Общее количество токенов, выделенных для аирдропа: *50,000,000 ${coin_symbol}*
 
-⭐️ За присоединение - Получи *{airdrop_amount}* баллов
-⭐️ За каждого реферала - Получи *{referral_reward}* баллов
-	        """
+⭐️ За присоединение - Получи *{airdrop_amount}* очков
+⭐️ За каждого реферала - Получи *{referral_reward}* очков
+
+📘 _Принимая участие, вы соглашаетесь с Условиями программы аирдропа {coin_name}. Пожалуйста, ознакомьтесь с закрепленным постом для получения дополнительной информации.
+
+Нажмите "🚀 Присоединиться к аирдропу" чтобы продолжить._
+        """
 	},
 	
 	"PROCEED_MESSAGE": {
 		"ENG": """
-📢*Airdrop Rules*
+📢 *Airdrop Rules*
 
 ✏️ *Mandatory Tasks*:
 - Join our Telegram group(s)
 - Follow our Twitter page(s)
 
-😡*Prohibited by the rules*:
-- Unsubscribe from the channel
-- Leave the project chat
+😡 *Prohibited*:
+- Unsubscribing from the channel
+- Leaving the project chat
 
-_NOTE: Users found cheating would be disqualified & banned immediately._
+_NOTE: Users found cheating will be disqualified and banned immediately._
 
 {website_url}
-	        """,
+        """,
 		"RU": """
-📢*Правила аирдропа*
+📢 *Правила аирдропа*
 
 ✏️ *Обязательные задания*:
-- Вступить в наши телеграм группы
-- Подписаться на наш твиттер
+- Вступить в наши группы в Telegram
+- Подписаться на наш Twitter
 
-😡*Правилами запрещается*:
-- Отписываться от твиттера/телеграмма
+😡 *Запрещено*:
+- Отписываться от наших каналов
 - Выходить из чата проекта
 
-_ВНИМАНИЕ: Пользователи которые читерят будут удалены и забанены._
+_ВНИМАНИЕ: Пользователи, замеченные в мошенничестве, будут немедленно дисквалифицированы и забанены._
 
 {website_url}
-	        """
+        """
 	},
 	
 	"MAKE_SURE_TELEGRAM": {
 		"ENG": """
-🔹 Subscribe to our channel and join the chat room
+🔹 Subscribe to our channel and join the chat room:
 {telegram_links}
-			""",
+        """,
 		"RU": """
-🔹 Подпишись на наш телеграм и вступи в чат
+🔹 Подпишитесь на наш канал и вступите в чат:
 {telegram_links}
-			"""
+        """
 	},
 	
 	"FOLLOW_TWITTER_TEXT": {
 		"ENG": """
-🔹 Follow our Twitter page
-{twitter_links}\n
+🔹 Follow our Twitter page:
+{twitter_links}
 
 Type in the link to your Twitter profile to proceed.
 Example:
 https://twitter.com/example
-			""",
+        """,
 		"RU": """
-🔹 Подпишись на наш Твиттер
-{twitter_links}\n
+🔹 Подпишитесь на наш Twitter:
+{twitter_links}
 
-Введите ссылку на ваш профиль Твиттера, чтобы продолжить.
+Введите ссылку на ваш профиль в Twitter, чтобы продолжить.
 Пример:
 https://twitter.com/example
-			"""
+        """
 	},
 	
 	"GET_TWITTER_LINK_TEXT": {
 		"ENG": """
 Type in the link to your Twitter profile to proceed.
-Example: 
+Example:
 https://twitter.com/example
-""",
+        """,
 		"RU": """
-Введите ссылку на ваш профиль Твиттера, чтобы продолжить.
+Введите ссылку на ваш профиль в Twitter, чтобы продолжить.
 Пример:
 https://twitter.com/example
-"""
+        """
 	},
 	
 	"SUBMIT_ADDRESS_TEXT": {
 		"ENG": """
-Type in your Wallet Address
+Type in your wallet address.
 
-Please make sure your wallet supports the *{airdrop_network}*
+Please make sure your wallet supports the *{airdrop_network}*.
 
 Example:
-UQBxCOstPWvIADbaYYBapGhwfRZCEZUui5p2OEFHU0a\_wWem
-			""",
+UQBxCOstPWvIADbaYYBapGhwfRZCEZUui5p2OEFHU0a_wWem
+        """,
 		"RU": """
-Введите ваш адрес кошелька
+Введите ваш адрес кошелька.
 
-Пожалуйста убедитесь что адрес поддерживает сеть *{airdrop_network}*
+Пожалуйста, убедитесь, что ваш кошелек поддерживает сеть *{airdrop_network}*.
 
 Пример:
-UQBxCOstPWvIADbaYYBapGhwfRZCEZUui5p2OEFHU0a\_wWem
-			"""
+UQBxCOstPWvIADbaYYBapGhwfRZCEZUui5p2OEFHU0a_wWem
+        """
 	},
 	
 	"JOINED_TEXT": {
 		"ENG": """
 *Thank you!*
 
-Rewards would be sent out automatically to your {airdrop_network} address
+Rewards will be sent automatically to your {airdrop_network} address after the airdrop concludes.
 
 *Don't forget to*:
-🔸 Stay in the telegram channels
-🔸 Follow all the social media channels for the updates
+🔸 Stay in the Telegram channels
+🔸 Follow all social media channels for updates
 
-Your personal referral link (+*{referral_reward}* point for each referral)
+Your personal referral link (+*{referral_reward}* points for each referral):
 {referral_link}
-			""",
+        """,
 		"RU": """
-*Спасибо вам!*
+*Спасибо!*
 
-Награды будут автоматически отправлены на ваш {airdrop_network} адрес, после завершения аирдропа
+Награды будут автоматически отправлены на ваш {airdrop_network} адрес после завершения аирдропа.
 
-*Не забывайте, что необходимо*:
-🔸 Оставаться в телеграм и твиттер канале
-🔸 Подписаться на все соц сети, чтобы знать актуальную информацию
+*Не забывайте*:
+🔸 Оставаться в Telegram-каналах
+🔸 Подписаться на все соцсети, чтобы быть в курсе обновлений
 
-Ваша персональная реферальная ссылка (+*{referral_reward}* поинтов за каждого реферала)
+Ваша персональная реферальная ссылка (+*{referral_reward}* очков за каждого реферала):
 {referral_link}
-			"""
-	},
-	"INVALID_ADDRESS_TEXT": {
-		"ENG": """
-Please provide a valid crypto address.
-""",
-		"RU": """
-Пожалуйста введите корректный адресс
-		"""
-	},
-	"TWITTER_INVALID_LINK_TEXT": {
-		"ENG": """
-Please provide a valid Twitter link.
-""",
-		"RU": """
-Пожалуйста введите корректную ссылку на Твиттер
-		"""
-	},
-	"TWITTER_ALREADY_REGISTERED_TEXT": {
-		"ENG": """
-This link is already registered
-""",
-		"RU": """
-Данный пользователь уже зарегистрирован
-		"""
-	},
-	"ADDRESS_ALREADY_REGISTERED_TEXT": {
-		"ENG": """
-This address is already registered
-""",
-		"RU": """
-Данный адрес уже зарегистрирован
-		"""
-	},
-	"NOT_SUB_AT_GROUP_TEXT": {
-		"ENG": """
-First, subscribe to the channel
-""",
-		"RU": """
-Для начала подпишитесь на группы
-		"""
+        """
 	},
 	
+	"INVALID_ADDRESS_TEXT": {
+		"ENG": "Please provide a valid crypto address.",
+		"RU": "Пожалуйста, введите корректный адрес кошелька."
+	},
+	
+	"TWITTER_INVALID_LINK_TEXT": {
+		"ENG": "Please provide a valid Twitter link.",
+		"RU": "Пожалуйста, введите корректную ссылку на Twitter."
+	},
+	
+	"TWITTER_ALREADY_REGISTERED_TEXT": {
+		"ENG": "This Twitter link is already registered.",
+		"RU": "Данный профиль Twitter уже зарегистрирован."
+	},
+	
+	"ADDRESS_ALREADY_REGISTERED_TEXT": {
+		"ENG": "This address is already registered.",
+		"RU": "Данный адрес уже зарегистрирован."
+	},
+	
+	"NOT_SUB_AT_GROUP_TEXT": {
+		"ENG": "First, subscribe to the channel.",
+		"RU": "Сначала подпишитесь на канал."
+	},
 	
 	"START_AGAIN_TEXT": {
-		"ENG": """
-Please, type /start or click the button below to begin
-""",
-		"RU": """
-Пожалуйста, напишите /start или нажмите на кнопку ниже, чтобы начать
-		"""
-	},
-	
+		"ENG": "Please, type /start or click the button below to begin.",
+		"RU": "Пожалуйста, введите /start или нажмите на кнопку ниже, чтобы начать."
+	}
 }
