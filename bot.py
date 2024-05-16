@@ -30,8 +30,8 @@ async def change_tasks():
     while True:
         new_tasks = await get_all_tasks()
         print("Tasks have been updated.")
-        await update_tasks(new_tasks)  # TODO напоминалка поставить 10 мин а не 1 перед окончательной установкой
-        await asyncio.sleep(60)  # 10 минут = 600 секунд
+        await update_tasks(new_tasks)
+        await asyncio.sleep(3600) # update every hour
 
 
 async def main() -> None:
