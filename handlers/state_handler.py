@@ -507,7 +507,6 @@ async def single_task_handler(message: types.Message, state: FSMContext) -> None
             reply = await get_message(other_messages, "SEND_PIC_TO_CHECK_TEXT", language)
             await message.answer(text=reply)
             await state.set_state(TasksState.screen_check_state)
-            await mark_task_as_await(message.from_user.id, index_task)
     elif user_response in ["⏪Вернуться Назад", "⏪Return Back"]:
         tasks_done = user.get("TASKS_DONE", [])
         total_buttons = await get_num_of_tasks()
@@ -544,8 +543,23 @@ async def achievements_handler(message: types.Message, state: FSMContext) -> Non
 
 @state_handler_router.message(TasksState.screen_check_state)
 async def handle_screen_check(message: types.Message, state: FSMContext) -> None:
+    user = await get_user_details(message.from_user.id)
+    language = await get_language_for_user(message.from_user.id)
     if message.photo:
         screenshot = message.photo[-1]
+        language = await get_language_for_user(message.from_user.id)
+        task_text = await state.get_data()
+        index_task = await get_index_by_text_task(task_text["num_of_task"], language)
+        await mark_task_as_await(message.from_user.id, index_task)
+    elif message.text in ["⏪Вернуться Назад", "⏪Return Back"]:
+        tasks_done = user.get("TASKS_DONE", [])
+        total_buttons = await get_num_of_tasks()
+        tasks_await = user.get("TASKS_AWAIT", [])
+        tasks_keyboard = await create_numeric_keyboard(total_buttons, tasks_done + tasks_await, language)
+        reply = await get_message(task_menu_messages, "WE_ARE_BACK_CHOOSE_TEXT", language)
+        await message.answer(text=reply, reply_markup=tasks_keyboard)
+        await state.set_state(TasksState.current_tasks_state)
+        return
     else:
         language = await get_language_for_user(message.from_user.id)
         reply = await get_message(other_messages, "SEND_PIC_TO_CHECK_TEXT", language)
