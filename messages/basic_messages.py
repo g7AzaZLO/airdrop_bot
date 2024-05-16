@@ -93,7 +93,7 @@ _ВНИМАНИЕ: Пользователи, замеченные в мошен�
     "FOLLOW_TWITTER_TEXT": {
         "ENG": """
 🔹 *Follow our Twitter page*:
-{twitter_links}
+[{twitter_links}]
 
 Type in the link to your Twitter profile to proceed.
 
@@ -104,7 +104,7 @@ _WARNING: this tweet will be used to verify assignments_
         """,
         "RU": """
 🔹 *Подпишитесь на наш Twitter*:
-{twitter_links}
+[{twitter_links}]
 
 Введите ссылку на ваш профиль в Twitter, чтобы продолжить.
 
@@ -122,7 +122,7 @@ Type in your wallet address.
 Please make sure your wallet supports the *{airdrop_network}*.
 
 Example:
-UQBxCOstPWvIADbaYYBapGhwfRZCEZUui5p2OEFHU0a_wWem
+[UQBxCOstPWvIADbaYYBapGhwfRZCEZUui5p2OEFHU0a_wWem]
         """,
         "RU": """
 Введите ваш адрес кошелька.
@@ -130,7 +130,7 @@ UQBxCOstPWvIADbaYYBapGhwfRZCEZUui5p2OEFHU0a_wWem
 Пожалуйста, убедитесь, что ваш кошелек поддерживает сеть *{airdrop_network}*.
 
 Пример:
-UQBxCOstPWvIADbaYYBapGhwfRZCEZUui5p2OEFHU0a_wWem
+[UQBxCOstPWvIADbaYYBapGhwfRZCEZUui5p2OEFHU0a_wWem]
         """
     },
 
