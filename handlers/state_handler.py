@@ -41,7 +41,7 @@ async def captcha_response_handler(message: types.Message, state: FSMContext) ->
         user_id = message.from_user.id
         language = await get_language_for_user(message.from_user.id)
         current_state = await get_state_for_user(user_id)
-        current_state_str = get_clean_state_identifier(current_state)
+        current_state_str = await get_clean_state_identifier(current_state)
         current_keyboard = state_keyboards[(current_state_str, language)]
         current_reply_messages = state_menus[current_state_str]
         current_reply = await get_message(current_reply_messages, state_messages[current_state_str], language)
@@ -95,7 +95,7 @@ async def hello_response_handler_in_reg(message: types.Message, state: FSMContex
     await state.update_data(user_hello_response=user_response)
     if user_response in ["🚀Join Airdrop", "🚀Присоединиться к аирдропу"]:
         await state.set_state(RegistrationState.proceed_state)
-        await set_user_state(message.from_user.id, get_clean_state_identifier(RegistrationState.proceed_state))
+        await set_user_state(message.from_user.id, await get_clean_state_identifier(RegistrationState.proceed_state))
         reply = await get_message(messages, "PROCEED_MESSAGE", language)
         await message.answer(text=reply, reply_markup=sub_cancel_kb[language], parse_mode="MARKDOWN")
     elif user_response in ["❌Cancel", "❌Отказаться"]:
@@ -160,7 +160,7 @@ async def follow_telegram_response_handler_in_reg(message: types.Message, state:
             print("Yes, user in all telegram channel")
             await state.set_state(RegistrationState.follow_twitter_state)
             await set_user_state(message.from_user.id,
-                                 get_clean_state_identifier(RegistrationState.follow_twitter_state))
+                                 await get_clean_state_identifier(RegistrationState.follow_twitter_state))
             reply = await get_message(messages, "FOLLOW_TWITTER_TEXT", language)
             await message.answer(text=reply, reply_markup=types.ReplyKeyboardRemove(), parse_mode="MARKDOWN")
         else:
@@ -186,7 +186,7 @@ async def follow_twitter_response_handler_in_reg(message: types.Message, state: 
             await update_user_details(message.from_user.id, TWITTER_USER=user_response)
             await state.set_state(RegistrationState.submit_address_state)
             await set_user_state(message.from_user.id,
-                                 get_clean_state_identifier(RegistrationState.submit_address_state))
+                                 await get_clean_state_identifier(RegistrationState.submit_address_state))
             reply = await get_message(messages, "SUBMIT_ADDRESS_TEXT", language)
             await message.answer(text=reply, reply_markup=types.ReplyKeyboardRemove(), parse_mode="MARKDOWN")
         else:
@@ -214,7 +214,7 @@ async def submit_address_response_handler_in_reg(message: types.Message, state: 
                                       POINTS=AIRDROP_AMOUNT)
             await state.set_state(RegistrationState.main_menu_state)
             await set_user_state(message.from_user.id,
-                                 get_clean_state_identifier(RegistrationState.main_menu_state))
+                                 await get_clean_state_identifier(RegistrationState.main_menu_state))
             ref_link = await get_refferal_link(message.from_user.id)
             reply = await get_message(messages, "JOINED_TEXT", language, referral_link=ref_link)
             await message.answer(text=reply, reply_markup=menu_kb[language], parse_mode="MARKDOWN")

@@ -74,7 +74,7 @@ state_keyboards = {
 }
 
 
-def get_state_from_string(state_string):
+async def get_state_from_string(state_string):
     parts = state_string.split(':')
     if len(parts) == 2:
         class_name, state_name = parts
@@ -87,9 +87,9 @@ def get_state_from_string(state_string):
     return None
 
 
-def get_clean_state_identifier(state):
+async def get_clean_state_identifier(state):
     full_str = str(state)
     # Typically, the format is "<State 'RegistrationState:lang_choose_state'>"
     # We need to remove the "<State '" prefix and "'>" suffix.
-    clean_identifier = full_str.split("'")[1]  # This splits the string by single quotes and takes the second element
+    clean_identifier = full_str.split("'")[1].replace('.',':')  # This splits the string by single quotes and takes the second element
     return clean_identifier
