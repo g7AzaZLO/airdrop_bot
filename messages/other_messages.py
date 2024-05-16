@@ -45,12 +45,12 @@ other_messages = {
     },
     "TASK_TEXT": {
         "ENG": """
-Task: {description}
-Points for completion: {points}
+*Task*: {description}
+*Points for completion*: {points}
         """,
         "RU": """
-Задание: {description}
-Баллов за выполнение: {points}
+*Задание*: {description}
+*Баллов за выполнение*: {points}
         """
     },
     "TASK_NOT_FOUND_TEXT": {
