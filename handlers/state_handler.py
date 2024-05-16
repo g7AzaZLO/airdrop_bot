@@ -78,7 +78,7 @@ async def lang_choose_response_handler_in_reg(message: types.Message, state: FSM
         await message.answer(text=reply, reply_markup=language_choose_kb)
         return
     await state.set_state(RegistrationState.hello_state)
-    await set_user_state(user_id, get_clean_state_identifier(RegistrationState.hello_state))
+    await set_user_state(user_id, await get_clean_state_identifier(RegistrationState.hello_state))
     await message.answer(
         text=(await get_message(messages, "WELCOME_MESSAGE", language, user_name=message.from_user.first_name)),
         reply_markup=join_kb[language],
@@ -127,7 +127,7 @@ async def proceed_response_handler_in_reg(message: types.Message, state: FSMCont
     await state.update_data(user_proceed_response=user_response)
     if user_response in ["✅Согласен с правилами", "✅Submit Details"]:
         await state.set_state(RegistrationState.follow_telegram_state)
-        await set_user_state(message.from_user.id, get_clean_state_identifier(RegistrationState.follow_telegram_state))
+        await set_user_state(message.from_user.id, await get_clean_state_identifier(RegistrationState.follow_telegram_state))
         reply = await get_message(messages, "MAKE_SURE_TELEGRAM", language)
         await message.answer(text=reply, reply_markup=social_join_kb[language])
     elif user_response in ["❌Cancel", "❌Отказаться"]:
