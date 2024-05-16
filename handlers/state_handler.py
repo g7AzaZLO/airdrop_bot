@@ -280,7 +280,9 @@ async def main_menu_handler(message: types.Message, state: FSMContext) -> None:
         await state.set_state(TasksState.current_tasks_state)
     elif user_response in ["🔒Смартконтракт", "🔒Smartcontract"]:
         reply = await get_message(menu_messages, "SMARTCONTRACT_TEXT", language)
-        await message.answer(text=reply, reply_markup=menu_kb[language], parse_mode="HTML")
+        await message.answer_photo(caption=reply, photo=types.FSInputFile(path="settings/image/smartcontract.png"),
+                                   reply_markup=menu_kb[language],
+                                   parse_mode="HTML")
         return
     elif user_response in ["🔧Настройки", "🔧Settings"]:
         reply = await get_message(menu_messages, "MENU_SETTINGS", language)
