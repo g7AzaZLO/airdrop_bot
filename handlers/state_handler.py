@@ -162,7 +162,7 @@ async def follow_telegram_response_handler_in_reg(message: types.Message, state:
             await set_user_state(message.from_user.id,
                                  get_clean_state_identifier(RegistrationState.follow_twitter_state))
             reply = await get_message(messages, "FOLLOW_TWITTER_TEXT", language)
-            await message.answer(text=reply, reply_markup=types.ReplyKeyboardRemove())
+            await message.answer(text=reply, reply_markup=types.ReplyKeyboardRemove(), parse_mode="MARKDOWN")
         else:
             print("NO HE ISNT HERE")
             await state.set_state(RegistrationState.follow_telegram_state)

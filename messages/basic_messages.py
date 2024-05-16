@@ -1,26 +1,26 @@
 from settings.config import *
 
 messages = {
-	"default_values": {
-		"user_name": "Friend",
-		"coin_name": COIN_NAME,
-		"coin_symbol": COIN_SYMBOL,
-		"airdrop_amount": AIRDROP_AMOUNT,
-		"referral_reward": REFERRAL_REWARD,
-		"website_url": WEBSITE_URL,
-		"telegram_links": TELEGRAM_LINKS,
-		"twitter_links": TWITTER_LINKS,
-		"airdrop_network": AIRDROP_NETWORK,
-		"referral_link": "https://t.me/Rcrvynjibot"
-	},
-	
-	"CAPTCHA_MESSAGE": {
-		"ENG": "Please type in the numbers on the image.",
-		"RU": "Пожалуйста, введите числа на картинке."
-	},
-	
-	"WELCOME_MESSAGE": {
-		"ENG": """
+    "default_values": {
+        "user_name": "Friend",
+        "coin_name": COIN_NAME,
+        "coin_symbol": COIN_SYMBOL,
+        "airdrop_amount": AIRDROP_AMOUNT,
+        "referral_reward": REFERRAL_REWARD,
+        "website_url": WEBSITE_URL,
+        "telegram_links": TELEGRAM_LINKS,
+        "twitter_links": TWITTER_LINKS,
+        "airdrop_network": AIRDROP_NETWORK,
+        "referral_link": "https://t.me/Rcrvynjibot"
+    },
+
+    "CAPTCHA_MESSAGE": {
+        "ENG": "Please type in the numbers on the image.",
+        "RU": "Пожалуйста, введите числа на картинке."
+    },
+
+    "WELCOME_MESSAGE": {
+        "ENG": """
 Hello, {user_name}! I am your friendly {coin_name} Airdrop bot.
 
 Total tokens allocated to airdrop: *50,000,000 ${coin_symbol}*
@@ -32,7 +32,7 @@ Total tokens allocated to airdrop: *50,000,000 ${coin_symbol}*
 
 Click "🚀 Join Airdrop" to proceed._
         """,
-		"RU": """
+        "RU": """
 Привет, {user_name}! Я твой дружелюбный {coin_name} аирдроп бот.
 
 Общее количество токенов, выделенных для аирдропа: *50,000,000 ${coin_symbol}*
@@ -44,10 +44,10 @@ Click "🚀 Join Airdrop" to proceed._
 
 Нажмите "🚀 Присоединиться к аирдропу" чтобы продолжить._
         """
-	},
-	
-	"PROCEED_MESSAGE": {
-		"ENG": """
+    },
+
+    "PROCEED_MESSAGE": {
+        "ENG": """
 📢 *Airdrop Rules*
 
 ✏️ *Mandatory Tasks*:
@@ -62,7 +62,7 @@ _NOTE: Users found cheating will be disqualified and banned immediately._
 
 {website_url}
         """,
-		"RU": """
+        "RU": """
 📢 *Правила аирдропа*
 
 ✏️ *Обязательные задания*:
@@ -77,53 +77,46 @@ _ВНИМАНИЕ: Пользователи, замеченные в мошен�
 
 {website_url}
         """
-	},
-	
-	"MAKE_SURE_TELEGRAM": {
-		"ENG": """
+    },
+
+    "MAKE_SURE_TELEGRAM": {
+        "ENG": """
 🔹 Subscribe to our channel and join the chat room:
 {telegram_links}
         """,
-		"RU": """
+        "RU": """
 🔹 Подпишитесь на наш канал и вступите в чат:
 {telegram_links}
         """
-	},
-	
-	"FOLLOW_TWITTER_TEXT": {
-		"ENG": """
-🔹 Follow our Twitter page:
+    },
+
+    "FOLLOW_TWITTER_TEXT": {
+        "ENG": """
+🔹 *Follow our Twitter page*:
 {twitter_links}
 
 Type in the link to your Twitter profile to proceed.
-Example:
+
+*Example*:
 https://twitter.com/example
+
+_WARNING: this tweet will be used to verify assignments_
         """,
-		"RU": """
-🔹 Подпишитесь на наш Twitter:
+        "RU": """
+🔹 *Подпишитесь на наш Twitter*:
 {twitter_links}
 
 Введите ссылку на ваш профиль в Twitter, чтобы продолжить.
-Пример:
+
+*Пример*:
 https://twitter.com/example
+
+_ВНИМАНИЕ: данный твиттер будет использоваться для проверки заданий_
         """
-	},
-	
-	"GET_TWITTER_LINK_TEXT": {
-		"ENG": """
-Type in the link to your Twitter profile to proceed.
-Example:
-https://twitter.com/example
-        """,
-		"RU": """
-Введите ссылку на ваш профиль в Twitter, чтобы продолжить.
-Пример:
-https://twitter.com/example
-        """
-	},
-	
-	"SUBMIT_ADDRESS_TEXT": {
-		"ENG": """
+    },
+
+    "SUBMIT_ADDRESS_TEXT": {
+        "ENG": """
 Type in your wallet address.
 
 Please make sure your wallet supports the *{airdrop_network}*.
@@ -131,7 +124,7 @@ Please make sure your wallet supports the *{airdrop_network}*.
 Example:
 UQBxCOstPWvIADbaYYBapGhwfRZCEZUui5p2OEFHU0a_wWem
         """,
-		"RU": """
+        "RU": """
 Введите ваш адрес кошелька.
 
 Пожалуйста, убедитесь, что ваш кошелек поддерживает сеть *{airdrop_network}*.
@@ -139,10 +132,10 @@ UQBxCOstPWvIADbaYYBapGhwfRZCEZUui5p2OEFHU0a_wWem
 Пример:
 UQBxCOstPWvIADbaYYBapGhwfRZCEZUui5p2OEFHU0a_wWem
         """
-	},
-	
-	"JOINED_TEXT": {
-		"ENG": """
+    },
+
+    "JOINED_TEXT": {
+        "ENG": """
 *Thank you!*
 
 Rewards will be sent automatically to your {airdrop_network} address after the airdrop concludes.
@@ -154,7 +147,7 @@ Rewards will be sent automatically to your {airdrop_network} address after the a
 Your personal referral link (+*{referral_reward}* points for each referral):
 {referral_link}
         """,
-		"RU": """
+        "RU": """
 *Спасибо!*
 
 Награды будут автоматически отправлены на ваш {airdrop_network} адрес после завершения аирдропа.
@@ -166,35 +159,35 @@ Your personal referral link (+*{referral_reward}* points for each referral):
 Ваша персональная реферальная ссылка (+*{referral_reward}* очков за каждого реферала):
 {referral_link}
         """
-	},
-	
-	"INVALID_ADDRESS_TEXT": {
-		"ENG": "Please provide a valid crypto address.",
-		"RU": "Пожалуйста, введите корректный адрес кошелька."
-	},
-	
-	"TWITTER_INVALID_LINK_TEXT": {
-		"ENG": "Please provide a valid Twitter link.",
-		"RU": "Пожалуйста, введите корректную ссылку на Twitter."
-	},
-	
-	"TWITTER_ALREADY_REGISTERED_TEXT": {
-		"ENG": "This Twitter link is already registered.",
-		"RU": "Данный профиль Twitter уже зарегистрирован."
-	},
-	
-	"ADDRESS_ALREADY_REGISTERED_TEXT": {
-		"ENG": "This address is already registered.",
-		"RU": "Данный адрес уже зарегистрирован."
-	},
-	
-	"NOT_SUB_AT_GROUP_TEXT": {
-		"ENG": "First, subscribe to the channel.",
-		"RU": "Сначала подпишитесь на канал."
-	},
-	
-	"START_AGAIN_TEXT": {
-		"ENG": "Please, type /start or click the button below to begin.",
-		"RU": "Пожалуйста, введите /start или нажмите на кнопку ниже, чтобы начать."
-	}
+    },
+
+    "INVALID_ADDRESS_TEXT": {
+        "ENG": "Please provide a valid crypto address.",
+        "RU": "Пожалуйста, введите корректный адрес кошелька."
+    },
+
+    "TWITTER_INVALID_LINK_TEXT": {
+        "ENG": "Please provide a valid Twitter link.",
+        "RU": "Пожалуйста, введите корректную ссылку на Twitter."
+    },
+
+    "TWITTER_ALREADY_REGISTERED_TEXT": {
+        "ENG": "This Twitter link is already registered.",
+        "RU": "Данный профиль Twitter уже зарегистрирован."
+    },
+
+    "ADDRESS_ALREADY_REGISTERED_TEXT": {
+        "ENG": "This address is already registered.",
+        "RU": "Данный адрес уже зарегистрирован."
+    },
+
+    "NOT_SUB_AT_GROUP_TEXT": {
+        "ENG": "First, subscribe to the channel.",
+        "RU": "Сначала подпишитесь на канал."
+    },
+
+    "START_AGAIN_TEXT": {
+        "ENG": "Please, type /start or click the button below to begin.",
+        "RU": "Пожалуйста, введите /start или нажмите на кнопку ниже, чтобы начать."
+    }
 }
