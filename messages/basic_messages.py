@@ -145,7 +145,7 @@ Rewards will be sent automatically to your {airdrop_network} address after the a
 🔸 Follow all social media channels for updates
 
 Your personal referral link (+*{referral_reward}* points for each referral):
-{referral_link}
+[{referral_link}]
         """,
         "RU": """
 *Спасибо!*
@@ -157,7 +157,7 @@ Your personal referral link (+*{referral_reward}* points for each referral):
 🔸 Подписаться на все соцсети, чтобы быть в курсе обновлений
 
 Ваша персональная реферальная ссылка (+*{referral_reward}* очков за каждого реферала):
-{referral_link}
+[{referral_link}]
         """
     },
 
