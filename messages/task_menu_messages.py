@@ -1,33 +1,36 @@
-
 task_menu_messages = {
     "ACHIEVEMENTS": {
         "ENG": """
-HERE WE NEED TO ADD SOMETHING ABOUT ACHIEVEMENTS {tasks_done}, u get {points_done} points(DONE)
+Congratulations! You have completed {tasks_done} tasks and earned {points_done} points.
         """,
         "RU": """
-СЮДА НУЖНО БУДЕТ ДОБАВИТЬ КАКУЮ-ТО ТЕМУ С АЧИВКАМИ {tasks_done}, заработано {points_done} очков (ЗАВЕРШЕНО)
-        """},
+Поздравляем! Вы выполнили [{tasks_done} заданий и заработали {points_done} очков.
+        """
+    },
     "TASK_DONE_ALREADY": {
-        "ENG": "You have already done this task.\n",
-        "RU": "Вы уже выполнили эту задачу.\n"},
+        "ENG": "You have already completed this task.",
+        "RU": "Вы уже выполнили эту задачу."
+    },
     "TASK_DONE_BACK_TEXT": {
-        "ENG": "Here is your task....... Have you done it?",
-        "RU": "Вот ваше задание, вы выполнили его?"},
+        "ENG": "Here is your task... Have you completed it?",
+        "RU": "Вот ваше задание... Вы его выполнили?"
+    },
     "CHOOSE_NUMBER_TASK_TEXT": {
         "ENG": """
-You have collected {tasks_done_points} out of {tasks_total_points} points here.
-Please choose a number:
+You have collected {tasks_done_points} out of {tasks_total_points} points.
+Please choose a task number:
         """,
         "RU": """
-Вы уже смогли собрать здесь {tasks_done_points} из {tasks_total_points} очков.
+Вы уже собрали {tasks_done_points} из {tasks_total_points} очков.
 Пожалуйста, выберите номер задания:
-        """},
+        """
+    },
     "WE_ARE_BACK_CHOOSE_TEXT": {
-        "ENG": "(Rewrite) We Are Back: Please choose a number:",
-        "RU": "(Переписать) Мы вернулись, пожалуйста выберите номер:"
+        "ENG": "We are back again! Please choose a task number:",
+        "RU": "Мы снова вернулись! Пожалуйста, выберите номер задания:"
     },
     "TASK_SEND_TO_CHECK_TEXT": {
-        "ENG": "You've submitted the assignment for review ",
-        "RU": "Вы отправили задание на проверку"
+        "ENG": "You have submitted the assignment for review.",
+        "RU": "Вы отправили задание на проверку."
     }
 }

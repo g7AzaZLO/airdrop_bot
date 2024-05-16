@@ -20,8 +20,8 @@ menu_messages = {
         "user_referral_balance": "0",
     },
     "MENU_SETTINGS": {
-        "ENG": "You can change your settings here",
-        "RU": "Вы можете изменить настройки здесь",
+        "ENG": "You can change your settings here.",
+        "RU": "Вы можете изменить настройки здесь.",
     },
     "YES_NO": {
         "ENG": "Are you sure?",
@@ -31,27 +31,28 @@ menu_messages = {
         "ENG": """
 We are sorry to see you go. Please come back anytime.
 Thank you for your support!
-p.s. You are safely deleted from our database.
+p.s. Your data has been safely removed from our database.
         """,
         "RU": """
 Нам жаль, что вы уходите. Пожалуйста, заходите в любое время.
 Спасибо за вашу поддержку!
-p.s. Вы благополучно удалены из нашей базы данных.
+p.s. Ваши данные успешно удалены из нашей базы.
         """,
     },
     "LANGUAGE_CHOSEN_WRONG": {
-        "ENG": "That language is not on the list.\nPlease choose your language",
+        "ENG": "That language is not on the list.\nPlease choose your language.",
+        "RU": "Этот язык не в списке.\nПожалуйста, выберите ваш язык.",
     },
     "LANGUAGE_CHOOSE": {
-        "ENG": "Please choose your language",
-        "RU": "Пожалуйста, выберите ваш язык",
+        "ENG": "Please choose your language.",
+        "RU": "Пожалуйста, выберите ваш язык.",
     },
     "INFORMATION_TEXT": {
         "ENG": """
-Total supply for airdrop *{airdrop_total}* ${coin_symbol}
+Total supply for airdrop: *{airdrop_total}* ${coin_symbol}
 
-For participation in airdrop you get {airdrop_amount} points
-For each referral you get {referral_reward} points
+For participation in airdrop, you receive {airdrop_amount} points.
+For each referral, you get {referral_reward} points.
 
 📢*Airdrop Rules*
 
@@ -59,31 +60,31 @@ For each referral you get {referral_reward} points
 - Join our Telegram group(s)
 - Follow our Twitter page(s)
 
-😡*Prohibited by the rules*:
-- Unsubscribe from the channel
-- Leave the project chat
+😡*Prohibited*:
+- Unsubscribing from the channel
+- Leaving the project chat
 
-_NOTE: Users found cheating would be disqualified & banned immediately._
+_NOTE: Users found cheating will be disqualified and banned immediately._
 
 {website_url}
 		""",
         "RU": """
-Всего выделено *{airdrop_total}* ${coin_symbol} на аирдроп
+Всего на аирдроп выделено: *{airdrop_total}* ${coin_symbol}
 
-За участие в аирдропе вам начисляется {airdrop_amount} поинтов
-За каждого реферала вам начисляется {referral_reward} поинтов
+За участие в аирдропе Вы получаете {airdrop_amount} очков.
+За каждого реферала Вы получаете {referral_reward} очков.
 
 📢*Правила аирдропа*
 
 ✏️ *Обязательные задания*:
-- Вступить в наши телеграм группы
-- Подписаться на наш твиттер
+- Вступить в наши группы в Telegram
+- Подписаться на наш Twitter
 
-😡*Правилами запрещается*:
-- Отписываться от твиттера/телеграмма
+😡*Запрещено*:
+- Отписываться от наших каналов
 - Выходить из чата проекта
 
-_ВНИМАНИЕ: Пользователи которые читерят будут удалены и забанены._
+_ВНИМАНИЕ: Пользователи, замеченные в мошенничестве, будут немедленно дисквалифицированы и забанены._
 
 {website_url}
 """
@@ -101,51 +102,51 @@ _ВНИМАНИЕ: Пользователи которые читерят буд
 """,
         "RU": """
 *Имя*: [{user_name}]
-*Рефералов*: {refferal_number}
-*TON адрес*: [{address}]
-*Твиттер*: [{user_twitter_link}]
+*Рефералы*: {refferal_number}
+*TON Адрес*: [{address}]
+*Twitter*: [{user_twitter_link}]
         """,
     },
     "INVITE_FRIENDS_TEXT": {
         "ENG": """
-*Here is your referral link*
+*Here is your referral link:*
 [{referral_link}]    
         """,
         "RU": """
-*Ваша реферальная ссылка*
+*Ваша реферальная ссылка:*
 [{referral_link}]
         """,
     },
     "BALANCE_TEXT": {
         "ENG": """
 *Balance*: {balance}
-*Referral poitns*: {user_referral_balance}
+*Referral Poitns*: {user_referral_balance}
         """,
         "RU": """
-Баланс*: {balance}
-*Очки за рефералов*: {user_referral_balance}*
+*Баланс*: {balance}
+*Очки за рефералов*: {user_referral_balance}
         """,
     },
     "UNKNOWN_COMMAND_TEXT": {
         "ENG": """
-Unknown command, please choose from the menu.
+Unknown command. Please choose from the menu.
 """,
         "RU": """
-Неизвестная команда, пожалуйста выберите команду из меню
+Неизвестная команда. Пожалуйста, выберите команду из меню.
 		"""
     },
     "SMARTCONTRACT_TEXT": {
         "ENG": """
 35% of the total supply is locked in the smart contract = 350,000,000 ${coin_symbol}
 
-The smart contract rewards holders who have <b>more than 100,000 ${coin_symbol}.</b>
+The smart contract rewards holders with <b>more than 100,000 ${coin_symbol}.</b>
 
-Rewards distribution occurs once every T period. This period can be calculated by the formula:
+Rewards distribution occurs once every T period. This period can be calculated using the formula:
 
 <code>
 T = max(30 - (29 * (holder_count - 1) / 49999), 1)
 </code>
-<i>holder_count - the number of token holders, and T is measured in days.</i>
+<i>holder_count is the number of token holders, and T is measured in days.</i>
 
 If a holder has more than 100,000 ${coin_symbol} in their balance, they are assigned a weight:
 
@@ -155,23 +156,23 @@ weight = balance / 100000
 <i>where balance is the number of tokens in the holder's balance.</i>
 		""",
         "RU": """
-В смартконтракте заблокировано 35% всего саплая = 350 000 000 ${coin_symbol}
+35% от общего количества токенов заблокировано в смарт-контракте = 350 000 000 ${coin_symbol}
 
-Смартконтракт награждает холдеров, на счету которых лежит <b>более 100 000 ${coin_symbol}.</b>
+Смарт-контракт вознаграждает держателей с <b>более чем 100 000 ${coin_symbol}.</b>
 
-Распределение наград происходит раз в T период. Этот период можно вычислить по формуле:
+Распределение наград происходит раз в период T. Этот период можно вычислить по формуле:
 
 <code>
 T = max(30 - (29 * (holder_count - 1) / 49999), 1)
 </code>
-<i>holder_count - количество холдеров токена, а само T измеряется в днях.</i>
+<i>holder_count - - это количество держателей токенов, а T измеряется в днях.</i>
 
-Если холдер держит более 100000 ${coin_symbol} на балансе, то ему присваивается вес:
+Если держатель имеет более 100,000 ${coin_symbol} на балансе, ему присваивается вес:
 
 <code>
 weight = balance / 100000
 </code>
-<i>где balance - количество токенов на балансе холдера.</i>
+<i>где balance - количество токенов на балансе держателя.</i>
 		"""
     }
 }

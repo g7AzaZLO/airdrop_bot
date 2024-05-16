@@ -463,7 +463,7 @@ async def current_tasks_handler(message: types.Message, state: FSMContext) -> No
         user = await get_user_details(message.from_user.id)
         tasks_done = user.get("TASKS_DONE", [])
         points_done = await calculate_total_points(tasks_done)
-        reply = await get_message(task_menu_messages, "ACHIEVEMENTS", language, tasks_done=tasks_done,
+        reply = await get_message(task_menu_messages, "ACHIEVEMENTS", language, tasks_done=len(tasks_done),
                                   points_done=points_done)
         await message.answer(text=reply, reply_markup=kb_tasks_back[language], parse_mode="MARKDOWN")
     else:
