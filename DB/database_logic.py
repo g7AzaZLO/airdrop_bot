@@ -1,8 +1,7 @@
-import motor.motor_asyncio
-from bson.objectid import ObjectId
-from settings.config import REFERRAL_REWARD
-from DB.mongo import users_collection
+from settings.config import REFERRAL_REWARD, tasks_init
+from DB.mongo import users_collection, tasks_collection, admin_messages_collection
 from FSM.states import get_state_from_string
+
 
 # Функция инициализации базы данных
 async def initialize_db() -> None:
@@ -21,6 +20,38 @@ async def initialize_db() -> None:
             print("Database initialized successfully with indexes on USER_ID")
     except Exception as e:
         print(f"Error initializing database: {e}")
+
+
+async def insert_tasks():
+    for task_id, task_data in tasks_init.items():
+        task_data["_id"] = task_id
+        await tasks_collection.update_one({"_id": task_id}, {"$set": task_data}, upsert=True)
+
+
+async def delete_admin_message(task_id: int):
+    await admin_messages_collection.delete_one({"_id": task_id})
+
+
+async def get_admin_messages_dict():
+    admin_messages_cursor = admin_messages_collection.find()
+    admin_messages_list = await admin_messages_cursor.to_list(length=None)  # Преобразуем курсор в список
+    admin_messages_dict = {message["_id"]: message for message in admin_messages_list}
+    return admin_messages_dict
+
+
+async def insert_admin_messages(admin_messages: dict) -> None:
+    for task_id, message_data in admin_messages.items():
+        message_data["_id"] = task_id
+        # Преобразуем ключи в строки
+        message_data = {str(k): v for k, v in message_data.items()}
+        await admin_messages_collection.update_one({"_id": task_id}, {"$set": message_data}, upsert=True)
+
+
+async def get_all_tasks():
+    tasks_cursor = tasks_collection.find()
+    tasks_list = await tasks_cursor.to_list(length=None)  # Преобразуем курсор в список
+    tasks_dict = {task["_id"]: task for task in tasks_list}
+    return tasks_dict
 
 
 # Функция удаления пользователя из базы данных
@@ -96,31 +127,7 @@ async def update_user_details(user_id: int, **kwargs) -> bool:
         return False
 
 
-# Функция получения данных пользователя
-# async def get_user_details(user_id: int) -> dict | None:
-#     """
-#     Возвращает детали пользователя по заданному идентификатору.
-#
-#     Параметры:
-#     - user_id (int): Уникальный идентификатор пользователя.
-#
-#     Возвращает:
-#     - dict: Словарь с деталями пользователя, если пользователь найден.
-#     - None, если пользователь не найден или произошла ошибка.
-#     """
-#     try:
-#         user = await users_collection.find_one({"USER_ID": user_id})
-#         if user:
-#             print(f"User details retrieved for user {user_id}.")
-#             return user
-#         else:
-#             print(f"User {user_id} not found in database.")
-#             return None
-#     except Exception as e:
-#         print(f"Error retrieving user details for user {user_id}: {e}")
-#         return None
-
-async def get_user_details(user_id: int) -> dict:
+async def get_user_details(user_id: int) -> dict | None:
     """
     Возвращает детали пользователя по заданному идентификатору.
 
@@ -205,7 +212,7 @@ async def add_user_to_db(user_id: int) -> bool:
         return False
 
 
-async def get_language_for_user(user_id: int) -> str:
+async def get_language_for_user(user_id: int) -> str | None:
     """
     Возвращает язык пользователя по заданному идентификатору.
 
@@ -312,7 +319,7 @@ async def decrement_referrer_count(referrer_id: int) -> None:
 
 
 # Функция получения реферера
-async def get_referrer(user_id: int) -> int:
+async def get_referrer(user_id: int) -> int | None:
     """
     Возвращает идентификатор реферера для указанного пользователя.
 
@@ -381,6 +388,7 @@ async def mark_task_as_done(user_id: int, task_index: int) -> bool:
         print(f"Error marking task {task_index} as done for user {user_id}: {e}")
         return False
 
+
 async def mark_task_as_await(user_id: int, task_index: int) -> bool:
     """
     Добавляет индекс выполненного задания в список выполненных заданий пользователя в MongoDB.
@@ -430,6 +438,8 @@ async def remove_task_from_await(user_id: int, task_index: int) -> bool:
     except Exception as e:
         print(f"Error removing task {task_index} from pending tasks for user {user_id}: {e}")
         return False
+
+
 async def add_points_to_user(user_id: int, points: int) -> bool:
     """
     Добавляет указанное количество очков к POINTS пользователя в базе данных.
@@ -476,9 +486,9 @@ async def set_user_state(user_id: int, state: str):
         )
     except Exception as e:
         print(f"Error setting state for user {user_id}: {e}")
-        
 
-async def get_state_for_user(user_id: int) -> str:
+
+async def get_state_for_user(user_id: int) -> str | None:
     """
     Returns the state of a user by the given user identifier.
 
@@ -501,3 +511,9 @@ async def get_state_for_user(user_id: int) -> str:
     except Exception as e:
         print(f"Error retrieving state for user {user_id}: {e}")
         return None
+
+
+async def get_all_users() -> list:
+    users_cursor = users_collection.find()
+    users_list = await users_cursor.to_list(length=None)
+    return users_list

@@ -1,6 +1,8 @@
 from aiogram import types, Router
 from DB.database_logic import get_language_for_user
 from tasks.task_dict import tasks
+from handlers.standart_handler import get_message
+from messages.other_messages import other_messages
 
 task_router = Router()
 
@@ -82,6 +84,7 @@ async def get_num_of_tasks() -> int:
     - int: Количество существующих заданий.
     """
     print("def get_num_of_tasks")
+    print(len(tasks))
     return len(tasks)
 
 
@@ -125,16 +128,12 @@ async def send_task_info(message: types.Message, task_index: int):
     tasks_list = list(tasks.values())
     if task_index >= 0 and task_index < len(tasks_list):
         task = tasks_list[task_index]
-
-        description = task["description"].get(language, "Description not available.")
+        reply = await get_message(other_messages, "NOT_DESC_TEXT", language)
+        description = task["description"].get(language, reply)
         points = task["points"]
         image_path = task.get("image", "")
-        # TODO: в 2х языках сделать message_text
         # Format message text
-        message_text = (
-            f"Task: {description}\n"
-            f"Points for completion: {points}\n"
-        )
+        message_text = await get_message(other_messages, "TASK_TEXT", language, description=description, points=points)
 
         # Send image (if specified) and message text
         if image_path:
@@ -142,4 +141,5 @@ async def send_task_info(message: types.Message, task_index: int):
         else:
             await message.answer(text=message_text)
     else:
-        await message.answer("Task not found. Please select another task.")
+        reply = await get_message(other_messages, "TASK_NOT_FOUND_TEXT", language)
+        await message.answer(text=reply)
