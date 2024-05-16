@@ -154,6 +154,8 @@ If a holder has more than 100,000 ${coin_symbol} in their balance, they are assi
 weight = balance / 100000
 </code>
 <i>where balance is the number of tokens in the holder's balance.</i>
+
+Weight is a coefficient to the reward, so keep as many tokens on your balance as possible!
 		""",
         "RU": """
 35% от общего количества токенов заблокировано в смарт-контракте = 350 000 000 ${coin_symbol}
@@ -165,7 +167,7 @@ weight = balance / 100000
 <code>
 T = max(30 - (29 * (holder_count - 1) / 49999), 1)
 </code>
-<i>holder_count - - это количество держателей токенов, а T измеряется в днях.</i>
+<i>holder_count - количество держателей токенов, а T измеряется в днях.</i>
 
 Если держатель имеет более 100,000 ${coin_symbol} на балансе, ему присваивается вес:
 
@@ -173,6 +175,8 @@ T = max(30 - (29 * (holder_count - 1) / 49999), 1)
 weight = balance / 100000
 </code>
 <i>где balance - количество токенов на балансе держателя.</i>
+
+Вес явялется коэффициентом к награде, поэтому держите на балансе какможно больше токенов!
 		"""
     }
 }
