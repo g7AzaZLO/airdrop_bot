@@ -504,7 +504,7 @@ async def get_state_for_user(user_id: int) -> str | None:
         user = await users_collection.find_one({"USER_ID": user_id}, {"STATE": 1, "_id": 0})
         if user and "STATE" in user:
             print(f"State for user {user_id} is {user['STATE']}.")
-            return get_state_from_string(user["STATE"])
+            return await get_state_from_string(user["STATE"])
         else:
             print(f"State for user {user_id} not found.")
             return None

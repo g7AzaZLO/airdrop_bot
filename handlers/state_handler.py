@@ -41,7 +41,7 @@ async def captcha_response_handler(message: types.Message, state: FSMContext) ->
         user_id = message.from_user.id
         language = await get_language_for_user(message.from_user.id)
         current_state = await get_state_for_user(user_id)
-        current_state_str = get_clean_state_identifier(current_state)
+        current_state_str = await get_clean_state_identifier(current_state)
         current_keyboard = state_keyboards[(current_state_str, language)]
         current_reply_messages = state_menus[current_state_str]
         current_reply = await get_message(current_reply_messages, state_messages[current_state_str], language)
@@ -78,7 +78,7 @@ async def lang_choose_response_handler_in_reg(message: types.Message, state: FSM
         await message.answer(text=reply, reply_markup=language_choose_kb)
         return
     await state.set_state(RegistrationState.hello_state)
-    await set_user_state(user_id, get_clean_state_identifier(RegistrationState.hello_state))
+    await set_user_state(user_id, await get_clean_state_identifier(RegistrationState.hello_state))
     await message.answer(
         text=(await get_message(messages, "WELCOME_MESSAGE", language, user_name=message.from_user.first_name)),
         reply_markup=join_kb[language],
@@ -95,7 +95,7 @@ async def hello_response_handler_in_reg(message: types.Message, state: FSMContex
     await state.update_data(user_hello_response=user_response)
     if user_response in ["🚀Join Airdrop", "🚀Присоединиться к аирдропу"]:
         await state.set_state(RegistrationState.proceed_state)
-        await set_user_state(message.from_user.id, get_clean_state_identifier(RegistrationState.proceed_state))
+        await set_user_state(message.from_user.id, await get_clean_state_identifier(RegistrationState.proceed_state))
         reply = await get_message(messages, "PROCEED_MESSAGE", language)
         await message.answer(text=reply, reply_markup=sub_cancel_kb[language], parse_mode="MARKDOWN")
     elif user_response in ["❌Cancel", "❌Отказаться"]:
@@ -127,7 +127,7 @@ async def proceed_response_handler_in_reg(message: types.Message, state: FSMCont
     await state.update_data(user_proceed_response=user_response)
     if user_response in ["✅Согласен с правилами", "✅Submit Details"]:
         await state.set_state(RegistrationState.follow_telegram_state)
-        await set_user_state(message.from_user.id, get_clean_state_identifier(RegistrationState.follow_telegram_state))
+        await set_user_state(message.from_user.id, await get_clean_state_identifier(RegistrationState.follow_telegram_state))
         reply = await get_message(messages, "MAKE_SURE_TELEGRAM", language)
         await message.answer(text=reply, reply_markup=social_join_kb[language])
     elif user_response in ["❌Cancel", "❌Отказаться"]:
@@ -160,7 +160,7 @@ async def follow_telegram_response_handler_in_reg(message: types.Message, state:
             print("Yes, user in all telegram channel")
             await state.set_state(RegistrationState.follow_twitter_state)
             await set_user_state(message.from_user.id,
-                                 get_clean_state_identifier(RegistrationState.follow_twitter_state))
+                                 await get_clean_state_identifier(RegistrationState.follow_twitter_state))
             reply = await get_message(messages, "FOLLOW_TWITTER_TEXT", language)
             await message.answer(text=reply, reply_markup=types.ReplyKeyboardRemove(), parse_mode="MARKDOWN")
         else:
@@ -186,7 +186,7 @@ async def follow_twitter_response_handler_in_reg(message: types.Message, state: 
             await update_user_details(message.from_user.id, TWITTER_USER=user_response)
             await state.set_state(RegistrationState.submit_address_state)
             await set_user_state(message.from_user.id,
-                                 get_clean_state_identifier(RegistrationState.submit_address_state))
+                                 await get_clean_state_identifier(RegistrationState.submit_address_state))
             reply = await get_message(messages, "SUBMIT_ADDRESS_TEXT", language)
             await message.answer(text=reply, reply_markup=types.ReplyKeyboardRemove(), parse_mode="MARKDOWN")
         else:
@@ -214,7 +214,7 @@ async def submit_address_response_handler_in_reg(message: types.Message, state: 
                                       POINTS=AIRDROP_AMOUNT)
             await state.set_state(RegistrationState.main_menu_state)
             await set_user_state(message.from_user.id,
-                                 get_clean_state_identifier(RegistrationState.main_menu_state))
+                                 await get_clean_state_identifier(RegistrationState.main_menu_state))
             ref_link = await get_refferal_link(message.from_user.id)
             reply = await get_message(messages, "JOINED_TEXT", language, referral_link=ref_link)
             await message.answer(text=reply, reply_markup=menu_kb[language], parse_mode="MARKDOWN")
@@ -280,7 +280,9 @@ async def main_menu_handler(message: types.Message, state: FSMContext) -> None:
         await state.set_state(TasksState.current_tasks_state)
     elif user_response in ["🔒Смартконтракт", "🔒Smartcontract"]:
         reply = await get_message(menu_messages, "SMARTCONTRACT_TEXT", language)
-        await message.answer(text=reply, reply_markup=menu_kb[language], parse_mode="HTML")
+        await message.answer_photo(caption=reply, photo=types.FSInputFile(path="settings/image/smartcontract.png"),
+                                   reply_markup=menu_kb[language],
+                                   parse_mode="HTML")
         return
     elif user_response in ["🔧Настройки", "🔧Settings"]:
         reply = await get_message(menu_messages, "MENU_SETTINGS", language)
@@ -507,7 +509,6 @@ async def single_task_handler(message: types.Message, state: FSMContext) -> None
             reply = await get_message(other_messages, "SEND_PIC_TO_CHECK_TEXT", language)
             await message.answer(text=reply)
             await state.set_state(TasksState.screen_check_state)
-            await mark_task_as_await(message.from_user.id, index_task)
     elif user_response in ["⏪Вернуться Назад", "⏪Return Back"]:
         tasks_done = user.get("TASKS_DONE", [])
         total_buttons = await get_num_of_tasks()
@@ -544,8 +545,23 @@ async def achievements_handler(message: types.Message, state: FSMContext) -> Non
 
 @state_handler_router.message(TasksState.screen_check_state)
 async def handle_screen_check(message: types.Message, state: FSMContext) -> None:
+    user = await get_user_details(message.from_user.id)
+    language = await get_language_for_user(message.from_user.id)
     if message.photo:
         screenshot = message.photo[-1]
+        language = await get_language_for_user(message.from_user.id)
+        task_text = await state.get_data()
+        index_task = await get_index_by_text_task(task_text["num_of_task"], language)
+        await mark_task_as_await(message.from_user.id, index_task)
+    elif message.text in ["⏪Вернуться Назад", "⏪Return Back"]:
+        tasks_done = user.get("TASKS_DONE", [])
+        total_buttons = await get_num_of_tasks()
+        tasks_await = user.get("TASKS_AWAIT", [])
+        tasks_keyboard = await create_numeric_keyboard(total_buttons, tasks_done + tasks_await, language)
+        reply = await get_message(task_menu_messages, "WE_ARE_BACK_CHOOSE_TEXT", language)
+        await message.answer(text=reply, reply_markup=tasks_keyboard)
+        await state.set_state(TasksState.current_tasks_state)
+        return
     else:
         language = await get_language_for_user(message.from_user.id)
         reply = await get_message(other_messages, "SEND_PIC_TO_CHECK_TEXT", language)

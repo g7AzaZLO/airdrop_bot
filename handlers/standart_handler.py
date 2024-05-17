@@ -46,7 +46,7 @@ async def start(message: types.Message, state: FSMContext) -> None:
         await generate_captcha(message)
         await state.set_state(CaptchaState.wait_captcha_state)
         capture_message = await get_message(messages, "CAPTCHA_MESSAGE", "ENG")
-        await message.answer(text=capture_message)
+        await message.answer(text=capture_message, reply_markup=types.ReplyKeyboardRemove())
         # Запуск меню после капчи
     else:
         print("User not in db")
@@ -57,7 +57,7 @@ async def start(message: types.Message, state: FSMContext) -> None:
         await generate_captcha(message)
         await state.set_state(RegistrationState.captcha_state)
         capture_message = await get_message(messages, "CAPTCHA_MESSAGE", "ENG")
-        await message.answer(text=capture_message)
+        await message.answer(text=capture_message, reply_markup=types.ReplyKeyboardRemove())
 
 
 @standard_handler_router.message(Command("message"), F.chat.type == "private")
