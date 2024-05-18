@@ -764,6 +764,9 @@ async def reject_task(callback_query: types.CallbackQuery):
     admin_messages = admin_messages_dict.get(index_task, {})
     user = await get_user_details(user_id)
     tasks_await = user.get("TASKS_AWAIT", [])
+    protection = await get_protection_from_task(index_task)
+    if protection == "twitter_screen_check":
+        await update_user_details(user_id, TWITTER_USER=None)
     if index_task in tasks_await:
         await remove_task_from_await(user_id, index_task)
 
