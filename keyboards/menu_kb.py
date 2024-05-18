@@ -107,10 +107,13 @@ async def create_numeric_keyboard(total_buttons: int, exclusions: list, language
 	keyboard_buttons = [KeyboardButton(text=f"{prefix}{num}") for num in sorted(button_numbers)]
 	
 	# Prepare special buttons
-	return_back_text = "⏪Вернуться Назад" if language == "RU" else "⏪Return Back"
 	achievements_text = "🏆Достижения" if language == "RU" else "🏆Achievements"
-	special_buttons = [KeyboardButton(text=return_back_text), KeyboardButton(text=achievements_text)]
+	return_back_text = "⏪Вернуться Назад" if language == "RU" else "⏪Return Back"
+	all_tasks_text = "📋Все Задания" if language == "RU" else "📋All Tasks"
 	
+	special_buttons = [KeyboardButton(text=achievements_text), KeyboardButton(text=return_back_text)]
+	
+	keyboard_buttons.append(KeyboardButton(text=all_tasks_text))
 	# Organize buttons in rows of three and make sure to add special buttons in the last row
 	keyboard_rows = [keyboard_buttons[i:i + 3] for i in range(0, len(keyboard_buttons), 3)]
 	

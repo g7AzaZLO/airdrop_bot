@@ -23,7 +23,7 @@ from logic.refs import get_refferer_id, get_refferal_link
 from logic.twitter import check_joined_twitter_channel, is_valid_twitter_link
 from logic.address import is_valid_crypto_address
 from logic.task import get_all_points, get_num_of_tasks, get_index_by_text_task, get_protection_from_task, \
-    calculate_total_points, get_points_from_task, send_task_info
+    calculate_total_points, get_points_from_task, send_task_info, send_all_tasks_info
 from tasks.task_dict import protection_fot_admins
 from settings.config import AIRDROP_AMOUNT, ADMINS_IDS
 
@@ -491,6 +491,19 @@ async def current_tasks_handler(message: types.Message, state: FSMContext) -> No
         reply = await get_message(task_menu_messages, "ACHIEVEMENTS", language, tasks_done=len(tasks_done),
                                   points_done=points_done)
         await message.answer(text=reply, reply_markup=kb_tasks_back[language], parse_mode="MARKDOWN")
+    elif user_response in ["📋Все Задания", "📋All Tasks"]:
+        await send_all_tasks_info(message, tasks_done)
+        tasks_done = user.get("TASKS_DONE", [])
+        total_buttons = await get_num_of_tasks()
+        task_done_points = await calculate_total_points(tasks_done)
+        tasks_total_points = await get_all_points()
+        tasks_await = user.get("TASKS_AWAIT", [])
+        tasks_keyboard = await create_numeric_keyboard(total_buttons, tasks_done + tasks_await, language)
+        reply = await get_message(task_menu_messages, "CHOOSE_NUMBER_TASK_TEXT", language,
+                                  tasks_done_points=task_done_points,
+                                  tasks_total_points=tasks_total_points)
+        await message.answer(text=reply, reply_markup=tasks_keyboard)
+        return
     else:
         reply = await get_message(menu_messages, "UNKNOWN_COMMAND_TEXT", language)
         user = await get_user_details(message.from_user.id)
