@@ -548,8 +548,8 @@ async def single_task_handler(message: types.Message, state: FSMContext) -> None
                 await message.answer(text=reply)
                 await state.set_state(TasksState.screen_check_state)
             elif protection == "twitter_screen_check":
-                reply = await get_message(task_menu_messages, "TYPE_TWITTER_TEXT", language, parse_mode="MARKDOWN")
-                await message.answer(text=reply)
+                reply = await get_message(task_menu_messages, "TYPE_TWITTER_TEXT", language)
+                await message.answer(text=reply, parse_mode="MARKDOWN")
                 await state.set_state(TasksState.follow_twitter_state)
             else:
                 print(f"THIS PROTECTION IS NOT IMPLEMENTED YET")
@@ -739,7 +739,7 @@ async def approve_task(callback_query: types.CallbackQuery):
             await delete_admin_message(index_task)
         await add_points_to_user(user_id, points)
         await mark_task_as_done(user_id, index_task)
-        reply = await get_message(other_messages, "TASK_DONE_TEXT", language, index_task=index_task)
+        reply = await get_message(other_messages, "TASK_DONE_TEXT", language, index_task=index_task+1)
         await callback_query.message.bot.send_message(chat_id=user_id, text=reply)
         reply2 = await get_message(other_messages, "TASK_CONFIRMED_TEXT", language)
         await callback_query.answer(text=reply2, show_alert=True)
