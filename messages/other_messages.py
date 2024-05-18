@@ -24,8 +24,8 @@ other_messages = {
         "RU": "У вас нет прав для выполнения этого действия."
     },
     "TASK_DONE_TEXT": {
-        "ENG": "Your task {index_task} has been completed and points have been awarded.",
-        "RU": "Ваше задание {index_task} выполнено, очки начислены."
+        "ENG": "Your task #{index_task} has been completed and points have been awarded.",
+        "RU": "Ваше задание #{index_task} выполнено, очки начислены."
     },
     "TASK_CONFIRMED_TEXT": {
         "ENG": "Assignment confirmed.",
