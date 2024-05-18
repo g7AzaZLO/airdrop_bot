@@ -1,5 +1,5 @@
 from aiogram import types, Router
-from DB.database_logic import get_language_for_user
+from DB.database_logic import get_language_for_user, get_user_details
 from tasks.task_dict import tasks
 from handlers.standart_handler import get_message
 from messages.other_messages import other_messages
@@ -142,3 +142,30 @@ async def send_task_info(message: types.Message, task_index: int):
     else:
         reply = await get_message(other_messages, "TASK_NOT_FOUND_TEXT", language)
         await message.answer(text=reply, parse_mode="MARKDOWN")
+
+
+async def send_all_tasks_info(message: types.Message, tasks_done):
+    """
+    Отправляет информацию обо всех заданиях пользователю.
+
+    Параметры:
+    - message (types.Message): Сообщение от пользователя.
+
+    Возвращает:
+    - None
+    """
+    language = await get_language_for_user(message.from_user.id)
+    # user = await get_user_details(message.from_user.id)
+    # tasks_done = user.get("TASKS_DONE", [])
+    tasks_list = [task for index, task in enumerate(tasks.values()) if index not in tasks_done]
+    all_tasks_info = []
+
+    for task_index, task in enumerate(tasks_list):
+        description = task["description"].get(language, await get_message(other_messages, "NOT_DESC_TEXT", language))
+        points = task["points"]
+        task_info = await get_message(other_messages, "TASK_TEXT", language, description=description, points=points)
+        all_tasks_info.append(f"Task #{task_index + 1}:{task_info}")
+
+    all_tasks_message = "\n".join(all_tasks_info)
+
+    await message.answer(text=all_tasks_message, parse_mode="MARKDOWN")

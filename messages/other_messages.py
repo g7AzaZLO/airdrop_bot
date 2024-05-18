@@ -1,4 +1,8 @@
 other_messages = {
+    "PROTECTION_NOT_IMPLEMENTED": {
+        "ENG": "Sorry, this task is still under construction, please try again later.",
+        "RU": "Извините, эта задача все еще в разработке, попробуйте позже."
+    },
     "TASK_ALREADY_SEND_TEXT": {
         "ENG": "This assignment has already been submitted for review.",
         "RU": "Это задание уже было отправлено на проверку."
@@ -20,8 +24,8 @@ other_messages = {
         "RU": "У вас нет прав для выполнения этого действия."
     },
     "TASK_DONE_TEXT": {
-        "ENG": "Your task {index_task} has been completed and points have been awarded.",
-        "RU": "Ваше задание {index_task} выполнено, очки начислены."
+        "ENG": "Your task #{index_task} has been completed and points have been awarded.",
+        "RU": "Ваше задание #{index_task} выполнено, очки начислены."
     },
     "TASK_CONFIRMED_TEXT": {
         "ENG": "Assignment confirmed.",
