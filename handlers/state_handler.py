@@ -46,7 +46,7 @@ async def captcha_response_handler(message: types.Message, state: FSMContext) ->
         current_reply_messages = state_menus[current_state_str]
         current_reply = await get_message(current_reply_messages, state_messages[current_state_str], language)
         await state.set_state(current_state)
-        await message.answer(text=current_reply, reply_markup=current_keyboard)
+        await message.answer(text=current_reply, reply_markup=current_keyboard, parse_mode="MARKDOWN")
 
 
 # Handler состояния капчи в регистрации пользователя
@@ -149,6 +149,56 @@ async def proceed_response_handler_in_reg(message: types.Message, state: FSMCont
         return
 
 
+# @state_handler_router.message(RegistrationState.follow_telegram_state)
+# async def follow_telegram_response_handler_in_reg(message: types.Message, state: FSMContext) -> None:
+#     print("def follow_telegram_response_handler")
+#     user_response = message.text
+#     language = await get_language_for_user(message.from_user.id)
+#     await state.update_data(user_follow_telegram_response=user_response)
+#     if user_response in ["✅Вступил", "✅Joined"]:
+#         if await check_joined_telegram_channel(message.from_user.id):
+#             print("Yes, user in all telegram channel")
+#             await state.set_state(RegistrationState.follow_twitter_state)
+#             await set_user_state(message.from_user.id,
+#                                  await get_clean_state_identifier(RegistrationState.follow_twitter_state))
+#             reply = await get_message(messages, "FOLLOW_TWITTER_TEXT", language)
+#             await message.answer(text=reply, reply_markup=types.ReplyKeyboardRemove(), parse_mode="MARKDOWN")
+#         else:
+#             print("NO HE ISNT HERE")
+#             await state.set_state(RegistrationState.follow_telegram_state)
+#             reply = await get_message(messages, "NOT_SUB_AT_GROUP_TEXT", language)
+#             await message.answer(text=reply, reply_markup=social_join_kb[language])
+#     else:
+#         reply = await get_message(menu_messages, "UNKNOWN_COMMAND_TEXT", language)
+#         await message.answer(text=reply, reply_markup=social_join_kb[language])
+#         await state.set_state(RegistrationState.follow_telegram_state)
+
+
+# @state_handler_router.message(RegistrationState.follow_twitter_state)
+# async def follow_twitter_response_handler_in_reg(message: types.Message, state: FSMContext) -> None:
+#     print("def follow_twitter_response_handler")
+#     user_response = message.text
+#     language = await get_language_for_user(message.from_user.id)
+#     await state.update_data(user_follow_twitter_response=user_response)
+#     if is_valid_twitter_link(user_response):
+#         if await check_joined_twitter_channel(user_response):
+#             print("all ok")
+#             await update_user_details(message.from_user.id, TWITTER_USER=user_response)
+#             await state.set_state(RegistrationState.submit_address_state)
+#             await set_user_state(message.from_user.id,
+#                                  await get_clean_state_identifier(RegistrationState.submit_address_state))
+#             reply = await get_message(messages, "SUBMIT_ADDRESS_TEXT", language)
+#             await message.answer(text=reply, reply_markup=types.ReplyKeyboardRemove(), parse_mode="MARKDOWN")
+#         else:
+#             print("already in base")
+#             await state.set_state(RegistrationState.follow_twitter_state)
+#             reply = await get_message(messages, "TWITTER_ALREADY_REGISTERED_TEXT", language)
+#             await message.answer(text=reply)
+#     else:
+#         print("Invalid Twitter Link")
+#         await state.set_state(RegistrationState.follow_twitter_state)
+#         reply = await get_message(messages, "TWITTER_INVALID_LINK_TEXT", language)
+#         await message.answer(text=reply)
 @state_handler_router.message(RegistrationState.follow_telegram_state)
 async def follow_telegram_response_handler_in_reg(message: types.Message, state: FSMContext) -> None:
     print("def follow_telegram_response_handler")
@@ -158,10 +208,10 @@ async def follow_telegram_response_handler_in_reg(message: types.Message, state:
     if user_response in ["✅Вступил", "✅Joined"]:
         if await check_joined_telegram_channel(message.from_user.id):
             print("Yes, user in all telegram channel")
-            await state.set_state(RegistrationState.follow_twitter_state)
+            await state.set_state(RegistrationState.submit_address_state)
             await set_user_state(message.from_user.id,
-                                 await get_clean_state_identifier(RegistrationState.follow_twitter_state))
-            reply = await get_message(messages, "FOLLOW_TWITTER_TEXT", language)
+                                 await get_clean_state_identifier(RegistrationState.submit_address_state))
+            reply = await get_message(messages, "SUBMIT_ADDRESS_TEXT", language)
             await message.answer(text=reply, reply_markup=types.ReplyKeyboardRemove(), parse_mode="MARKDOWN")
         else:
             print("NO HE ISNT HERE")
@@ -172,34 +222,7 @@ async def follow_telegram_response_handler_in_reg(message: types.Message, state:
         reply = await get_message(menu_messages, "UNKNOWN_COMMAND_TEXT", language)
         await message.answer(text=reply, reply_markup=social_join_kb[language])
         await state.set_state(RegistrationState.follow_telegram_state)
-
-
-@state_handler_router.message(RegistrationState.follow_twitter_state)
-async def follow_twitter_response_handler_in_reg(message: types.Message, state: FSMContext) -> None:
-    print("def follow_twitter_response_handler")
-    user_response = message.text
-    language = await get_language_for_user(message.from_user.id)
-    await state.update_data(user_follow_twitter_response=user_response)
-    if is_valid_twitter_link(user_response):
-        if await check_joined_twitter_channel(user_response):
-            print("all ok")
-            await update_user_details(message.from_user.id, TWITTER_USER=user_response)
-            await state.set_state(RegistrationState.submit_address_state)
-            await set_user_state(message.from_user.id,
-                                 await get_clean_state_identifier(RegistrationState.submit_address_state))
-            reply = await get_message(messages, "SUBMIT_ADDRESS_TEXT", language)
-            await message.answer(text=reply, reply_markup=types.ReplyKeyboardRemove(), parse_mode="MARKDOWN")
-        else:
-            print("already in base")
-            await state.set_state(RegistrationState.follow_twitter_state)
-            reply = await get_message(messages, "TWITTER_ALREADY_REGISTERED_TEXT", language)
-            await message.answer(text=reply)
-    else:
-        print("Invalid Twitter Link")
-        await state.set_state(RegistrationState.follow_twitter_state)
-        reply = await get_message(messages, "TWITTER_INVALID_LINK_TEXT", language)
-        await message.answer(text=reply)
-
+        
 
 @state_handler_router.message(RegistrationState.submit_address_state)
 async def submit_address_response_handler_in_reg(message: types.Message, state: FSMContext) -> None:
@@ -488,10 +511,11 @@ async def single_task_handler(message: types.Message, state: FSMContext) -> None
     task_text = await state.get_data()
     index_task = await get_index_by_text_task(task_text["num_of_task"], language)
     if user_response in ["✅Выполнил", "✅Done"]:
-        if await get_protection_from_task(index_task) not in protection_fot_admins:
+        protection = await get_protection_from_task(index_task)
+        if not await get_protection_from_task(index_task):
             points = await get_points_from_task(index_task)
             await add_points_to_user(message.from_user.id, points)
-
+    
             task_marked = await mark_task_as_done(message.from_user.id, index_task)
             tasks_done = user.get("TASKS_DONE", [])
             if task_marked:
@@ -506,9 +530,26 @@ async def single_task_handler(message: types.Message, state: FSMContext) -> None
             await message.answer(text=reply, reply_markup=tasks_keyboard)
             await state.set_state(TasksState.current_tasks_state)
         else:
-            reply = await get_message(other_messages, "SEND_PIC_TO_CHECK_TEXT", language)
-            await message.answer(text=reply)
-            await state.set_state(TasksState.screen_check_state)
+            if protection == "screen_check":
+                reply = await get_message(other_messages, "SEND_PIC_TO_CHECK_TEXT", language)
+                await message.answer(text=reply)
+                await state.set_state(TasksState.screen_check_state)
+            elif protection == "twitter_screen_check":
+                reply = await get_message(task_menu_messages, "TYPE_TWITTER_TEXT", language, parse_mode="MARKDOWN")
+                await message.answer(text=reply)
+                await state.set_state(TasksState.follow_twitter_state)
+            else:
+                print(f"THIS PROTECTION IS NOT IMPLEMENTED YET")
+                reply = await get_message(other_messages, "PROTECTION_NOT_IMPLEMENTED", language)
+                await message.answer(text=reply)
+                await state.set_state(TasksState.screen_check_state)
+                tasks_done = user.get("TASKS_DONE", [])
+                total_buttons = await get_num_of_tasks()
+                tasks_await = user.get("TASKS_AWAIT", [])
+                tasks_keyboard = await create_numeric_keyboard(total_buttons, tasks_done + tasks_await, language)
+                reply = await get_message(task_menu_messages, "WE_ARE_BACK_CHOOSE_TEXT", language)
+                await message.answer(text=reply, reply_markup=tasks_keyboard)
+                await state.set_state(TasksState.current_tasks_state)
     elif user_response in ["⏪Вернуться Назад", "⏪Return Back"]:
         tasks_done = user.get("TASKS_DONE", [])
         total_buttons = await get_num_of_tasks()
@@ -521,6 +562,43 @@ async def single_task_handler(message: types.Message, state: FSMContext) -> None
         reply = await get_message(menu_messages, "UNKNOWN_COMMAND_TEXT", language)
         await message.answer(text=reply, reply_markup=kb_task_done_back[language])
         return
+
+
+@state_handler_router.message(TasksState.follow_twitter_state)
+async def follow_twitter_response_handler_in_reg(message: types.Message, state: FSMContext) -> None:
+    print("def follow_twitter_response_handler")
+    user_response = message.text
+    language = await get_language_for_user(message.from_user.id)
+    await state.update_data(user_follow_twitter_response=user_response)
+    if is_valid_twitter_link(user_response):
+        if await check_joined_twitter_channel(user_response):
+            print("all ok")
+            await update_user_details(message.from_user.id, TWITTER_USER=user_response)
+            reply = await get_message(other_messages, "SEND_PIC_TO_CHECK_TEXT", language, parse_mode="MARKDOWN")
+            await message.answer(text=reply)
+            await state.set_state(TasksState.screen_check_state)
+        else:
+            print("already in base")
+            user = await get_user_details(message.from_user.id)
+            reply1 = await get_message(messages, "TWITTER_ALREADY_REGISTERED_TEXT", language)
+            tasks_done = user.get("TASKS_DONE", [])
+            total_buttons = await get_num_of_tasks()
+            tasks_await = user.get("TASKS_AWAIT", [])
+            tasks_keyboard = await create_numeric_keyboard(total_buttons, tasks_done + tasks_await, language)
+            reply2 = await get_message(task_menu_messages, "WE_ARE_BACK_CHOOSE_TEXT", language)
+            await message.answer(text=reply1 + '\n' + reply2, reply_markup=tasks_keyboard)
+            await state.set_state(TasksState.current_tasks_state)
+    else:
+        print("Invalid Twitter Link")
+        reply1 = await get_message(messages, "TWITTER_INVALID_LINK_TEXT", language)
+        user = await get_user_details(message.from_user.id)
+        tasks_done = user.get("TASKS_DONE", [])
+        total_buttons = await get_num_of_tasks()
+        tasks_await = user.get("TASKS_AWAIT", [])
+        tasks_keyboard = await create_numeric_keyboard(total_buttons, tasks_done + tasks_await, language)
+        reply2 = await get_message(task_menu_messages, "WE_ARE_BACK_CHOOSE_TEXT", language)
+        await message.answer(text=reply1 + '\n' + reply2, reply_markup=tasks_keyboard)
+        await state.set_state(TasksState.current_tasks_state)
 
 
 @state_handler_router.message(TasksState.achievements_state)

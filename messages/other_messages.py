@@ -1,4 +1,8 @@
 other_messages = {
+    "PROTECTION_NOT_IMPLEMENTED": {
+        "ENG": "Sorry, this task is still under construction, please try again later.",
+        "RU": "Извините, эта задача все еще в разработке, попробуйте позже."
+    },
     "TASK_ALREADY_SEND_TEXT": {
         "ENG": "This assignment has already been submitted for review.",
         "RU": "Это задание уже было отправлено на проверку."
