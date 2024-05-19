@@ -24,6 +24,7 @@ class RegistrationState(StatesGroup):
     menu_settings = State()  # State for the main menu
     lang_choose_state_again = State()  # changing the language second time
     yes_no_state = State()
+    change_address_state = State()
 
 
 class TasksState(StatesGroup):

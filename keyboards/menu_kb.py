@@ -52,6 +52,7 @@ kb_menu_settings = {
 				KeyboardButton(text="❌Удалить Аккаунт"),
 			],
 			[
+				KeyboardButton(text="🔀Сменить адрес"),
 				KeyboardButton(text="⏪Вернуться Назад"),
 			],
 		],
@@ -65,6 +66,7 @@ kb_menu_settings = {
 				KeyboardButton(text="❌Delete Account"),
 			],
 			[
+				KeyboardButton(text="🔀Change address"),
 				KeyboardButton(text="⏪Return back"),
 			],
 		],
