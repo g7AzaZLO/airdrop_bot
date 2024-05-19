@@ -127,7 +127,8 @@ async def proceed_response_handler_in_reg(message: types.Message, state: FSMCont
     await state.update_data(user_proceed_response=user_response)
     if user_response in ["✅Согласен с правилами", "✅Submit Details"]:
         await state.set_state(RegistrationState.follow_telegram_state)
-        await set_user_state(message.from_user.id, await get_clean_state_identifier(RegistrationState.follow_telegram_state))
+        await set_user_state(message.from_user.id,
+                             await get_clean_state_identifier(RegistrationState.follow_telegram_state))
         reply = await get_message(messages, "MAKE_SURE_TELEGRAM", language)
         await message.answer(text=reply, reply_markup=social_join_kb[language])
     elif user_response in ["❌Cancel", "❌Отказаться"]:
@@ -344,6 +345,20 @@ async def menu_settings(message: types.Message, state: FSMContext) -> None:
         await state.set_state(RegistrationState.main_menu_state)
         reply = await get_message(menu_messages, "MENU", language)
         await message.answer(text=reply, reply_markup=menu_kb[language])
+    elif user_response in ["🔀Сменить адрес", "🔀Change address"]:
+        await state.set_state(RegistrationState.change_address_state)
+        await state.update_data(
+            state_end1=RegistrationState.change_address_state,
+            state_end2=RegistrationState.menu_settings,
+            text1=await get_message(menu_messages, "GET_ADDRESS_TEXT", language),
+            text2=await get_message(menu_messages, "MENU_SETTINGS", language),
+            kb1=kb_tasks_back[language],
+            kb2=kb_menu_settings[language],
+            delete=False
+        )
+        reply = await get_message(menu_messages, "CHANGE_ADDRESS_TEXT", language)
+        await message.answer(text=reply, reply_markup=yes_no_kb[language])
+        await state.set_state(RegistrationState.yes_no_state)
     else:
         reply = await get_message(menu_messages, "UNKNOWN_COMMAND_TEXT", language)
         await message.answer(text=reply, reply_markup=kb_menu_settings[language])
@@ -836,3 +851,33 @@ async def handle_admin_message(message: types.Message, state: FSMContext):
     await state.set_state(RegistrationState.main_menu_state)
     reply = await get_message(other_messages, "MESSAGE_SENT_TEXT", language)
     await message.answer(text=reply)
+
+
+@state_handler_router.message(RegistrationState.change_address_state)
+async def change_address(message: types.Message, state: FSMContext):
+    user_id = message.from_user.id
+    language = await get_language_for_user(user_id)
+    user_response = message.text
+    if user_response in ["⏪Вернуться Назад", "⏪Return Back"]:
+        reply = await get_message(menu_messages, "MENU_SETTINGS", language)
+        await message.answer(text=reply, reply_markup=kb_menu_settings[language])
+        await state.set_state(RegistrationState.menu_settings)
+        return
+    if await check_wallet_exists(user_response):
+        if is_valid_crypto_address(user_response):
+            print("Valid crypto address")
+            await update_user_details(message.from_user.id, ADDR=user_response)
+            reply = await get_message(menu_messages, "SUCCESS_CHANGE_ADRESS", language)
+            await message.answer(text=reply, reply_markup=kb_menu_settings[language])
+            await state.set_state(RegistrationState.main_menu_state)
+        else:
+            print("Invalid crypto address")
+            await state.set_state(RegistrationState.change_address_state)
+            reply = await get_message(messages, "INVALID_ADDRESS_TEXT", language)
+            await message.answer(text=reply, reply_markup=kb_tasks_back[language])
+            return
+    else:
+        await state.set_state(RegistrationState.change_address_state)
+        reply = await get_message(messages, "ADDRESS_ALREADY_REGISTERED_TEXT", language)
+        await message.answer(text=reply, reply_markup=kb_tasks_back[language])
+        return
