@@ -869,7 +869,7 @@ async def change_address(message: types.Message, state: FSMContext):
             await update_user_details(message.from_user.id, ADDR=user_response)
             reply = await get_message(menu_messages, "SUCCESS_CHANGE_ADRESS", language)
             await message.answer(text=reply, reply_markup=kb_menu_settings[language])
-            await state.set_state(RegistrationState.main_menu_state)
+            await state.set_state(RegistrationState.menu_settings)
         else:
             print("Invalid crypto address")
             await state.set_state(RegistrationState.change_address_state)
