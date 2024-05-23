@@ -727,8 +727,8 @@ async def handle_screen_check(message: types.Message, state: FSMContext) -> None
 
 @state_handler_router.callback_query(lambda callback_query: callback_query.data.startswith("approve_"))
 async def approve_task(callback_query: types.CallbackQuery):
-    user_id = callback_query.from_user.id
-    language = await get_language_for_user(user_id)
+    admin_user_id = callback_query.from_user.id
+    language = await get_language_for_user(admin_user_id)
     if callback_query.from_user.id not in ADMINS_IDS:
         reply = await get_message(other_messages, "NO_PERMISSION_TEXT", language)
         await callback_query.answer(text=reply, show_alert=True)
@@ -754,9 +754,10 @@ async def approve_task(callback_query: types.CallbackQuery):
             await delete_admin_message(index_task)
         await add_points_to_user(user_id, points)
         await mark_task_as_done(user_id, index_task)
-        reply = await get_message(other_messages, "TASK_DONE_TEXT", language, index_task=index_task+1)
+        user_language = user.get("LANGUAGE", "")
+        reply = await get_message(other_messages, "TASK_DONE_TEXT", user_language, index_task=index_task+1)
         await callback_query.message.bot.send_message(chat_id=user_id, text=reply)
-        reply2 = await get_message(other_messages, "TASK_CONFIRMED_TEXT", language)
+        reply2 = await get_message(other_messages, "TASK_CONFIRMED_TEXT", user_language)
         await callback_query.answer(text=reply2, show_alert=True)
     else:
         return
@@ -764,8 +765,8 @@ async def approve_task(callback_query: types.CallbackQuery):
 
 @state_handler_router.callback_query(lambda callback_query: callback_query.data.startswith("reject_"))
 async def reject_task(callback_query: types.CallbackQuery):
-    user_id = callback_query.from_user.id
-    language = await get_language_for_user(user_id)
+    admins_user_id = callback_query.from_user.id
+    language = await get_language_for_user(admins_user_id)
     if callback_query.from_user.id not in ADMINS_IDS:
         reply = await get_message(other_messages, "NO_PERMISSION_TEXT", language)
         await callback_query.answer(text=reply,
@@ -792,10 +793,11 @@ async def reject_task(callback_query: types.CallbackQuery):
                 print(f"Failed to delete message {message_id} for admin {admin_id}: {e}")
         if index_task in admin_messages_dict:
             await delete_admin_message(index_task)
-        reply = await get_message(other_messages, "TRY_AGAIN_TEXT", language)
+        user_language = user.get("LANGUAGE", "")
+        reply = await get_message(other_messages, "TRY_AGAIN_TEXT", user_language)
         await callback_query.message.bot.send_message(chat_id=user_id,
                                                       text=reply)
-        reply2 = await get_message(other_messages, "TASK_REJECTED_TEXT", language)
+        reply2 = await get_message(other_messages, "TASK_REJECTED_TEXT", user_language)
         await callback_query.answer(text=reply2, show_alert=True)
     else:
         return
