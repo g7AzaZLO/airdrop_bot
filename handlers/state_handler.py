@@ -24,8 +24,8 @@ from logic.twitter import check_joined_twitter_channel, is_valid_twitter_link
 from logic.address import is_valid_crypto_address
 from logic.task import get_all_points, get_num_of_tasks, get_index_by_text_task, get_protection_from_task, \
     calculate_total_points, get_points_from_task, send_task_info, send_all_tasks_info
-from tasks.task_dict import protection_fot_admins
-from settings.config import AIRDROP_AMOUNT, ADMINS_IDS
+from settings.config import AIRDROP_AMOUNT
+from logic.admins import ADMINS_IDS
 
 state_handler_router = Router()
 
