@@ -108,6 +108,7 @@ async def start_add_admin_command(message: types.Message):
         reply = await get_message(other_messages, "INCORRECT_ADD_ADMIN_TEXT", language)
         await message.answer(text=reply)
 
+
 @standard_handler_router.message(Command("del_admin"), F.chat.type == "private")
 async def start_del_admin_command(message: types.Message):
     user_id = message.from_user.id
@@ -118,15 +119,33 @@ async def start_del_admin_command(message: types.Message):
         reply = await get_message(other_messages, "NO_PERMISSION_TEXT", language)
         await message.answer(text=reply)
         return
-    admin_id = int(message.text.split()[1])
+    try:
+        admin_id = int(message.text.split()[1])
+    except ValueError:
+        reply = await get_message(other_messages, "INCORRECT_DEL_ADMIN_TEXT", language)
+        await message.answer(text=reply)
+        return
     if admin_id in all_admin:
         try:
             await remove_admin(admin_id)
             reply = await get_message(other_messages, "ADMIN_DEL_SUCCESS", language, admin_id=admin_id)
             await message.answer(text=reply)
         except (IndexError, ValueError):
-            reply = await get_message(other_messages,"INCORRECT_DEL_ADMIN_TEXT", language, admin_id=admin_id)
+            reply = await get_message(other_messages, "INCORRECT_DEL_ADMIN_TEXT", language, admin_id=admin_id)
             await message.answer(text=reply)
     else:
         reply = await get_message(other_messages, "ADMINS_NOT_FOUND_TEXT", language, admin_id=admin_id)
         await message.answer(text=reply)
+
+
+@standard_handler_router.message(Command("admin_info"), F.chat.type == "private")
+async def start_admin_info_command(message: types.Message):
+    user_id = message.from_user.id
+    language = await get_language_for_user(user_id)
+    print(ADMINS_IDS)
+    if message.from_user.id not in ADMINS_IDS:
+        reply = await get_message(other_messages, "NO_PERMISSION_TEXT", language)
+        await message.answer(text=reply)
+        return
+    reply = await get_message(other_messages, "ADMIN_INFO", language)
+    await message.answer(text=reply)

@@ -108,6 +108,20 @@ other_messages = {
     "INCORRECT_DEL_ADMIN_TEXT": {
         "ENG": "Please use the correct command format: /del_admin <ID>",
         "RU": "Пожалуйста, используйте правильный формат команды: /del_admin <ID>"
+    },
+    "ADMIN_INFO": {
+        "ENG": """
+/message - message everyone
+/update_admin - update the list of amins + display the list of all admins
+/add_admin <ID> - add a new admin
+/del_admin <ID> - remove admin
+        """,
+        "RU": """
+/message - отправить сообщение всем
+/update_admin - обновить список аминов + вывести список всех админов
+/add_admin <ID> - добавить нового админа
+/del_admin <ID> - удалить админа
+        """
     }
 }
 
