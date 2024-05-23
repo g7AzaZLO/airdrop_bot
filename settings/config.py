@@ -23,12 +23,12 @@ WEBSITE_URL = "https://buyordie.fun/"
 MAX_USERS = 100000
 MAX_REFS = 100
 
-# Admins
-ADMINS_IDS = [int(id.strip()) for id in os.getenv("ADMINS_IDS").split(",")]
-print(ADMINS_IDS)
 # Token
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 AI_KEY = os.getenv("AI_KEY")
+
+# Admins
+ADMINS_IDS_INIT = [int(id.strip()) for id in os.getenv("ADMINS_IDS").split(",")]
 
 # Bot
 bot = Bot(token=BOT_TOKEN)

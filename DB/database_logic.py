@@ -1,5 +1,6 @@
+from logic.admins import update_admins_ids
 from settings.config import REFERRAL_REWARD, tasks_init
-from DB.mongo import users_collection, tasks_collection, admin_messages_collection
+from DB.mongo import users_collection, tasks_collection, admin_messages_collection, admins_collection
 from FSM.states import get_state_from_string
 
 
@@ -517,3 +518,15 @@ async def get_all_users() -> list:
     users_cursor = users_collection.find()
     users_list = await users_cursor.to_list(length=None)
     return users_list
+
+
+# Функция для добавления администратора
+async def add_admin(admin_id: int) -> None:
+    await admins_collection.update_one({"_id": admin_id}, {"$set": {"_id": admin_id}}, upsert=True)
+    await update_admins_ids()
+
+
+# Функция для удаления администратора
+async def remove_admin(admin_id: int) -> None:
+    await admins_collection.delete_one({"_id": admin_id})
+    await update_admins_ids()

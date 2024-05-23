@@ -8,4 +8,4 @@ async def update_tasks(new_tasks):
     print(tasks)
 
 
-protection_fot_admins = ["screen_check", "twitter_screen_check"]
+protection_for_admins = ["screen_check", "twitter_screen_check"]
