@@ -84,6 +84,30 @@ other_messages = {
     "ENTER_MESSAGE_TEXT": {
         "ENG": "Please enter the message, or send a photo, video, or GIF you want to send to all users.",
         "RU": "Пожалуйста, введите сообщение, отправьте фото, видео или GIF, которое вы хотите отправить всем пользователям."
+    },
+    "ADMINS_BEEN_UPDATE": {
+        "ENG": "The admins have been updated, here's a list of all the admins: ",
+        "RU": "Администраторы были обновлены, вот список всех админов: "
+    },
+    "ADD_ADMIN_TEXT": {
+        "ENG": "The administrator with ID {admin_id} was successfully added.",
+        "RU": "Администратор с ID {admin_id} был успешно добавлен."
+    },
+    "INCORRECT_ADD_ADMIN_TEXT": {
+        "ENG": "Please use the correct command format: /add_admin <ID>",
+        "RU": "Пожалуйста, используйте правильный формат команды: /add_admin <ID>"
+    },
+    "ADMINS_NOT_FOUND_TEXT": {
+        "ENG": "Administrator with ID {admin_id} was not found.",
+        "RU": "Администратор с ID {admin_id} не найден."
+    },
+    "ADMIN_DEL_SUCCESS": {
+        "ENG": "Administrator with ID {admin_id} was successfully deleted.",
+        "RU": "Администратор с ID {admin_id} был успешно удален."
+    },
+    "INCORRECT_DEL_ADMIN_TEXT": {
+        "ENG": "Please use the correct command format: /del_admin <ID>",
+        "RU": "Пожалуйста, используйте правильный формат команды: /del_admin <ID>"
     }
 }
 
