@@ -5,9 +5,11 @@ from messages.other_messages import other_messages
 from logic.captcha import generate_captcha
 from aiogram.fsm.context import FSMContext
 from FSM.states import CaptchaState, RegistrationState, AdminMessageState
-from DB.database_logic import check_is_user_already_here, add_user_to_db, add_referrer_to_user, get_language_for_user
+from DB.database_logic import check_is_user_already_here, add_user_to_db, add_referrer_to_user, get_language_for_user, \
+    add_admin, remove_admin
 from logic.refs import get_refferer_id
-from settings.config import ADMINS_IDS
+from logic.admins import ADMINS_IDS, update_admins_ids
+from DB.get_all_admins import get_all_admins
 
 standard_handler_router = Router()
 
@@ -65,8 +67,61 @@ async def start_message_command(message: types.Message, state: FSMContext):
     user_id = message.from_user.id
     language = await get_language_for_user(user_id)
     if message.from_user.id not in ADMINS_IDS:
-        await message.answer("У вас нет прав для выполнения этого действия.")
+        reply = await get_message(other_messages, "NO_PERMISSION_TEXT", language)
+        await message.answer(text=reply)
         return
-    reply = await get_message(other_messages,"ENTER_MESSAGE_TEXT", language)
+    reply = await get_message(other_messages, "ENTER_MESSAGE_TEXT", language)
     await message.answer(text=reply)
     await state.set_state(AdminMessageState.waiting_for_message)
+
+
+@standard_handler_router.message(Command("update_admin"), F.chat.type == "private")
+async def start_update_admin_command(message: types.Message):
+    user_id = message.from_user.id
+    language = await get_language_for_user(user_id)
+    print(ADMINS_IDS)
+    if message.from_user.id not in ADMINS_IDS:
+        reply = await get_message(other_messages, "NO_PERMISSION_TEXT", language)
+        await message.answer(text=reply)
+        return
+    await update_admins_ids()
+    reply = "Администраторы были обновлены, вот список всех админов: " + str(await get_all_admins())
+    await message.answer(text=reply)
+    return
+
+
+@standard_handler_router.message(Command("add_admin"), F.chat.type == "private")
+async def start_add_admin_command(message: types.Message):
+    user_id = message.from_user.id
+    language = await get_language_for_user(user_id)
+    print(ADMINS_IDS)
+    if message.from_user.id not in ADMINS_IDS:
+        reply = await get_message(other_messages, "NO_PERMISSION_TEXT", language)
+        await message.answer(text=reply)
+        return
+    try:
+        admin_id = int(message.text.split()[1])
+        await add_admin(admin_id)
+        await message.answer(f"Администратор с ID {admin_id} был успешно добавлен.")
+    except (IndexError, ValueError):
+        await message.answer("Пожалуйста, используйте правильный формат команды: /add_admin <ID>")
+
+@standard_handler_router.message(Command("del_admin"), F.chat.type == "private")
+async def start_del_admin_command(message: types.Message):
+    user_id = message.from_user.id
+    language = await get_language_for_user(user_id)
+    print(ADMINS_IDS)
+    all_admin = await get_all_admins()
+    if message.from_user.id not in ADMINS_IDS:
+        reply = await get_message(other_messages, "NO_PERMISSION_TEXT", language)
+        await message.answer(text=reply)
+        return
+    admin_id = int(message.text.split()[1])
+    if admin_id in all_admin:
+        try:
+            await remove_admin(admin_id)
+            await message.answer(f"Администратор с ID {admin_id} был успешно удален.")
+        except (IndexError, ValueError):
+            await message.answer("Пожалуйста, используйте правильный формат команды: /del_admin <ID>")
+    else:
+        await message.answer(f"Администратор с ID {admin_id} не найден.")
