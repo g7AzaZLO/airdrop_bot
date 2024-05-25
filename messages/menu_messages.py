@@ -178,5 +178,17 @@ weight = balance / 100000
 
 Вес явялется коэффициентом к награде, поэтому держите на балансе как можно больше токенов!
 		"""
+    },
+    "CHANGE_ADDRESS_TEXT": {
+        "ENG": "Are you sure you want to change your address?",
+        "RU": "Вы уверены, что хотите сменить адрес?"
+    },
+    "GET_ADDRESS_TEXT": {
+        "ENG": "Enter a new wallet address",
+        "RU": "Введите новый адрес кошелька"
+    },
+    "SUCCESS_CHANGE_ADRESS": {
+        "ENG": "The address has been successfully changed",
+        "RU": "Адрес успешно изменен "
     }
 }

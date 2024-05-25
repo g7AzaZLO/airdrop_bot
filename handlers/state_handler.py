@@ -24,8 +24,8 @@ from logic.twitter import check_joined_twitter_channel, is_valid_twitter_link
 from logic.address import is_valid_crypto_address
 from logic.task import get_all_points, get_num_of_tasks, get_index_by_text_task, get_protection_from_task, \
     calculate_total_points, get_points_from_task, send_task_info, send_all_tasks_info
-from tasks.task_dict import protection_fot_admins
-from settings.config import AIRDROP_AMOUNT, ADMINS_IDS
+from settings.config import AIRDROP_AMOUNT
+from logic.admins import ADMINS_IDS
 
 state_handler_router = Router()
 
@@ -127,7 +127,8 @@ async def proceed_response_handler_in_reg(message: types.Message, state: FSMCont
     await state.update_data(user_proceed_response=user_response)
     if user_response in ["✅Согласен с правилами", "✅Submit Details"]:
         await state.set_state(RegistrationState.follow_telegram_state)
-        await set_user_state(message.from_user.id, await get_clean_state_identifier(RegistrationState.follow_telegram_state))
+        await set_user_state(message.from_user.id,
+                             await get_clean_state_identifier(RegistrationState.follow_telegram_state))
         reply = await get_message(messages, "MAKE_SURE_TELEGRAM", language)
         await message.answer(text=reply, reply_markup=social_join_kb[language])
     elif user_response in ["❌Cancel", "❌Отказаться"]:
@@ -344,6 +345,20 @@ async def menu_settings(message: types.Message, state: FSMContext) -> None:
         await state.set_state(RegistrationState.main_menu_state)
         reply = await get_message(menu_messages, "MENU", language)
         await message.answer(text=reply, reply_markup=menu_kb[language])
+    elif user_response in ["🔀Сменить адрес", "🔀Change address"]:
+        await state.set_state(RegistrationState.change_address_state)
+        await state.update_data(
+            state_end1=RegistrationState.change_address_state,
+            state_end2=RegistrationState.menu_settings,
+            text1=await get_message(menu_messages, "GET_ADDRESS_TEXT", language),
+            text2=await get_message(menu_messages, "MENU_SETTINGS", language),
+            kb1=kb_tasks_back[language],
+            kb2=kb_menu_settings[language],
+            delete=False
+        )
+        reply = await get_message(menu_messages, "CHANGE_ADDRESS_TEXT", language)
+        await message.answer(text=reply, reply_markup=yes_no_kb[language])
+        await state.set_state(RegistrationState.yes_no_state)
     else:
         reply = await get_message(menu_messages, "UNKNOWN_COMMAND_TEXT", language)
         await message.answer(text=reply, reply_markup=kb_menu_settings[language])
@@ -548,8 +563,8 @@ async def single_task_handler(message: types.Message, state: FSMContext) -> None
                 await message.answer(text=reply)
                 await state.set_state(TasksState.screen_check_state)
             elif protection == "twitter_screen_check":
-                reply = await get_message(task_menu_messages, "TYPE_TWITTER_TEXT", language, parse_mode="MARKDOWN")
-                await message.answer(text=reply)
+                reply = await get_message(task_menu_messages, "TYPE_TWITTER_TEXT", language)
+                await message.answer(text=reply, parse_mode="MARKDOWN")
                 await state.set_state(TasksState.follow_twitter_state)
             else:
                 print(f"THIS PROTECTION IS NOT IMPLEMENTED YET")
@@ -712,8 +727,8 @@ async def handle_screen_check(message: types.Message, state: FSMContext) -> None
 
 @state_handler_router.callback_query(lambda callback_query: callback_query.data.startswith("approve_"))
 async def approve_task(callback_query: types.CallbackQuery):
-    user_id = callback_query.from_user.id
-    language = await get_language_for_user(user_id)
+    admin_user_id = callback_query.from_user.id
+    language = await get_language_for_user(admin_user_id)
     if callback_query.from_user.id not in ADMINS_IDS:
         reply = await get_message(other_messages, "NO_PERMISSION_TEXT", language)
         await callback_query.answer(text=reply, show_alert=True)
@@ -739,9 +754,10 @@ async def approve_task(callback_query: types.CallbackQuery):
             await delete_admin_message(index_task)
         await add_points_to_user(user_id, points)
         await mark_task_as_done(user_id, index_task)
-        reply = await get_message(other_messages, "TASK_DONE_TEXT", language, index_task=index_task)
+        user_language = user.get("LANGUAGE", "")
+        reply = await get_message(other_messages, "TASK_DONE_TEXT", user_language, index_task=index_task+1)
         await callback_query.message.bot.send_message(chat_id=user_id, text=reply)
-        reply2 = await get_message(other_messages, "TASK_CONFIRMED_TEXT", language)
+        reply2 = await get_message(other_messages, "TASK_CONFIRMED_TEXT", user_language)
         await callback_query.answer(text=reply2, show_alert=True)
     else:
         return
@@ -749,8 +765,8 @@ async def approve_task(callback_query: types.CallbackQuery):
 
 @state_handler_router.callback_query(lambda callback_query: callback_query.data.startswith("reject_"))
 async def reject_task(callback_query: types.CallbackQuery):
-    user_id = callback_query.from_user.id
-    language = await get_language_for_user(user_id)
+    admins_user_id = callback_query.from_user.id
+    language = await get_language_for_user(admins_user_id)
     if callback_query.from_user.id not in ADMINS_IDS:
         reply = await get_message(other_messages, "NO_PERMISSION_TEXT", language)
         await callback_query.answer(text=reply,
@@ -764,6 +780,9 @@ async def reject_task(callback_query: types.CallbackQuery):
     admin_messages = admin_messages_dict.get(index_task, {})
     user = await get_user_details(user_id)
     tasks_await = user.get("TASKS_AWAIT", [])
+    protection = await get_protection_from_task(index_task)
+    if protection == "twitter_screen_check":
+        await update_user_details(user_id, TWITTER_USER=None)
     if index_task in tasks_await:
         await remove_task_from_await(user_id, index_task)
 
@@ -774,10 +793,11 @@ async def reject_task(callback_query: types.CallbackQuery):
                 print(f"Failed to delete message {message_id} for admin {admin_id}: {e}")
         if index_task in admin_messages_dict:
             await delete_admin_message(index_task)
-        reply = await get_message(other_messages, "TRY_AGAIN_TEXT", language)
+        user_language = user.get("LANGUAGE", "")
+        reply = await get_message(other_messages, "TRY_AGAIN_TEXT", user_language)
         await callback_query.message.bot.send_message(chat_id=user_id,
                                                       text=reply)
-        reply2 = await get_message(other_messages, "TASK_REJECTED_TEXT", language)
+        reply2 = await get_message(other_messages, "TASK_REJECTED_TEXT", user_language)
         await callback_query.answer(text=reply2, show_alert=True)
     else:
         return
@@ -833,3 +853,33 @@ async def handle_admin_message(message: types.Message, state: FSMContext):
     await state.set_state(RegistrationState.main_menu_state)
     reply = await get_message(other_messages, "MESSAGE_SENT_TEXT", language)
     await message.answer(text=reply)
+
+
+@state_handler_router.message(RegistrationState.change_address_state)
+async def change_address(message: types.Message, state: FSMContext):
+    user_id = message.from_user.id
+    language = await get_language_for_user(user_id)
+    user_response = message.text
+    if user_response in ["⏪Вернуться Назад", "⏪Return Back"]:
+        reply = await get_message(menu_messages, "MENU_SETTINGS", language)
+        await message.answer(text=reply, reply_markup=kb_menu_settings[language])
+        await state.set_state(RegistrationState.menu_settings)
+        return
+    if await check_wallet_exists(user_response):
+        if is_valid_crypto_address(user_response):
+            print("Valid crypto address")
+            await update_user_details(message.from_user.id, ADDR=user_response)
+            reply = await get_message(menu_messages, "SUCCESS_CHANGE_ADRESS", language)
+            await message.answer(text=reply, reply_markup=kb_menu_settings[language])
+            await state.set_state(RegistrationState.menu_settings)
+        else:
+            print("Invalid crypto address")
+            await state.set_state(RegistrationState.change_address_state)
+            reply = await get_message(messages, "INVALID_ADDRESS_TEXT", language)
+            await message.answer(text=reply, reply_markup=kb_tasks_back[language])
+            return
+    else:
+        await state.set_state(RegistrationState.change_address_state)
+        reply = await get_message(messages, "ADDRESS_ALREADY_REGISTERED_TEXT", language)
+        await message.answer(text=reply, reply_markup=kb_tasks_back[language])
+        return

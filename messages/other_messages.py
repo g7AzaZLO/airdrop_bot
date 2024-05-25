@@ -24,8 +24,8 @@ other_messages = {
         "RU": "У вас нет прав для выполнения этого действия."
     },
     "TASK_DONE_TEXT": {
-        "ENG": "Your task {index_task} has been completed and points have been awarded.",
-        "RU": "Ваше задание {index_task} выполнено, очки начислены."
+        "ENG": "Your task #{index_task} has been completed and points have been awarded.",
+        "RU": "Ваше задание #{index_task} выполнено, очки начислены."
     },
     "TASK_CONFIRMED_TEXT": {
         "ENG": "Assignment confirmed.",
@@ -84,6 +84,44 @@ other_messages = {
     "ENTER_MESSAGE_TEXT": {
         "ENG": "Please enter the message, or send a photo, video, or GIF you want to send to all users.",
         "RU": "Пожалуйста, введите сообщение, отправьте фото, видео или GIF, которое вы хотите отправить всем пользователям."
+    },
+    "ADMINS_BEEN_UPDATE": {
+        "ENG": "The admins have been updated, here's a list of all the admins: ",
+        "RU": "Администраторы были обновлены, вот список всех админов: "
+    },
+    "ADD_ADMIN_TEXT": {
+        "ENG": "The administrator with ID {admin_id} was successfully added.",
+        "RU": "Администратор с ID {admin_id} был успешно добавлен."
+    },
+    "INCORRECT_ADD_ADMIN_TEXT": {
+        "ENG": "Please use the correct command format: /add_admin <ID>",
+        "RU": "Пожалуйста, используйте правильный формат команды: /add_admin <ID>"
+    },
+    "ADMINS_NOT_FOUND_TEXT": {
+        "ENG": "Administrator with ID {admin_id} was not found.",
+        "RU": "Администратор с ID {admin_id} не найден."
+    },
+    "ADMIN_DEL_SUCCESS": {
+        "ENG": "Administrator with ID {admin_id} was successfully deleted.",
+        "RU": "Администратор с ID {admin_id} был успешно удален."
+    },
+    "INCORRECT_DEL_ADMIN_TEXT": {
+        "ENG": "Please use the correct command format: /del_admin <ID>",
+        "RU": "Пожалуйста, используйте правильный формат команды: /del_admin <ID>"
+    },
+    "ADMIN_INFO": {
+        "ENG": """
+/message - message everyone
+/update_admin - update the list of amins + display the list of all admins
+/add_admin <ID> - add a new admin
+/del_admin <ID> - remove admin
+        """,
+        "RU": """
+/message - отправить сообщение всем
+/update_admin - обновить список аминов + вывести список всех админов
+/add_admin <ID> - добавить нового админа
+/del_admin <ID> - удалить админа
+        """
     }
 }
 
