@@ -793,6 +793,7 @@ async def reject_task(callback_query: types.CallbackQuery):
                 print(f"Failed to delete message {message_id} for admin {admin_id}: {e}")
         if index_task in admin_messages_dict:
             await delete_admin_message(index_task)
+        #user_language = user.get("LANGUAGE", "")
         user_language = await get_language_for_user(user_id)
         reply = await get_message(other_messages, "TRY_AGAIN_TEXT", user_language)
         await callback_query.message.bot.send_message(chat_id=user_id,
