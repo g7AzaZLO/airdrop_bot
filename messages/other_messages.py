@@ -122,11 +122,9 @@ other_messages = {
 /add_admin <ID> - добавить нового админа
 /del_admin <ID> - удалить админа
         """
+    },
+    "NO_TASKS_TEXT": {
+        "ENG": "You've completed all your tasks",
+        "RU": "Вы выполнили все задания"
     }
 }
-
-
-
-
-
-
