@@ -82,11 +82,11 @@ _ВНИМАНИЕ: Пользователи, замеченные в мошен�
     "MAKE_SURE_TELEGRAM": {
         "ENG": """
 🔹 Subscribe to our channel and join the chat room:
-{telegram_links}
+[{telegram_links}]
         """,
         "RU": """
 🔹 Подпишитесь на наш канал и вступите в чат:
-{telegram_links}
+[{telegram_links}]
         """
     },
 
