@@ -21,7 +21,7 @@ messages = {
 
     "WELCOME_MESSAGE": {
         "ENG": """
-Hello, {user_name}! I am your friendly {coin_name} Airdrop bot.
+Hello, [{user_name}]! I am your friendly {coin_name} Airdrop bot.
 
 Total tokens allocated to airdrop: *50,000,000 ${coin_symbol}*
 
@@ -33,7 +33,7 @@ Total tokens allocated to airdrop: *50,000,000 ${coin_symbol}*
 Click "🚀 Join Airdrop" to proceed._
         """,
         "RU": """
-Привет, {user_name}! Я твой дружелюбный {coin_name} аирдроп бот.
+Привет, [{user_name}]! Я твой дружелюбный {coin_name} аирдроп бот.
 
 Общее количество токенов, выделенных для аирдропа: *50,000,000 ${coin_symbol}*
 
@@ -52,7 +52,6 @@ Click "🚀 Join Airdrop" to proceed._
 
 ✏️ *Mandatory Tasks*:
 - Join our Telegram group(s)
-- Follow our Twitter page(s)
 
 😡 *Prohibited*:
 - Unsubscribing from the channel
@@ -67,7 +66,6 @@ _NOTE: Users found cheating will be disqualified and banned immediately._
 
 ✏️ *Обязательные задания*:
 - Вступить в наши группы в Telegram
-- Подписаться на наш Twitter
 
 😡 *Запрещено*:
 - Отписываться от наших каналов
