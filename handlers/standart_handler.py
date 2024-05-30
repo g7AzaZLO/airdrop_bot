@@ -163,3 +163,8 @@ async def start_change_tasks_command(message: types.Message):
     await change_tasks()
     reply = await get_message(other_messages, "TASKS_UPDATED_INFO", language)
     await message.answer(text=reply)
+
+
+@standard_handler_router.message(Command("get_my_id"), F.chat.type == "private")
+async def start_change_tasks_command(message: types.Message):
+    await message.answer(text=str(message.from_user.id))
