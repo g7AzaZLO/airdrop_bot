@@ -223,7 +223,7 @@ async def follow_telegram_response_handler_in_reg(message: types.Message, state:
         reply = await get_message(menu_messages, "UNKNOWN_COMMAND_TEXT", language)
         await message.answer(text=reply, reply_markup=social_join_kb[language])
         await state.set_state(RegistrationState.follow_telegram_state)
-        
+
 
 @state_handler_router.message(RegistrationState.submit_address_state)
 async def submit_address_response_handler_in_reg(message: types.Message, state: FSMContext) -> None:
@@ -543,7 +543,7 @@ async def single_task_handler(message: types.Message, state: FSMContext) -> None
         if not await get_protection_from_task(index_task):
             points = await get_points_from_task(index_task)
             await add_points_to_user(message.from_user.id, points)
-    
+
             task_marked = await mark_task_as_done(message.from_user.id, index_task)
             tasks_done = user.get("TASKS_DONE", [])
             if task_marked:
@@ -757,12 +757,19 @@ async def approve_task(callback_query: types.CallbackQuery):
             await add_points_to_user(user_id, points)
             await mark_task_as_done(user_id, index_task)
         user_language = user.get("LANGUAGE", "")
-        reply = await get_message(other_messages, "TASK_DONE_TEXT", user_language, index_task=index_task+1)
+        reply = await get_message(other_messages, "TASK_DONE_TEXT", user_language, index_task=index_task + 1)
         await callback_query.message.bot.send_message(chat_id=user_id, text=reply)
         reply2 = await get_message(other_messages, "TASK_CONFIRMED_TEXT", user_language)
         await callback_query.answer(text=reply2, show_alert=True)
     else:
-        return
+        print("Tasks not in task_await, delete")
+        for admin_id, message_id in admin_messages.items():
+            try:
+                await callback_query.message.bot.delete_message(chat_id=admin_id, message_id=message_id)
+            except Exception as e:
+                print(f"Failed to delete message {message_id} for admin {admin_id}: {e} (task not in task_await)")
+        if index_task in admin_messages_dict:
+            await delete_admin_message(index_task)
 
 
 @state_handler_router.callback_query(lambda callback_query: callback_query.data.startswith("reject_"))
@@ -787,7 +794,6 @@ async def reject_task(callback_query: types.CallbackQuery):
         await update_user_details(user_id, TWITTER_USER=None)
     if index_task in tasks_await:
         await remove_task_from_await(user_id, index_task)
-
         for admin_id, message_id in admin_messages.items():
             try:
                 await callback_query.message.bot.delete_message(chat_id=admin_id, message_id=message_id)
@@ -795,7 +801,7 @@ async def reject_task(callback_query: types.CallbackQuery):
                 print(f"Failed to delete message {message_id} for admin {admin_id}: {e}")
         if index_task in admin_messages_dict:
             await delete_admin_message(index_task)
-        #user_language = user.get("LANGUAGE", "")
+        # user_language = user.get("LANGUAGE", "")
         user_language = await get_language_for_user(user_id)
         reply = await get_message(other_messages, "TRY_AGAIN_TEXT", user_language)
         await callback_query.message.bot.send_message(chat_id=user_id,
@@ -803,7 +809,14 @@ async def reject_task(callback_query: types.CallbackQuery):
         reply2 = await get_message(other_messages, "TASK_REJECTED_TEXT", user_language)
         await callback_query.answer(text=reply2, show_alert=True)
     else:
-        return
+        print("Tasks not in task_await, delete")
+        for admin_id, message_id in admin_messages.items():
+            try:
+                await callback_query.message.bot.delete_message(chat_id=admin_id, message_id=message_id)
+            except Exception as e:
+                print(f"Failed to delete message {message_id} for admin {admin_id}: {e} (task not in task_await)")
+        if index_task in admin_messages_dict:
+            await delete_admin_message(index_task)
 
 
 @state_handler_router.message(AdminMessageState.waiting_for_message)
