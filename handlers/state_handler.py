@@ -26,9 +26,9 @@ from logic.task import get_all_points, get_num_of_tasks, get_index_by_text_task,
     calculate_total_points, get_points_from_task, send_task_info, send_all_tasks_info
 from settings.config import AIRDROP_AMOUNT
 from logic.admins import ADMINS_IDS
+import asyncio
 
 state_handler_router = Router()
-
 
 # Handler состояния капчи в CaptchaState
 @state_handler_router.message(CaptchaState.wait_captcha_state)
@@ -720,10 +720,27 @@ async def handle_screen_check(message: types.Message, state: FSMContext) -> None
         reply2 = await get_message(other_messages, "YOUR_PIC_SEND_TEXT", language)
         await message.answer(text=reply2, reply_markup=tasks_keyboard)
         await state.set_state(TasksState.current_tasks_state)
+    
+        asyncio.create_task(auto_reject_task(user_id, index_task, admin_messages, message, 10))
+        
     else:
         reply = await get_message(other_messages, "PLS_SEND_PIC_TEXT", language)
         await message.answer(text=reply)
 
+
+async def auto_reject_task(user_id: int, index_task: int, admin_messages: dict, message, delay: int):
+    await asyncio.sleep(delay)
+    user = await get_user_details(user_id)
+    tasks_await = user.get("TASKS_AWAIT", [])
+    if index_task in tasks_await:
+        await remove_task_from_await(user_id, index_task)
+        
+        if index_task in admin_messages:
+            await delete_admin_message(index_task)
+        user_language = await get_language_for_user(user_id)
+        reply = await get_message(other_messages, "TRY_AGAIN_TEXT", user_language)
+        await message.answer(text=reply)
+        print(f"Task {index_task} rejected for user {user_id} due to timeout")
 
 @state_handler_router.callback_query(lambda callback_query: callback_query.data.startswith("approve_"))
 async def approve_task(callback_query: types.CallbackQuery):
