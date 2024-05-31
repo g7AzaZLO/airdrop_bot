@@ -30,6 +30,7 @@ import asyncio
 
 state_handler_router = Router()
 
+
 # Handler состояния капчи в CaptchaState
 @state_handler_router.message(CaptchaState.wait_captcha_state)
 async def captcha_response_handler(message: types.Message, state: FSMContext) -> None:
@@ -720,9 +721,9 @@ async def handle_screen_check(message: types.Message, state: FSMContext) -> None
         reply2 = await get_message(other_messages, "YOUR_PIC_SEND_TEXT", language)
         await message.answer(text=reply2, reply_markup=tasks_keyboard)
         await state.set_state(TasksState.current_tasks_state)
-    
-        asyncio.create_task(auto_reject_task(user_id, index_task, admin_messages, message, 10))
-        
+
+        asyncio.create_task(auto_reject_task(user_id, index_task, admin_messages, message, 36000))
+
     else:
         reply = await get_message(other_messages, "PLS_SEND_PIC_TEXT", language)
         await message.answer(text=reply)
@@ -734,13 +735,14 @@ async def auto_reject_task(user_id: int, index_task: int, admin_messages: dict, 
     tasks_await = user.get("TASKS_AWAIT", [])
     if index_task in tasks_await:
         await remove_task_from_await(user_id, index_task)
-        
+
         if index_task in admin_messages:
             await delete_admin_message(index_task)
         user_language = await get_language_for_user(user_id)
         reply = await get_message(other_messages, "TRY_AGAIN_TEXT", user_language)
         await message.answer(text=reply)
         print(f"Task {index_task} rejected for user {user_id} due to timeout")
+
 
 @state_handler_router.callback_query(lambda callback_query: callback_query.data.startswith("approve_"))
 async def approve_task(callback_query: types.CallbackQuery):
