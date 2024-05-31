@@ -44,7 +44,7 @@ def is_valid_twitter_link(twitter_link: str) -> bool:
     включающих буквы, цифры и символы подчеркивания.
     """
     twitter_regex = re.compile(
-        r'^(https?://)?(www\.)?twitter\.com/([A-Za-z0-9_]{1,20})/?$'
+        r'^(https?://)?(www\.)?(twitter\.com|x\.com)/([A-Za-z0-9_]{1,20})/?$'
     )
     match = twitter_regex.match(twitter_link)
     return match is not None

@@ -115,18 +115,22 @@ other_messages = {
 /update_admin - update the list of amins + display the list of all admins
 /add_admin <ID> - add a new admin
 /del_admin <ID> - remove admin
+/update_tasks - update tasks
         """,
         "RU": """
 /message - отправить сообщение всем
 /update_admin - обновить список аминов + вывести список всех админов
 /add_admin <ID> - добавить нового админа
 /del_admin <ID> - удалить админа
+/update_tasks - обновить задания
         """
+    },
+    "NO_TASKS_TEXT": {
+        "ENG": "You've completed all your tasks",
+        "RU": "Вы выполнили все задания"
+    },
+    "TASKS_UPDATED_INFO": {
+        "ENG": "Tasks been updated",
+        "RU": "Задания были обновлены"
     }
 }
-
-
-
-
-
-

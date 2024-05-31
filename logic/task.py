@@ -166,6 +166,9 @@ async def send_all_tasks_info(message: types.Message, tasks_done):
         task_info = await get_message(other_messages, "TASK_TEXT", language, description=description, points=points)
         all_tasks_info.append(f"Task #{task_index + 1}:{task_info}")
 
-    all_tasks_message = "\n".join(all_tasks_info)
-
-    await message.answer(text=all_tasks_message, parse_mode="MARKDOWN")
+    if not all_tasks_info:
+        reply = await get_message(other_messages, "NO_TASKS_TEXT", language)
+        await message.answer(text=reply, parse_mode="MARKDOWN")
+    else:
+        all_tasks_message = "\n".join(all_tasks_info)
+        await message.answer(text=all_tasks_message, parse_mode="MARKDOWN")

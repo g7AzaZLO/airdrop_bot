@@ -21,7 +21,7 @@ messages = {
 
     "WELCOME_MESSAGE": {
         "ENG": """
-Hello, {user_name}! I am your friendly {coin_name} Airdrop bot.
+Hello, [{user_name}]! I am your friendly {coin_name} Airdrop bot.
 
 Total tokens allocated to airdrop: *50,000,000 ${coin_symbol}*
 
@@ -33,7 +33,7 @@ Total tokens allocated to airdrop: *50,000,000 ${coin_symbol}*
 Click "🚀 Join Airdrop" to proceed._
         """,
         "RU": """
-Привет, {user_name}! Я твой дружелюбный {coin_name} аирдроп бот.
+Привет, [{user_name}]! Я твой дружелюбный {coin_name} аирдроп бот.
 
 Общее количество токенов, выделенных для аирдропа: *50,000,000 ${coin_symbol}*
 
@@ -52,7 +52,6 @@ Click "🚀 Join Airdrop" to proceed._
 
 ✏️ *Mandatory Tasks*:
 - Join our Telegram group(s)
-- Follow our Twitter page(s)
 
 😡 *Prohibited*:
 - Unsubscribing from the channel
@@ -67,7 +66,6 @@ _NOTE: Users found cheating will be disqualified and banned immediately._
 
 ✏️ *Обязательные задания*:
 - Вступить в наши группы в Telegram
-- Подписаться на наш Twitter
 
 😡 *Запрещено*:
 - Отписываться от наших каналов
@@ -82,11 +80,11 @@ _ВНИМАНИЕ: Пользователи, замеченные в мошен�
     "MAKE_SURE_TELEGRAM": {
         "ENG": """
 🔹 Subscribe to our channel and join the chat room:
-{telegram_links}
+[{telegram_links}]
         """,
         "RU": """
 🔹 Подпишитесь на наш канал и вступите в чат:
-{telegram_links}
+[{telegram_links}]
         """
     },
 
@@ -99,6 +97,7 @@ Type in the link to your Twitter profile to proceed.
 
 *Example*:
 https://twitter.com/example
+https://x.com/example
 
 _WARNING: this tweet will be used to verify assignments_
         """,
@@ -110,6 +109,7 @@ _WARNING: this tweet will be used to verify assignments_
 
 *Пример*:
 https://twitter.com/example
+https://x.com/example
 
 _ВНИМАНИЕ: данный твиттер будет использоваться для проверки заданий_
         """

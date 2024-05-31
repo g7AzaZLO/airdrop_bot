@@ -6,10 +6,11 @@ from logic.captcha import generate_captcha
 from aiogram.fsm.context import FSMContext
 from FSM.states import CaptchaState, RegistrationState, AdminMessageState
 from DB.database_logic import check_is_user_already_here, add_user_to_db, add_referrer_to_user, get_language_for_user, \
-    add_admin, remove_admin
+    add_admin, remove_admin, get_all_tasks
 from logic.refs import get_refferer_id
 from logic.admins import ADMINS_IDS, update_admins_ids
 from DB.get_all_admins import get_all_admins
+from tasks.task_dict import update_tasks, change_tasks
 
 standard_handler_router = Router()
 
@@ -149,3 +150,21 @@ async def start_admin_info_command(message: types.Message):
         return
     reply = await get_message(other_messages, "ADMIN_INFO", language)
     await message.answer(text=reply)
+
+
+@standard_handler_router.message(Command("update_tasks"), F.chat.type == "private")
+async def start_change_tasks_command(message: types.Message):
+    user_id = message.from_user.id
+    language = await get_language_for_user(user_id)
+    if message.from_user.id not in ADMINS_IDS:
+        reply = await get_message(other_messages, "NO_PERMISSION_TEXT", language)
+        await message.answer(text=reply)
+        return
+    await change_tasks()
+    reply = await get_message(other_messages, "TASKS_UPDATED_INFO", language)
+    await message.answer(text=reply)
+
+
+@standard_handler_router.message(Command("get_my_id"), F.chat.type == "private")
+async def start_change_tasks_command(message: types.Message):
+    await message.answer(text=str(message.from_user.id))

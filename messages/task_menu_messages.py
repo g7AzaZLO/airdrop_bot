@@ -39,6 +39,7 @@ Please choose a task number:
 
 *Example*:
 https://twitter.com/example
+https://x.com/example
 
 _WARNING: this tweet will be used to verify assignments_
         """,
@@ -47,6 +48,7 @@ _WARNING: this tweet will be used to verify assignments_
 
 *Пример*:
 https://twitter.com/example
+https://x.com/example
 
 _ВНИМАНИЕ: данный твиттер будет использоваться для проверки заданий_
         """

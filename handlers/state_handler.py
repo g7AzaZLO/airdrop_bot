@@ -752,8 +752,10 @@ async def approve_task(callback_query: types.CallbackQuery):
 
         if index_task in admin_messages_dict:
             await delete_admin_message(index_task)
-        await add_points_to_user(user_id, points)
-        await mark_task_as_done(user_id, index_task)
+        task_done = user.get("TASKS_DONE", [])
+        if index_task not in task_done:
+            await add_points_to_user(user_id, points)
+            await mark_task_as_done(user_id, index_task)
         user_language = user.get("LANGUAGE", "")
         reply = await get_message(other_messages, "TASK_DONE_TEXT", user_language, index_task=index_task+1)
         await callback_query.message.bot.send_message(chat_id=user_id, text=reply)
@@ -793,7 +795,8 @@ async def reject_task(callback_query: types.CallbackQuery):
                 print(f"Failed to delete message {message_id} for admin {admin_id}: {e}")
         if index_task in admin_messages_dict:
             await delete_admin_message(index_task)
-        user_language = user.get("LANGUAGE", "")
+        #user_language = user.get("LANGUAGE", "")
+        user_language = await get_language_for_user(user_id)
         reply = await get_message(other_messages, "TRY_AGAIN_TEXT", user_language)
         await callback_query.message.bot.send_message(chat_id=user_id,
                                                       text=reply)
