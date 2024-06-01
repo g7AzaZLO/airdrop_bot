@@ -29,25 +29,103 @@ async def insert_tasks():
         await tasks_collection.update_one({"_id": task_id}, {"$set": task_data}, upsert=True)
 
 
-async def delete_admin_message(task_id: int):
-    await admin_messages_collection.delete_one({"_id": task_id})
+# async def delete_admin_message(task_id: int):
+#     await admin_messages_collection.delete_one({"_id": task_id})
 
-
-async def get_admin_messages_dict():
-    admin_messages_cursor = admin_messages_collection.find()
-    admin_messages_list = await admin_messages_cursor.to_list(length=None)  # Преобразуем курсор в список
-    admin_messages_dict = {message["_id"]: message for message in admin_messages_list}
+# async def delete_admin_message(task_id: int, user_id: int):
+#     await admin_messages_collection.delete_one({"_id": task_id, "user_id": user_id})
+async def get_admin_messages_dict(user_id: int):
+    user_doc = await admin_messages_collection.find_one({"user_id": user_id})
+    if not user_doc:
+        return {}
+    
+    admin_messages_dict = {task["_id"]: task for task in user_doc.get("tasks", [])}
     return admin_messages_dict
 
+# async def get_admin_messages_dict():
+#     admin_messages_cursor = admin_messages_collection.find()
+#     admin_messages_list = await admin_messages_cursor.to_list(length=None)  # Преобразуем курсор в список
+#     admin_messages_dict = {message["_id"]: message for message in admin_messages_list}
+#     return admin_messages_dict
 
-async def insert_admin_messages(admin_messages: dict) -> None:
-    for task_id, message_data in admin_messages.items():
+# async def get_admin_messages_dict(user_id: int):
+#     admin_messages_cursor = admin_messages_collection.find({"user_id": user_id})
+#     admin_messages_list = await admin_messages_cursor.to_list(length=None)  # Convert cursor to list
+#     admin_messages_dict = {message["_id"]: message for message in admin_messages_list}
+#     return admin_messages_dict
+
+
+async def delete_admin_message(task_id: int, user_id: int):
+    # Find the user's document
+    user_doc = await admin_messages_collection.find_one({"user_id": user_id})
+    if not user_doc:
+        return
+    
+    # Filter out the task with the specified task_id
+    updated_tasks = [task for task in user_doc.get("tasks", []) if task["_id"] != task_id]
+    
+    if updated_tasks:
+        # Update the user's document with the new tasks list
+        await admin_messages_collection.update_one(
+            {"user_id": user_id},
+            {"$set": {"tasks": updated_tasks}}
+        )
+    else:
+        # If the tasks list is empty, delete the user's document
+        await admin_messages_collection.delete_one({"user_id": user_id})
+# async def insert_admin_messages(admin_messages: dict) -> None:
+#     for task_id, message_data in admin_messages.items():
+#         message_data["_id"] = task_id
+#         message_data = {str(k): v for k, v in message_data.items()}
+#         await admin_messages_collection.update_one({"_id": task_id}, {"$set": message_data}, upsert=True)
+
+# async def insert_admin_messages(admin_messages: dict, user_id: int) -> None:
+#     for task_id, message_data in admin_messages.items():
+#         message_data["_id"] = task_id
+#         message_data["user_id"] = user_id  # Add the user_id to the message data
+#         # Convert keys to strings
+#         message_data = {str(k): v for k, v in message_data.items()}
+#         await admin_messages_collection.update_one(
+#             {"_id": task_id, "user_id": user_id},  # Ensure the document is identified by both task_id and user_id
+#             {"$set": message_data},
+#             upsert=True
+#         )
+
+async def insert_admin_messages(admin_messages: dict, user_id: int) -> None:
+    # Retrieve the existing document for the user
+    user_doc = await admin_messages_collection.find_one({"user_id": user_id})
+    
+    if user_doc is None:
+        user_doc = {"user_id": user_id, "tasks": []}
+    
+    # Create a dictionary to store tasks
+    tasks_dict = {task_id: message_data for task_id, message_data in admin_messages.items()}
+    
+    # Update the existing tasks or add new tasks
+    for task_id, message_data in tasks_dict.items():
         message_data["_id"] = task_id
-        # Преобразуем ключи в строки
+        message_data["user_id"] = user_id  # Ensure each message has the user_id
+        
+        # Convert keys to strings
         message_data = {str(k): v for k, v in message_data.items()}
-        await admin_messages_collection.update_one({"_id": task_id}, {"$set": message_data}, upsert=True)
-
-
+        
+        # Check if the task already exists
+        task_exists = False
+        for task in user_doc["tasks"]:
+            if task["_id"] == task_id:
+                task.update(message_data)
+                task_exists = True
+                break
+        
+        if not task_exists:
+            user_doc["tasks"].append(message_data)
+    
+    # Update the user's document
+    await admin_messages_collection.update_one(
+        {"user_id": user_id},
+        {"$set": {"tasks": user_doc["tasks"]}},
+        upsert=True
+    )
 async def get_all_tasks():
     tasks_cursor = tasks_collection.find()
     tasks_list = await tasks_cursor.to_list(length=None)  # Преобразуем курсор в список

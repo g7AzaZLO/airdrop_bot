@@ -30,7 +30,7 @@ dp.include_router(task_router)
 async def main() -> None:
     await initialize_db()
     await insert_tasks()
-    await insert_admin_messages(admin_messages={})
+    await insert_admin_messages(admin_messages={}, user_id=0)
     for admin in ADMINS_IDS_INIT:
         await add_admin(admin)
     await change_tasks()
