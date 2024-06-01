@@ -95,12 +95,14 @@ _ВНИМАНИЕ: Пользователи, замеченные в мошен�
     },
     "PROFILE_MENU": {
         "ENG": """
+*User id*: [{user_id}]
 *Name*: [{user_name}]
 *Referrals*: [{refferal_number}]
 *TON address*: [{address}]
 *Twitter*: [{user_twitter_link}]
 """,
         "RU": """
+*User id*: [{user_id}]
 *Имя*: [{user_name}]
 *Рефералы*: {refferal_number}
 *TON Адрес*: [{address}]

@@ -530,3 +530,5 @@ async def add_admin(admin_id: int) -> None:
 async def remove_admin(admin_id: int) -> None:
     await admins_collection.delete_one({"_id": admin_id})
     await update_admins_ids()
+
+    
