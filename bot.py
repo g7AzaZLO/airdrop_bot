@@ -1,15 +1,15 @@
 import asyncio
 from aiogram import Dispatcher
 from settings.config import bot, ADMINS_IDS_INIT
-from handlers.standart_handler import standard_handler_router
 from handlers.state_handler import state_handler_router
+from handlers.standart_handler import standard_handler_router, garbage_handler_router
 # from handlers.game_commands import setup_game_routes
 from logic.task import task_router
 from dotenv import load_dotenv
 from DB.database_logic import initialize_db, insert_tasks, insert_admin_messages, add_admin
 from aiogram.fsm.storage.memory import MemoryStorage
 from tasks.task_dict import update_tasks, change_tasks
-
+# from handlers.standart_handler import load_all_user_states
 # Загрузка переменных окружения
 env_path = '.env'
 load_dotenv(env_path)
@@ -22,6 +22,7 @@ dp = Dispatcher(storage=storage)
 
 dp.include_router(standard_handler_router)
 dp.include_router(state_handler_router)
+dp.include_router(garbage_handler_router)
 dp.include_router(task_router)
 # setup_game_routes(dp)
 
@@ -33,7 +34,7 @@ async def main() -> None:
     for admin in ADMINS_IDS_INIT:
         await add_admin(admin)
     await change_tasks()
-    await bot.delete_webhook(drop_pending_updates=True)
+    # await bot.delete_webhook(drop_pending_updates=True)
     await dp.start_polling(bot)
 
 

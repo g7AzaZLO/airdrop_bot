@@ -6,13 +6,14 @@ from logic.captcha import generate_captcha
 from aiogram.fsm.context import FSMContext
 from FSM.states import CaptchaState, RegistrationState, AdminMessageState
 from DB.database_logic import check_is_user_already_here, add_user_to_db, add_referrer_to_user, get_language_for_user, \
-    add_admin, remove_admin, get_all_tasks
+    add_admin, remove_admin, get_user_state
 from logic.refs import get_refferer_id
 from logic.admins import ADMINS_IDS, update_admins_ids
 from DB.get_all_admins import get_all_admins
 from tasks.task_dict import update_tasks, change_tasks
 
 standard_handler_router = Router()
+garbage_handler_router = Router()
 
 
 async def get_message(messages: dict, message_key: str, language: str, **kwargs) -> str:
@@ -168,3 +169,59 @@ async def start_change_tasks_command(message: types.Message):
 @standard_handler_router.message(Command("get_my_id"), F.chat.type == "private")
 async def start_change_tasks_command(message: types.Message):
     await message.answer(text=str(message.from_user.id))
+
+
+@garbage_handler_router.message(F.chat.type == "private")
+async def all_other_text_handler(message: types.Message, state: FSMContext):
+    user_id = message.from_user.id
+    current_state = await get_user_state(user_id)
+    # print(f"I am here, state {current_state}")
+    if current_state is None:
+        if await check_is_user_already_here(user_id):
+            print("User already in db")
+            await generate_captcha(message)
+            await state.set_state(CaptchaState.wait_captcha_state)
+            capture_message = await get_message(messages, "CAPTCHA_MESSAGE", "ENG")
+            await message.answer(text=capture_message, reply_markup=types.ReplyKeyboardRemove())
+            # Запуск меню после капчи
+        else:
+            print("User not in db")
+            await add_user_to_db(user_id)
+            refferer = await get_refferer_id(message.text)
+            if refferer is not None:
+                await add_referrer_to_user(user_id, refferer)
+            await generate_captcha(message)
+            await state.set_state(RegistrationState.captcha_state)
+            capture_message = await get_message(messages, "CAPTCHA_MESSAGE", "ENG")
+            await message.answer(text=capture_message, reply_markup=types.ReplyKeyboardRemove())
+    await state.set_state(current_state)
+
+#
+#
+# from DB.mongo import users_collection
+# from aiogram import types
+# from aiogram.fsm.context import FSMContext
+# from aiogram import Dispatcher
+#
+# async def get_all_user_states():
+#     try:
+#         users = await users_collection.find({}, {"USER_ID": 1, "STATE": 1, "_id": 0}).to_list(length=None)
+#         user_states = [(user["USER_ID"], user["STATE"]) for user in users if "STATE" in user]
+#         return user_states
+#     except Exception as e:
+#         print(f"Error retrieving all user states: {e}")
+#         return []
+#
+#
+# async def set_user_state(user_id: int, user_state: str, dispatcher: Dispatcher):
+#     # state = FSMContext(dispatcher.storage, chat=user_id, user=user_id)
+#     state = dispatcher.current_state(user=user_id)
+#     await state.set_state(user_state)
+#
+#
+# async def load_all_user_states(dispatcher: Dispatcher):
+#     user_states = await get_all_user_states()
+#     for user_id, state in user_states:
+#         await set_user_state(user_id, state, dispatcher)
+
+# Call this function on bot startup
