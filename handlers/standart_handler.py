@@ -4,9 +4,10 @@ from messages.basic_messages import messages
 from messages.other_messages import other_messages
 from logic.captcha import generate_captcha
 from aiogram.fsm.context import FSMContext
-from FSM.states import CaptchaState, RegistrationState, AdminMessageState
+from FSM.states import CaptchaState, RegistrationState, AdminMessageState, get_clean_state_identifier,\
+    state_keyboards, state_menus, state_messages
 from DB.database_logic import check_is_user_already_here, add_user_to_db, add_referrer_to_user, get_language_for_user, \
-    add_admin, remove_admin, get_user_state
+    add_admin, remove_admin, get_state_for_user
 from logic.refs import get_refferer_id
 from logic.admins import ADMINS_IDS, update_admins_ids
 from DB.get_all_admins import get_all_admins
@@ -46,7 +47,7 @@ async def start(message: types.Message, state: FSMContext) -> None:
     print("Processing /start command...")
     user_id = message.from_user.id
     if await check_is_user_already_here(user_id):
-        print("User already in db")
+        # print("User already in db")
         await generate_captcha(message)
         await state.set_state(CaptchaState.wait_captcha_state)
         capture_message = await get_message(messages, "CAPTCHA_MESSAGE", "ENG")
@@ -174,18 +175,19 @@ async def start_change_tasks_command(message: types.Message):
 @garbage_handler_router.message(F.chat.type == "private")
 async def all_other_text_handler(message: types.Message, state: FSMContext):
     user_id = message.from_user.id
-    current_state = await get_user_state(user_id)
+    current_state = await get_state_for_user(user_id)
     # print(f"I am here, state {current_state}")
     if current_state is None:
         if await check_is_user_already_here(user_id):
-            print("User already in db")
+            # print("User already in db")
             await generate_captcha(message)
             await state.set_state(CaptchaState.wait_captcha_state)
             capture_message = await get_message(messages, "CAPTCHA_MESSAGE", "ENG")
             await message.answer(text=capture_message, reply_markup=types.ReplyKeyboardRemove())
+            
             # Запуск меню после капчи
         else:
-            print("User not in db")
+            # print("User not in db")
             await add_user_to_db(user_id)
             refferer = await get_refferer_id(message.text)
             if refferer is not None:
@@ -194,34 +196,12 @@ async def all_other_text_handler(message: types.Message, state: FSMContext):
             await state.set_state(RegistrationState.captcha_state)
             capture_message = await get_message(messages, "CAPTCHA_MESSAGE", "ENG")
             await message.answer(text=capture_message, reply_markup=types.ReplyKeyboardRemove())
-    await state.set_state(current_state)
-
-#
-#
-# from DB.mongo import users_collection
-# from aiogram import types
-# from aiogram.fsm.context import FSMContext
-# from aiogram import Dispatcher
-#
-# async def get_all_user_states():
-#     try:
-#         users = await users_collection.find({}, {"USER_ID": 1, "STATE": 1, "_id": 0}).to_list(length=None)
-#         user_states = [(user["USER_ID"], user["STATE"]) for user in users if "STATE" in user]
-#         return user_states
-#     except Exception as e:
-#         print(f"Error retrieving all user states: {e}")
-#         return []
-#
-#
-# async def set_user_state(user_id: int, user_state: str, dispatcher: Dispatcher):
-#     # state = FSMContext(dispatcher.storage, chat=user_id, user=user_id)
-#     state = dispatcher.current_state(user=user_id)
-#     await state.set_state(user_state)
-#
-#
-# async def load_all_user_states(dispatcher: Dispatcher):
-#     user_states = await get_all_user_states()
-#     for user_id, state in user_states:
-#         await set_user_state(user_id, state, dispatcher)
-
-# Call this function on bot startup
+    else:
+        await state.set_state(current_state)
+        language = await get_language_for_user(message.from_user.id)
+        current_state_str = await get_clean_state_identifier(current_state)
+        current_keyboard = state_keyboards[(current_state_str, language)]
+        current_reply_messages = state_menus[current_state_str]
+        current_reply = await get_message(current_reply_messages, state_messages[current_state_str], language)
+        await state.set_state(current_state)
+        await message.answer(text=current_reply, reply_markup=current_keyboard, parse_mode="MARKDOWN")

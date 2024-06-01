@@ -531,14 +531,4 @@ async def remove_admin(admin_id: int) -> None:
     await admins_collection.delete_one({"_id": admin_id})
     await update_admins_ids()
 
-
-async def get_user_state(user_id: int):
-    try:
-        user = await users_collection.find_one({"USER_ID": user_id}, {"STATE": 1, "_id": 0})
-        if user and "STATE" in user:
-            return user["STATE"]
-        return None
-    except Exception as e:
-        print(f"Error retrieving state for user {user_id}: {e}")
-        return None
     
