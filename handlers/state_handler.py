@@ -264,14 +264,14 @@ async def main_menu_handler(message: types.Message, state: FSMContext) -> None:
     print(f"def main_menu_handler, user response {user_response}, user {message.from_user.id}")
     language = await get_language_for_user(message.from_user.id)
     if user_response in ["😈Профиль", "😈Profile"]:
-
+        user_id = message.from_user.id
         user_name = message.from_user.first_name
         num_of_refs = user.get("NUM_OF_REFS", 0)
         user_address = user.get("ADDR", "Not provided")
         user_twi = user.get("TWITTER_USER", "Not provided")
         reply = await get_message(menu_messages, "PROFILE_MENU", language, user_name=user_name,
                                   refferal_number=num_of_refs,
-                                  address=user_address, user_twitter_link=user_twi)
+                                  address=user_address, user_twitter_link=user_twi, user_id=user_id)
         await message.answer(text=reply, reply_markup=menu_kb[language], parse_mode="MARKDOWN")
         return
     elif user_response in ["#️⃣Информация", "#️⃣Information"]:
