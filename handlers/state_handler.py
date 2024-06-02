@@ -23,7 +23,7 @@ from logic.refs import get_refferer_id, get_refferal_link
 from logic.twitter import check_joined_twitter_channel, is_valid_twitter_link
 from logic.address import is_valid_crypto_address
 from logic.task import get_all_points, get_num_of_tasks, get_index_by_text_task, get_protection_from_task, \
-    calculate_total_points, get_points_from_task, send_task_info, send_all_tasks_info
+    calculate_total_points, get_points_from_task, send_task_info, send_all_tasks_info, get_puzzle_from_task
 from settings.config import AIRDROP_AMOUNT
 from logic.admins import ADMINS_IDS
 import asyncio
@@ -567,6 +567,10 @@ async def single_task_handler(message: types.Message, state: FSMContext) -> None
                 reply = await get_message(task_menu_messages, "TYPE_TWITTER_TEXT", language)
                 await message.answer(text=reply, parse_mode="MARKDOWN")
                 await state.set_state(TasksState.follow_twitter_state)
+            elif protection == "puzzle":
+                reply = await get_message(other_messages, "PUZZLE_CHECK", language)
+                await message.answer(text=reply, reply_markup=kb_tasks_back[language])
+                await state.set_state(TasksState.puzzle_check_state)
             else:
                 print(f"THIS PROTECTION IS NOT IMPLEMENTED YET")
                 reply = await get_message(other_messages, "PROTECTION_NOT_IMPLEMENTED", language)
@@ -652,13 +656,14 @@ async def achievements_handler(message: types.Message, state: FSMContext) -> Non
 
 @state_handler_router.message(TasksState.screen_check_state)
 async def handle_screen_check(message: types.Message, state: FSMContext) -> None:
-    user = await get_user_details(message.from_user.id)
+    user_id = message.from_user.id
+    user = await get_user_details(user_id)
     language = await get_language_for_user(message.from_user.id)
+    task_text = await state.get_data()
+    index_task = await get_index_by_text_task(task_text["num_of_task"], language)
+    points = await get_points_from_task(index_task)
     if message.photo:
         screenshot = message.photo[-1]
-        language = await get_language_for_user(message.from_user.id)
-        task_text = await state.get_data()
-        index_task = await get_index_by_text_task(task_text["num_of_task"], language)
         await mark_task_as_await(message.from_user.id, index_task)
     elif message.text in ["⏪Вернуться Назад", "⏪Return Back"]:
         tasks_done = user.get("TASKS_DONE", [])
@@ -670,17 +675,10 @@ async def handle_screen_check(message: types.Message, state: FSMContext) -> None
         await state.set_state(TasksState.current_tasks_state)
         return
     else:
-        language = await get_language_for_user(message.from_user.id)
         reply = await get_message(other_messages, "SEND_PIC_TO_CHECK_TEXT", language)
         await message.answer(text=reply)
         await state.set_state(TasksState.screen_check_state)
         return
-    user_id = message.from_user.id
-    task_text = await state.get_data()
-    index_task = await get_index_by_text_task(task_text["num_of_task"], await get_language_for_user(user_id))
-    points = await get_points_from_task(index_task)
-    user = await get_user_details(message.from_user.id)
-    language = await get_language_for_user(user_id)
 
     if screenshot:
         inline_kb = InlineKeyboardMarkup(inline_keyboard=[
@@ -917,3 +915,46 @@ async def change_address(message: types.Message, state: FSMContext):
         reply = await get_message(messages, "ADDRESS_ALREADY_REGISTERED_TEXT", language)
         await message.answer(text=reply, reply_markup=kb_tasks_back[language])
         return
+
+
+@state_handler_router.message(TasksState.puzzle_check_state)
+async def puzzle_check(message: types.Message, state: FSMContext):
+    user = await get_user_details(message.from_user.id)
+    language = await get_language_for_user(message.from_user.id)
+    if message.text in ["⏪Вернуться Назад", "⏪Return Back"]:
+        tasks_done = user.get("TASKS_DONE", [])
+        total_buttons = await get_num_of_tasks()
+        tasks_await = user.get("TASKS_AWAIT", [])
+        tasks_keyboard = await create_numeric_keyboard(total_buttons, tasks_done + tasks_await, language)
+        reply = await get_message(task_menu_messages, "WE_ARE_BACK_CHOOSE_TEXT", language)
+        await message.answer(text=reply, reply_markup=tasks_keyboard)
+        await state.set_state(TasksState.current_tasks_state)
+        return
+    else:
+        task_text = await state.get_data()
+        index_task = await get_index_by_text_task(task_text["num_of_task"], language)
+        points = await get_points_from_task(index_task)
+        user_response = message.text
+        puzzle = await get_puzzle_from_task(index_task)
+        if user_response in puzzle:
+            print("Puzzle solved")
+            await add_points_to_user(message.from_user.id, points)
+            task_marked = await mark_task_as_done(message.from_user.id, index_task)
+            tasks_done = user.get("TASKS_DONE", [])
+            if task_marked:
+                tasks_done.append(index_task)
+            task_done_points = await calculate_total_points(tasks_done)
+            total_buttons = await get_num_of_tasks()
+            tasks_await = user.get("TASKS_AWAIT", [])
+            tasks_keyboard = await create_numeric_keyboard(total_buttons, tasks_done + tasks_await, language)
+            tasks_total_points = await get_all_points()
+            reply1 = await get_message(other_messages, "CORRECT_ANSWER", language)
+            await message.answer(text=reply1)
+            reply2 = await get_message(task_menu_messages, "CHOOSE_NUMBER_TASK_TEXT", language,
+                                       tasks_done_points=task_done_points, tasks_total_points=tasks_total_points)
+            await message.answer(text=reply2, reply_markup=tasks_keyboard)
+            await state.set_state(TasksState.current_tasks_state)
+        else:
+            reply = await get_message(other_messages, "PUZZLE_REJECTED", language)
+            await message.answer(text=reply, reply_markup=kb_tasks_back[language])
+            await state.set_state(TasksState.puzzle_check_state)
