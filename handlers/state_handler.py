@@ -750,7 +750,7 @@ async def approve_task(callback_query: types.CallbackQuery):
     language = await get_language_for_user(admin_user_id)
     if callback_query.from_user.id not in ADMINS_IDS:
         reply = await get_message(other_messages, "NO_PERMISSION_TEXT", language)
-        await callback_query.answer(text=reply, show_alert=True)
+        await callback_query.answer(text=reply)
         return
 
     data = callback_query.data.split("_")
@@ -779,7 +779,7 @@ async def approve_task(callback_query: types.CallbackQuery):
         reply = await get_message(other_messages, "TASK_DONE_TEXT", user_language, index_task=index_task + 1)
         await callback_query.message.bot.send_message(chat_id=user_id, text=reply)
         reply2 = await get_message(other_messages, "TASK_CONFIRMED_TEXT", user_language)
-        await callback_query.answer(text=reply2, show_alert=True)
+        await callback_query.answer(text=reply2)
     else:
         print("Tasks not in task_await, delete")
         for admin_id, message_id in admin_messages.items():
@@ -797,8 +797,7 @@ async def reject_task(callback_query: types.CallbackQuery):
     language = await get_language_for_user(admins_user_id)
     if callback_query.from_user.id not in ADMINS_IDS:
         reply = await get_message(other_messages, "NO_PERMISSION_TEXT", language)
-        await callback_query.answer(text=reply,
-                                    show_alert=True)
+        await callback_query.answer(text=reply)
         return
 
     data = callback_query.data.split("_")
@@ -826,7 +825,7 @@ async def reject_task(callback_query: types.CallbackQuery):
         await callback_query.message.bot.send_message(chat_id=user_id,
                                                       text=reply)
         reply2 = await get_message(other_messages, "TASK_REJECTED_TEXT", user_language)
-        await callback_query.answer(text=reply2, show_alert=True)
+        await callback_query.answer(text=reply2)
     else:
         print("Tasks not in task_await, delete")
         for admin_id, message_id in admin_messages.items():
