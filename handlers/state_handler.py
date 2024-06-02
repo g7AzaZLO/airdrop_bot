@@ -656,13 +656,14 @@ async def achievements_handler(message: types.Message, state: FSMContext) -> Non
 
 @state_handler_router.message(TasksState.screen_check_state)
 async def handle_screen_check(message: types.Message, state: FSMContext) -> None:
-    user = await get_user_details(message.from_user.id)
+    user_id = message.from_user.id
+    user = await get_user_details(user_id)
     language = await get_language_for_user(message.from_user.id)
+    task_text = await state.get_data()
+    index_task = await get_index_by_text_task(task_text["num_of_task"], language)
+    points = await get_points_from_task(index_task)
     if message.photo:
         screenshot = message.photo[-1]
-        language = await get_language_for_user(message.from_user.id)
-        task_text = await state.get_data()
-        index_task = await get_index_by_text_task(task_text["num_of_task"], language)
         await mark_task_as_await(message.from_user.id, index_task)
     elif message.text in ["⏪Вернуться Назад", "⏪Return Back"]:
         tasks_done = user.get("TASKS_DONE", [])
@@ -674,18 +675,10 @@ async def handle_screen_check(message: types.Message, state: FSMContext) -> None
         await state.set_state(TasksState.current_tasks_state)
         return
     else:
-        language = await get_language_for_user(message.from_user.id)
         reply = await get_message(other_messages, "SEND_PIC_TO_CHECK_TEXT", language)
         await message.answer(text=reply)
         await state.set_state(TasksState.screen_check_state)
         return
-    user_id = message.from_user.id  # TODO user_id тоже самое что user в начале функции
-    task_text = await state.get_data()
-    index_task = await get_index_by_text_task(task_text["num_of_task"], await get_language_for_user(
-        user_id))  # TODO нафига тут еще один язык?можно взять тот что в начале
-    points = await get_points_from_task(index_task)
-    user = await get_user_details(message.from_user.id)  # TODO тут повторение юзера из самого начала функции - зачем?
-    language = await get_language_for_user(user_id)  # TODO язык так же определяется в начале - зачем он тут?
 
     if screenshot:
         inline_kb = InlineKeyboardMarkup(inline_keyboard=[
@@ -962,8 +955,15 @@ async def puzzle_check(message: types.Message, state: FSMContext):
             await message.answer(text=reply2, reply_markup=tasks_keyboard)
             await state.set_state(TasksState.current_tasks_state)
         else:
+            reply = await get_message(other_messages, "PUZZLE_REJECTED", language)
+            await message.answer(text=reply)
+            tasks_done = user.get("TASKS_DONE", [])
+            task_done_points = await calculate_total_points(tasks_done)
+            total_buttons = await get_num_of_tasks()
             tasks_await = user.get("TASKS_AWAIT", [])
-            if index_task in tasks_await:
-                await remove_task_from_await(message.from_user.id, index_task)
-                reply = await get_message(other_messages, "PUZZLE_REJECTED", language)
-                await message.answer(text=reply)
+            tasks_keyboard = await create_numeric_keyboard(total_buttons, tasks_done + tasks_await, language)
+            tasks_total_points = await get_all_points()
+            reply2 = await get_message(task_menu_messages, "CHOOSE_NUMBER_TASK_TEXT", language,
+                                       tasks_done_points=task_done_points, tasks_total_points=tasks_total_points)
+            await message.answer(text=reply2, reply_markup=tasks_keyboard)
+            await state.set_state(TasksState.current_tasks_state)
