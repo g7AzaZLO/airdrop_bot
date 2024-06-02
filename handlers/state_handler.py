@@ -956,14 +956,5 @@ async def puzzle_check(message: types.Message, state: FSMContext):
             await state.set_state(TasksState.current_tasks_state)
         else:
             reply = await get_message(other_messages, "PUZZLE_REJECTED", language)
-            await message.answer(text=reply)
-            tasks_done = user.get("TASKS_DONE", [])
-            task_done_points = await calculate_total_points(tasks_done)
-            total_buttons = await get_num_of_tasks()
-            tasks_await = user.get("TASKS_AWAIT", [])
-            tasks_keyboard = await create_numeric_keyboard(total_buttons, tasks_done + tasks_await, language)
-            tasks_total_points = await get_all_points()
-            reply2 = await get_message(task_menu_messages, "CHOOSE_NUMBER_TASK_TEXT", language,
-                                       tasks_done_points=task_done_points, tasks_total_points=tasks_total_points)
-            await message.answer(text=reply2, reply_markup=tasks_keyboard)
-            await state.set_state(TasksState.current_tasks_state)
+            await message.answer(text=reply, reply_markup=kb_tasks_back[language])
+            await state.set_state(TasksState.puzzle_check_state)
