@@ -132,5 +132,9 @@ other_messages = {
     "TASKS_UPDATED_INFO": {
         "ENG": "Tasks been updated",
         "RU": "Задания были обновлены"
+    },
+    "SEND_TWITTER_CHECK": {
+        "ENG": "Send a screenshot showing that you are subscribed to our Twitter feed (X)",
+        "RU": "Пришлите скриншот, где видно, что вы подписаны на наш канал в Twitter (X)"
     }
 }

@@ -603,7 +603,7 @@ async def follow_twitter_response_handler_in_reg(message: types.Message, state: 
         if await check_joined_twitter_channel(user_response):
             print("all ok")
             await update_user_details(message.from_user.id, TWITTER_USER=user_response)
-            reply = await get_message(other_messages, "SEND_PIC_TO_CHECK_TEXT", language, parse_mode="MARKDOWN")
+            reply = await get_message(other_messages, "SEND_TWITTER_CHECK", language, parse_mode="MARKDOWN")
             await message.answer(text=reply)
             await state.set_state(TasksState.screen_check_state)
         else:
