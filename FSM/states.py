@@ -34,6 +34,7 @@ class TasksState(StatesGroup):
     screen_check_state = State()  # Новое состояние для отправки фото на проверку
     waiting_for_approval = State()  # Новое состояние ожидания проверки
     follow_twitter_state = State()
+    puzzle_check_state = State()
 
 
 class AdminMessageState(StatesGroup):

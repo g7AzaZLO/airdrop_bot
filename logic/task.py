@@ -172,3 +172,20 @@ async def send_all_tasks_info(message: types.Message, tasks_done):
     else:
         all_tasks_message = "\n".join(all_tasks_info)
         await message.answer(text=all_tasks_message, parse_mode="MARKDOWN")
+
+
+async def get_puzzle_from_task(index_task: int) -> str:
+    """
+    Возвращает название защиты задания.
+
+    Параметры:
+    - index_task (int): Индекс задания.
+
+    Возвращает:
+    - str: название защиты задания
+    """
+    # index_task -= 1
+    print("def get_protection_from_task")
+    value_at_index = list(tasks.values())[index_task]
+    print(value_at_index)
+    return value_at_index["puzzle"]

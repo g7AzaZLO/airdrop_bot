@@ -136,5 +136,17 @@ other_messages = {
     "SEND_TWITTER_CHECK": {
         "ENG": "Send a screenshot showing that you are subscribed to our Twitter feed (X)",
         "RU": "Пришлите скриншот, где видно, что вы подписаны на наш канал в Twitter (X)"
+    },
+    "PUZZLE_CHECK": {
+        "ENG": "Write the answer",
+        "RU": "Напишите ответ"
+    },
+    "PUZZLE_REJECTED": {
+        "ENG": "That's not the right answer",
+        "RU": "Неверный ответ"
+    },
+    "CORRECT_ANSWER": {
+        "ENG": "That's the right answer",
+        "RU": "Верный ответ"
     }
 }
