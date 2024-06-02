@@ -711,7 +711,7 @@ async def handle_screen_check(message: types.Message, state: FSMContext) -> None
                 print(f"Некорректный ID администратора: {admin_id}")
             except Exception as e:
                 print(f"Не удалось отправить сообщение администратору с ID {admin_id}: {e}")
-        await insert_admin_messages({index_task: admin_messages})
+        await insert_admin_messages({index_task: admin_messages}, user_id)
         tasks_done = user.get("TASKS_DONE", [])
         total_buttons = await get_num_of_tasks()
         tasks_await = user.get("TASKS_AWAIT", [])
@@ -737,7 +737,7 @@ async def auto_reject_task(user_id: int, index_task: int, admin_messages: dict, 
         await remove_task_from_await(user_id, index_task)
 
         if index_task in admin_messages:
-            await delete_admin_message(index_task)
+            await delete_admin_message(index_task, user_id)
         user_language = await get_language_for_user(user_id)
         reply = await get_message(other_messages, "TRY_AGAIN_TEXT", user_language)
         await message.answer(text=reply)
@@ -757,7 +757,7 @@ async def approve_task(callback_query: types.CallbackQuery):
     user_id = int(data[1])
     index_task = int(data[2])
     points = int(data[3])
-    admin_messages_dict = await get_admin_messages_dict()
+    admin_messages_dict = await get_admin_messages_dict(user_id)
     admin_messages = admin_messages_dict.get(index_task, {})
     user = await get_user_details(user_id)
     tasks_await = user.get("TASKS_AWAIT", [])
@@ -770,7 +770,7 @@ async def approve_task(callback_query: types.CallbackQuery):
                 print(f"Failed to delete message {message_id} for admin {admin_id}: {e}")
 
         if index_task in admin_messages_dict:
-            await delete_admin_message(index_task)
+            await delete_admin_message(index_task, user_id)
         task_done = user.get("TASKS_DONE", [])
         if index_task not in task_done:
             await add_points_to_user(user_id, points)
@@ -788,7 +788,7 @@ async def approve_task(callback_query: types.CallbackQuery):
             except Exception as e:
                 print(f"Failed to delete message {message_id} for admin {admin_id}: {e} (task not in task_await)")
         if index_task in admin_messages_dict:
-            await delete_admin_message(index_task)
+            await delete_admin_message(index_task, user_id)
 
 
 @state_handler_router.callback_query(lambda callback_query: callback_query.data.startswith("reject_"))
@@ -804,7 +804,7 @@ async def reject_task(callback_query: types.CallbackQuery):
     data = callback_query.data.split("_")
     user_id = int(data[1])
     index_task = int(data[2])
-    admin_messages_dict = await get_admin_messages_dict()
+    admin_messages_dict = await get_admin_messages_dict(user_id)
     admin_messages = admin_messages_dict.get(index_task, {})
     user = await get_user_details(user_id)
     tasks_await = user.get("TASKS_AWAIT", [])
@@ -819,7 +819,7 @@ async def reject_task(callback_query: types.CallbackQuery):
             except Exception as e:
                 print(f"Failed to delete message {message_id} for admin {admin_id}: {e}")
         if index_task in admin_messages_dict:
-            await delete_admin_message(index_task)
+            await delete_admin_message(index_task, user_id)
         # user_language = user.get("LANGUAGE", "")
         user_language = await get_language_for_user(user_id)
         reply = await get_message(other_messages, "TRY_AGAIN_TEXT", user_language)
@@ -835,7 +835,7 @@ async def reject_task(callback_query: types.CallbackQuery):
             except Exception as e:
                 print(f"Failed to delete message {message_id} for admin {admin_id}: {e} (task not in task_await)")
         if index_task in admin_messages_dict:
-            await delete_admin_message(index_task)
+            await delete_admin_message(index_task, user_id)
 
 
 @state_handler_router.message(AdminMessageState.waiting_for_message)
