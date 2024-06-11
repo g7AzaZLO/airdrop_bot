@@ -34,7 +34,6 @@ async def main() -> None:
     for admin in ADMINS_IDS_INIT:
         await add_admin(admin)
     await change_tasks()
-    # await bot.delete_webhook(drop_pending_updates=True)
     await dp.start_polling(bot)
 
 

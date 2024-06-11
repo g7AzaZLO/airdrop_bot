@@ -4,7 +4,6 @@ from DB.mongo import users_collection, tasks_collection, admin_messages_collecti
 from FSM.states import get_state_from_string
 
 
-# Функция инициализации базы данных
 async def initialize_db() -> None:
     """
     Инициализирует коллекцию пользователей в MongoDB.
@@ -23,117 +22,125 @@ async def initialize_db() -> None:
         print(f"Error initializing database: {e}")
 
 
-async def insert_tasks():
+async def insert_tasks() -> None:
+    """
+    Вставляет задачи в коллекцию `tasks_collection` в базе данных MongoDB.
+
+    Функция перебирает все задачи из словаря `tasks_init`, добавляет каждому
+    из них идентификатор `_id` и вставляет их в коллекцию `tasks_collection`
+    """
     for task_id, task_data in tasks_init.items():
         task_data["_id"] = task_id
         await tasks_collection.update_one({"_id": task_id}, {"$set": task_data}, upsert=True)
 
 
-# async def delete_admin_message(task_id: int):
-#     await admin_messages_collection.delete_one({"_id": task_id})
+async def get_admin_messages_dict(user_id: int) -> dict:
+    """
+    Получает словарь сообщений администраторов из коллекции `admin_messages_collection` в базе данных MongoDB.
 
-# async def delete_admin_message(task_id: int, user_id: int):
-#     await admin_messages_collection.delete_one({"_id": task_id, "user_id": user_id})
-async def get_admin_messages_dict(user_id: int):
+    Функция ищет документ в коллекции `admin_messages_collection` по `user_id`.
+    Если документ не найден, возвращается пустой словарь.
+    Если документ найден, извлекается список задач из поля `tasks`, и создается словарь `admin_messages_dict`,
+
+    Параметры:
+    - user_id (int): Идентификатор пользователя.
+
+    Возвращает:
+    - dict: Словарь сообщений администраторов, где ключ - идентификатор задачи, а значение - данные задачи.
+    """
     user_doc = await admin_messages_collection.find_one({"user_id": user_id})
     if not user_doc:
         return {}
-    
     admin_messages_dict = {task["_id"]: task for task in user_doc.get("tasks", [])}
     return admin_messages_dict
 
-# async def get_admin_messages_dict():
-#     admin_messages_cursor = admin_messages_collection.find()
-#     admin_messages_list = await admin_messages_cursor.to_list(length=None)  # Преобразуем курсор в список
-#     admin_messages_dict = {message["_id"]: message for message in admin_messages_list}
-#     return admin_messages_dict
 
-# async def get_admin_messages_dict(user_id: int):
-#     admin_messages_cursor = admin_messages_collection.find({"user_id": user_id})
-#     admin_messages_list = await admin_messages_cursor.to_list(length=None)  # Convert cursor to list
-#     admin_messages_dict = {message["_id"]: message for message in admin_messages_list}
-#     return admin_messages_dict
+async def delete_admin_message(task_id: int, user_id: int) -> None:
+    """
+    Удаляет задачу из списка задач администратора в коллекции `admin_messages_collection` по идентификатору задачи и пользователя.
 
+    Функция ищет документ в коллекции `admin_messages_collection` по `user_id`.
+    Если документ не найден, функция возвращает `None`.
+    Если документ найден, функция обновляет список задач, исключая задачу с заданным `task_id`.
+    Если обновленный список задач не пуст, функция обновляет документ с новым списком задач.
+    Если обновленный список задач пуст, функция удаляет документ из коллекции.
 
-async def delete_admin_message(task_id: int, user_id: int):
-    # Find the user's document
+    Параметры:
+    - task_id (int): Идентификатор задачи, которую нужно удалить.
+    - user_id (int): Идентификатор пользователя.
+
+    Возвращает:
+    - None
+    """
     user_doc = await admin_messages_collection.find_one({"user_id": user_id})
     if not user_doc:
         return
-    
-    # Filter out the task with the specified task_id
     updated_tasks = [task for task in user_doc.get("tasks", []) if task["_id"] != task_id]
-    
     if updated_tasks:
-        # Update the user's document with the new tasks list
         await admin_messages_collection.update_one(
             {"user_id": user_id},
             {"$set": {"tasks": updated_tasks}}
         )
     else:
-        # If the tasks list is empty, delete the user's document
         await admin_messages_collection.delete_one({"user_id": user_id})
-# async def insert_admin_messages(admin_messages: dict) -> None:
-#     for task_id, message_data in admin_messages.items():
-#         message_data["_id"] = task_id
-#         message_data = {str(k): v for k, v in message_data.items()}
-#         await admin_messages_collection.update_one({"_id": task_id}, {"$set": message_data}, upsert=True)
 
-# async def insert_admin_messages(admin_messages: dict, user_id: int) -> None:
-#     for task_id, message_data in admin_messages.items():
-#         message_data["_id"] = task_id
-#         message_data["user_id"] = user_id  # Add the user_id to the message data
-#         # Convert keys to strings
-#         message_data = {str(k): v for k, v in message_data.items()}
-#         await admin_messages_collection.update_one(
-#             {"_id": task_id, "user_id": user_id},  # Ensure the document is identified by both task_id and user_id
-#             {"$set": message_data},
-#             upsert=True
-#         )
 
 async def insert_admin_messages(admin_messages: dict, user_id: int) -> None:
-    # Retrieve the existing document for the user
+    """
+    Вставляет или обновляет сообщения администраторов в коллекции `admin_messages_collection` для конкретного пользователя.
+
+    Функция ищет документ в коллекции `admin_messages_collection` по `user_id`.
+    Если документ не найден, создается новый документ с `user_id` и пустым списком задач.
+    Функция обновляет или добавляет задачи из словаря `admin_messages` в список задач документа.
+    Если задача с заданным `task_id` уже существует, она обновляется.
+    Если задача с заданным `task_id` не существует, она добавляется в список задач.
+
+    Параметры:
+    - admin_messages (dict): Словарь, где ключи - идентификаторы задач, а значения - данные сообщений.
+    - user_id (int): Идентификатор пользователя.
+
+    Возвращает:
+    - None
+       """
     user_doc = await admin_messages_collection.find_one({"user_id": user_id})
-    
     if user_doc is None:
         user_doc = {"user_id": user_id, "tasks": []}
-    
-    # Create a dictionary to store tasks
     tasks_dict = {task_id: message_data for task_id, message_data in admin_messages.items()}
-    
-    # Update the existing tasks or add new tasks
     for task_id, message_data in tasks_dict.items():
         message_data["_id"] = task_id
-        message_data["user_id"] = user_id  # Ensure each message has the user_id
-        
-        # Convert keys to strings
+        message_data["user_id"] = user_id
         message_data = {str(k): v for k, v in message_data.items()}
-        
-        # Check if the task already exists
         task_exists = False
         for task in user_doc["tasks"]:
             if task["_id"] == task_id:
                 task.update(message_data)
                 task_exists = True
                 break
-        
         if not task_exists:
             user_doc["tasks"].append(message_data)
-    
-    # Update the user's document
     await admin_messages_collection.update_one(
         {"user_id": user_id},
         {"$set": {"tasks": user_doc["tasks"]}},
         upsert=True
     )
-async def get_all_tasks():
+
+
+async def get_all_tasks() -> dict:
+    """
+    Получает все задачи из коллекции `tasks_collection` и возвращает их в виде словаря.
+
+    Функция выполняет запрос ко всем документам в коллекции `tasks_collection`, преобразует их в список,
+    а затем в словарь, где ключами являются идентификаторы задач (`_id`), а значениями - данные задач.
+
+    Возвращает:
+    - dict: Словарь, содержащий все задачи, где ключами являются идентификаторы задач, а значениями - данные задач.
+      """
     tasks_cursor = tasks_collection.find()
-    tasks_list = await tasks_cursor.to_list(length=None)  # Преобразуем курсор в список
+    tasks_list = await tasks_cursor.to_list(length=None)
     tasks_dict = {task["_id"]: task for task in tasks_list}
     return tasks_dict
 
 
-# Функция удаления пользователя из базы данных
 async def delete_user_from_db(user_id: int) -> bool:
     """
     Удаляет пользователя из коллекции MongoDB по заданному идентификатору пользователя.
@@ -178,7 +185,6 @@ async def check_is_user_already_here(user_id: int) -> bool:
         return False
 
 
-# Функция обновления данных пользователя
 async def update_user_details(user_id: int, **kwargs) -> bool:
     """
     Обновляет конкретные детали пользователя в MongoDB. Принимает ID пользователя и аргументы,
@@ -231,7 +237,6 @@ async def get_user_details(user_id: int) -> dict | None:
         return None
 
 
-# Функция обновления языка пользователя
 async def update_language_in_db(user_id: int, language: str) -> bool:
     """
     Обновляет язык пользователя в базе данных.
@@ -316,7 +321,6 @@ async def get_language_for_user(user_id: int) -> str | None:
         return None
 
 
-# Функция добавления реферера к пользователю
 async def add_referrer_to_user(user_id: int, referrer_id: int) -> bool:
     """
     Добавляет идентификатор пользователя-реферера к записи пользователя.
@@ -342,7 +346,6 @@ async def add_referrer_to_user(user_id: int, referrer_id: int) -> bool:
         return False
 
 
-# Функция увеличения реферального счетчика и очков
 async def increment_referrer_count(referrer_id: int) -> None:
     """
     Увеличивает количество рефералов и количество очков за рефералов у пользователя-реферера в MongoDB.
@@ -397,7 +400,6 @@ async def decrement_referrer_count(referrer_id: int) -> None:
         print(f"Error decrementing referral count or points for user {referrer_id}: {e}")
 
 
-# Функция получения реферера
 async def get_referrer(user_id: int) -> int | None:
     """
     Возвращает идентификатор реферера для указанного пользователя.
@@ -420,7 +422,6 @@ async def get_referrer(user_id: int) -> int | None:
         return None
 
 
-# Функция проверки наличия кошелька
 async def check_wallet_exists(wallet_address: str) -> bool:
     """
     Проверяет, отсутствует ли запись с указанным кошельком в MongoDB.
@@ -593,20 +594,43 @@ async def get_state_for_user(user_id: int) -> str | None:
 
 
 async def get_all_users() -> list:
+    """
+    Получает всех пользователей из коллекции `users_collection`.
+
+    Функция выполняет запрос ко всем документам в коллекции `users_collection`,
+    преобразует их в список и возвращает его.
+
+    Возвращает:
+    - list: Список всех пользователей, содержащих документы с данными пользователей.
+    """
     users_cursor = users_collection.find()
     users_list = await users_cursor.to_list(length=None)
     return users_list
 
 
-# Функция для добавления администратора
 async def add_admin(admin_id: int) -> None:
+    """
+    Добавляет администратора в коллекцию `admins_collection`.
+
+    Функция выполняет обновление или вставку документа с идентификатором администратора в коллекцию `admins_collection`.
+    После этого обновляет глобальный список идентификаторов администраторов.
+
+    Параметры:
+    - admin_id (int): Идентификатор администратора, который нужно добавить.
+    """
     await admins_collection.update_one({"_id": admin_id}, {"$set": {"_id": admin_id}}, upsert=True)
     await update_admins_ids()
 
 
-# Функция для удаления администратора
 async def remove_admin(admin_id: int) -> None:
+    """
+    Удаляет администратора из коллекции `admins_collection`.
+
+    Функция выполняет удаление документа с идентификатором администратора из коллекции `admins_collection`.
+    После этого обновляет глобальный список идентификаторов администраторов.
+
+    Параметры:
+    - admin_id (int): Идентификатор администратора, который нужно удалить.
+    """
     await admins_collection.delete_one({"_id": admin_id})
     await update_admins_ids()
-
-    

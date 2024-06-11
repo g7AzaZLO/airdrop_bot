@@ -1,39 +1,50 @@
+import asyncio
 from aiogram import types, Router
-from FSM.states import CaptchaState, RegistrationState, TasksState, state_messages, state_keyboards, \
-    get_clean_state_identifier, state_menus, AdminMessageState
-from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
-from logic.captcha import generate_captcha, check_captcha
 from aiogram.fsm.context import FSMContext
-from handlers.standart_handler import get_message
+from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from messages.basic_messages import messages
 from messages.menu_messages import menu_messages
 from messages.task_menu_messages import task_menu_messages
 from messages.other_messages import other_messages
+from FSM.states import CaptchaState, RegistrationState, TasksState, state_messages, state_keyboards, \
+    get_clean_state_identifier, state_menus, AdminMessageState
 from keyboards.menu_kb import menu_kb, kb_menu_settings, create_numeric_keyboard
 from keyboards.small_kb import join_kb, language_choose_kb, yes_no_kb, sub_cancel_kb, social_join_kb, kb_start, \
     kb_task_done_back, kb_tasks_back
-from DB.database_logic import update_language_in_db, get_language_for_user, delete_user_from_db, get_user_details, \
-    update_user_details, check_wallet_exists, decrement_referrer_count, mark_task_as_done, get_state_for_user, \
-    set_user_state, remove_task_from_await, mark_task_as_await, delete_admin_message, insert_admin_messages, \
-    get_admin_messages_dict, get_all_users
-from logic.telegram import check_joined_telegram_channel
-from DB.database_logic import check_is_user_already_here, add_user_to_db, add_referrer_to_user, get_referrer, \
-    increment_referrer_count, add_points_to_user
 from logic.refs import get_refferer_id, get_refferal_link
 from logic.twitter import check_joined_twitter_channel, is_valid_twitter_link
 from logic.address import is_valid_crypto_address
 from logic.task import get_all_points, get_num_of_tasks, get_index_by_text_task, get_protection_from_task, \
     calculate_total_points, get_points_from_task, send_task_info, send_all_tasks_info, get_puzzle_from_task
-from settings.config import AIRDROP_AMOUNT
+from logic.captcha import generate_captcha, check_captcha
 from logic.admins import ADMINS_IDS
-import asyncio
+from logic.telegram import check_joined_telegram_channel
+from DB.database_logic import update_language_in_db, get_language_for_user, delete_user_from_db, get_user_details, \
+    update_user_details, check_wallet_exists, decrement_referrer_count, mark_task_as_done, get_state_for_user, \
+    set_user_state, remove_task_from_await, mark_task_as_await, delete_admin_message, insert_admin_messages, \
+    get_admin_messages_dict, get_all_users
+from DB.database_logic import check_is_user_already_here, add_user_to_db, add_referrer_to_user, get_referrer, \
+    increment_referrer_count, add_points_to_user
+from settings.config import AIRDROP_AMOUNT
+from handlers.standart_handler import get_message
 
 state_handler_router = Router()
 
 
-# Handler состояния капчи в CaptchaState
 @state_handler_router.message(CaptchaState.wait_captcha_state)
 async def captcha_response_handler(message: types.Message, state: FSMContext) -> None:
+    """
+    Обрабатывает ответ пользователя на капчу.
+
+    Параметры:
+    - message (types.Message): Сообщение от пользователя.
+    - state (FSMContext): Контекст состояния конечного автомата.
+
+    Действия:
+    - Получает ответ пользователя на капчу.
+    - Проверяет правильность ответа.
+    - Если ответ правильный, восстанавливает предыдущее состояние пользователя и отправляет соответствующее сообщение.
+    """
     print("def captcha_response_handler")
     user_response = message.text
     await state.update_data(user_captcha_response=user_response)
@@ -50,9 +61,20 @@ async def captcha_response_handler(message: types.Message, state: FSMContext) ->
         await message.answer(text=current_reply, reply_markup=current_keyboard, parse_mode="MARKDOWN")
 
 
-# Handler состояния капчи в регистрации пользователя
 @state_handler_router.message(RegistrationState.captcha_state)
 async def captcha_response_handler_in_reg(message: types.Message, state: FSMContext) -> None:
+    """
+    Обрабатывает ответ пользователя на капчу в процессе регистрации.
+
+    Параметры:
+    - message (types.Message): Сообщение от пользователя.
+    - state (FSMContext): Контекст состояния конечного автомата.
+
+    Действия:
+    - Получает ответ пользователя на капчу.
+    - Проверяет правильность ответа.
+    - Если ответ правильный, переводит пользователя в состояние выбора языка.
+    """
     print("def captcha_response_handler_in_reg")
     user_response = message.text
     await state.update_data(user_captcha_response=user_response)
@@ -65,11 +87,23 @@ async def captcha_response_handler_in_reg(message: types.Message, state: FSMCont
 
 @state_handler_router.message(RegistrationState.lang_choose_state)
 async def lang_choose_response_handler_in_reg(message: types.Message, state: FSMContext) -> None:
+    """
+    Обрабатывает выбор языка пользователем в процессе регистрации.
+
+    Параметры:
+    - message (types.Message): Сообщение от пользователя.
+    - state (FSMContext): Контекст состояния конечного автомата.
+
+    Действия:
+    - Получает выбор языка пользователя.
+    - Проверяет правильность выбора языка.
+    - Если язык выбран правильно, переводит пользователя в состояние приветствия.
+    - Обновляет язык пользователя в базе данных.
+    """
     print("def lang_choose_response_handler_in_reg")
     user_response = message.text
     await state.update_data(user_lang_choose_response=user_response)
-
-    user_id = message.from_user.id  # Идентификатор пользователя для SQL запроса
+    user_id = message.from_user.id
     if user_response == "ENG English":
         language = "ENG"
     elif user_response == "RU Русский":
@@ -84,12 +118,24 @@ async def lang_choose_response_handler_in_reg(message: types.Message, state: FSM
         text=(await get_message(messages, "WELCOME_MESSAGE", language, user_name=message.from_user.first_name)),
         reply_markup=join_kb[language],
         parse_mode="MARKDOWN")
-    # Вызываем функцию для обновления языка пользователя в базе данных
     await update_language_in_db(user_id, language)
 
 
 @state_handler_router.message(RegistrationState.hello_state)
 async def hello_response_handler_in_reg(message: types.Message, state: FSMContext) -> None:
+    """
+    Обрабатывает ответ пользователя на приветственное сообщение в процессе регистрации.
+
+    Параметры:
+    - message (types.Message): Сообщение от пользователя.
+    - state (FSMContext): Контекст состояния конечного автомата.
+
+    Действия:
+    - Получает ответ пользователя на приветственное сообщение.
+    - Если пользователь согласен присоединиться к аирдропу, переводит его в состояние продолжения регистрации.
+    - Если пользователь отказывается, запрашивает подтверждение отказа.
+    - В противном случае, повторно отправляет приветственное сообщение.
+    """
     print("def hello_response_handler_in_reg")
     user_response = message.text
     language = await get_language_for_user(message.from_user.id)
@@ -122,6 +168,19 @@ async def hello_response_handler_in_reg(message: types.Message, state: FSMContex
 
 @state_handler_router.message(RegistrationState.proceed_state)
 async def proceed_response_handler_in_reg(message: types.Message, state: FSMContext) -> None:
+    """
+    Обрабатывает согласие пользователя с правилами и продолжение регистрации.
+
+    Параметры:
+    - message (types.Message): Сообщение от пользователя.
+    - state (FSMContext): Контекст состояния конечного автомата.
+
+    Действия:
+    - Получает ответ пользователя о согласии с правилами.
+    - Если пользователь согласен, переводит его в состояние следования за Telegram каналом.
+    - Если пользователь отказывается, запрашивает подтверждение отказа.
+    - В противном случае, повторно отправляет сообщение с правилами.
+    """
     print("def proceed_response_handler_in_reg")
     user_response = message.text
     language = await get_language_for_user(message.from_user.id)
@@ -151,58 +210,22 @@ async def proceed_response_handler_in_reg(message: types.Message, state: FSMCont
         return
 
 
-# @state_handler_router.message(RegistrationState.follow_telegram_state)
-# async def follow_telegram_response_handler_in_reg(message: types.Message, state: FSMContext) -> None:
-#     print("def follow_telegram_response_handler")
-#     user_response = message.text
-#     language = await get_language_for_user(message.from_user.id)
-#     await state.update_data(user_follow_telegram_response=user_response)
-#     if user_response in ["✅Вступил", "✅Joined"]:
-#         if await check_joined_telegram_channel(message.from_user.id):
-#             print("Yes, user in all telegram channel")
-#             await state.set_state(RegistrationState.follow_twitter_state)
-#             await set_user_state(message.from_user.id,
-#                                  await get_clean_state_identifier(RegistrationState.follow_twitter_state))
-#             reply = await get_message(messages, "FOLLOW_TWITTER_TEXT", language)
-#             await message.answer(text=reply, reply_markup=types.ReplyKeyboardRemove(), parse_mode="MARKDOWN")
-#         else:
-#             print("NO HE ISNT HERE")
-#             await state.set_state(RegistrationState.follow_telegram_state)
-#             reply = await get_message(messages, "NOT_SUB_AT_GROUP_TEXT", language)
-#             await message.answer(text=reply, reply_markup=social_join_kb[language])
-#     else:
-#         reply = await get_message(menu_messages, "UNKNOWN_COMMAND_TEXT", language)
-#         await message.answer(text=reply, reply_markup=social_join_kb[language])
-#         await state.set_state(RegistrationState.follow_telegram_state)
-
-
-# @state_handler_router.message(RegistrationState.follow_twitter_state)
-# async def follow_twitter_response_handler_in_reg(message: types.Message, state: FSMContext) -> None:
-#     print("def follow_twitter_response_handler")
-#     user_response = message.text
-#     language = await get_language_for_user(message.from_user.id)
-#     await state.update_data(user_follow_twitter_response=user_response)
-#     if is_valid_twitter_link(user_response):
-#         if await check_joined_twitter_channel(user_response):
-#             print("all ok")
-#             await update_user_details(message.from_user.id, TWITTER_USER=user_response)
-#             await state.set_state(RegistrationState.submit_address_state)
-#             await set_user_state(message.from_user.id,
-#                                  await get_clean_state_identifier(RegistrationState.submit_address_state))
-#             reply = await get_message(messages, "SUBMIT_ADDRESS_TEXT", language)
-#             await message.answer(text=reply, reply_markup=types.ReplyKeyboardRemove(), parse_mode="MARKDOWN")
-#         else:
-#             print("already in base")
-#             await state.set_state(RegistrationState.follow_twitter_state)
-#             reply = await get_message(messages, "TWITTER_ALREADY_REGISTERED_TEXT", language)
-#             await message.answer(text=reply)
-#     else:
-#         print("Invalid Twitter Link")
-#         await state.set_state(RegistrationState.follow_twitter_state)
-#         reply = await get_message(messages, "TWITTER_INVALID_LINK_TEXT", language)
-#         await message.answer(text=reply)
 @state_handler_router.message(RegistrationState.follow_telegram_state)
 async def follow_telegram_response_handler_in_reg(message: types.Message, state: FSMContext) -> None:
+    """
+    Обрабатывает ответ пользователя о вступлении в Telegram канал в процессе регистрации.
+
+    Параметры:
+    - message (types.Message): Сообщение от пользователя.
+    - state (FSMContext): Контекст состояния конечного автомата.
+
+    Действия:
+    - Получает ответ пользователя о вступлении в Telegram канал.
+    - Проверяет, действительно ли пользователь вступил в канал.
+    - Если да, переводит пользователя в состояние ввода адреса.
+    - Если нет, просит пользователя вступить в канал.
+    - В случае неизвестной команды, отправляет сообщение с инструкцией.
+    """
     print("def follow_telegram_response_handler")
     user_response = message.text
     language = await get_language_for_user(message.from_user.id)
@@ -228,6 +251,20 @@ async def follow_telegram_response_handler_in_reg(message: types.Message, state:
 
 @state_handler_router.message(RegistrationState.submit_address_state)
 async def submit_address_response_handler_in_reg(message: types.Message, state: FSMContext) -> None:
+    """
+    Обрабатывает ответ пользователя с крипто-адресом в процессе регистрации.
+
+    Параметры:
+    - message (types.Message): Сообщение от пользователя.
+    - state (FSMContext): Контекст состояния конечного автомата.
+
+    Действия:
+    - Получает крипто-адрес пользователя.
+    - Проверяет валидность и уникальность адреса.
+    - Если адрес валидный и уникальный, завершает регистрацию и добавляет пользователя в основное меню.
+    - Если адрес уже используется, просит ввести другой адрес.
+    - Если адрес невалидный, просит ввести валидный адрес.
+    """
     print("def submit_address_response_handler_in_reg")
     user_response = message.text
     language = await get_language_for_user(message.from_user.id)
@@ -259,6 +296,18 @@ async def submit_address_response_handler_in_reg(message: types.Message, state: 
 
 @state_handler_router.message(RegistrationState.main_menu_state)
 async def main_menu_handler(message: types.Message, state: FSMContext) -> None:
+    """
+    Обрабатывает команды пользователя в основном меню.
+
+    Параметры:
+    - message (types.Message): Сообщение от пользователя.
+    - state (FSMContext): Контекст состояния конечного автомата.
+
+    Действия:
+    - Определяет команду пользователя в основном меню.
+    - Выполняет соответствующие действия, такие как показ профиля, баланса, задач и т.д.
+    - Обновляет состояние пользователя и отправляет соответствующее сообщение.
+    """
     user_response = message.text
     user = await get_user_details(message.from_user.id)
     print(f"def main_menu_handler, user response {user_response}, user {message.from_user.id}")
@@ -316,12 +365,23 @@ async def main_menu_handler(message: types.Message, state: FSMContext) -> None:
     else:
         reply = await get_message(menu_messages, "UNKNOWN_COMMAND_TEXT", language)
         await message.answer(text=reply, reply_markup=menu_kb[language])
-        # await state.set_state(RegistrationState.main_menu_state)
         return
 
 
 @state_handler_router.message(RegistrationState.menu_settings)
 async def menu_settings(message: types.Message, state: FSMContext) -> None:
+    """
+    Обрабатывает команды пользователя в меню настроек.
+
+    Параметры:
+    - message (types.Message): Сообщение от пользователя.
+    - state (FSMContext): Контекст состояния конечного автомата.
+
+    Действия:
+    - Определяет команду пользователя в меню настроек.
+    - Выполняет соответствующие действия, такие как смена языка, удаление аккаунта, смена адреса и т.д.
+    - Обновляет состояние пользователя и отправляет соответствующее сообщение.
+    """
     user_response = message.text
     print(f"def menu_settings")
     language = await get_language_for_user(message.from_user.id)
@@ -368,10 +428,22 @@ async def menu_settings(message: types.Message, state: FSMContext) -> None:
 
 @state_handler_router.message(RegistrationState.lang_choose_state_again)
 async def lang_choose_response_handler(message: types.Message, state: FSMContext) -> None:
+    """
+    Обрабатывает выбор языка пользователем в меню настроек.
+
+    Параметры:
+    - message (types.Message): Сообщение от пользователя.
+    - state (FSMContext): Контекст состояния конечного автомата.
+
+    Действия:
+    - Получает выбор языка пользователя.
+    - Проверяет правильность выбора языка.
+    - Если язык выбран правильно, обновляет язык пользователя в базе данных и возвращает в меню настроек.
+    """
     print("def lang_choose_response_handler")
     user_response = message.text
     await state.update_data(user_lang_choose_response=user_response)
-    user_id = message.from_user.id  # Идентификатор пользователя для SQL запроса
+    user_id = message.from_user.id
     if user_response == "ENG English":
         language = "ENG"
     elif user_response == "RU Русский":
@@ -383,12 +455,23 @@ async def lang_choose_response_handler(message: types.Message, state: FSMContext
     reply = await get_message(menu_messages, "MENU_SETTINGS", language)
     await message.answer(text=reply, reply_markup=kb_menu_settings[language])
     await state.set_state(RegistrationState.menu_settings)
-    # Вызываем функцию для обновления языка пользователя в базе данных
     await update_language_in_db(user_id, language)
 
 
 @state_handler_router.message(RegistrationState.yes_no_state)
 async def yes_no_reply(message: types.Message, state: FSMContext) -> None:
+    """
+    Обрабатывает ответ пользователя на вопрос "Да/Нет".
+
+    Параметры:
+    - message (types.Message): Сообщение от пользователя.
+    - state (FSMContext): Контекст состояния конечного автомата.
+
+    Действия:
+    - Получает ответ пользователя на вопрос "Да/Нет".
+    - В зависимости от ответа выполняет соответствующие действия (удаление аккаунта, возврат в предыдущее состояние).
+    - Обновляет состояние пользователя и отправляет соответствующее сообщение.
+    """
     print("def yes_no_reply")
     data = await state.get_data()
     state_end1 = data.get('state_end1')
@@ -425,6 +508,19 @@ async def yes_no_reply(message: types.Message, state: FSMContext) -> None:
 
 @state_handler_router.message(CaptchaState.null_state)
 async def null_state(message: types.Message, state: FSMContext) -> None:
+    """
+    Обрабатывает состояние нулевой капчи.
+
+    Параметры:
+    - message (types.Message): Сообщение от пользователя.
+    - state (FSMContext): Контекст состояния конечного автомата.
+
+    Действия:
+    - Проверяет, существует ли пользователь в базе данных.
+    - Если пользователь существует, генерирует капчу и переводит в состояние ожидания капчи.
+    - Если пользователь не существует, добавляет его в базу данных, обрабатывает реферера и генерирует капчу.
+    - Отправляет пользователю соответствующее сообщение.
+    """
     print("def null_state")
     user_response = message.text
     language = await get_language_for_user(message.from_user.id)
@@ -456,8 +552,21 @@ async def null_state(message: types.Message, state: FSMContext) -> None:
 
 @state_handler_router.message(TasksState.current_tasks_state)
 async def current_tasks_handler(message: types.Message, state: FSMContext) -> None:
+    """
+    Обрабатывает команды пользователя в состоянии текущих задач.
+
+    Параметры:
+    - message (types.Message): Сообщение от пользователя.
+    - state (FSMContext): Контекст состояния конечного автомата.
+
+    Действия:
+    - Получает команду пользователя в состоянии текущих задач.
+    - Проверяет выполнение или ожидание задачи.
+    - Если задача выполнена или в ожидании, отправляет соответствующее сообщение.
+    - Если задача новая, отправляет информацию о задаче.
+    - Обновляет состояние пользователя и отправляет соответствующее сообщение.
+    """
     print(f"def current_tasks_handler, task #{message.text}")
-    # reply = await get_message(menu_messages, "INFORMATION_TEXT", language)
     language = await get_language_for_user(message.from_user.id)
     user_response = message.text
     index_task = await get_index_by_text_task(user_response, language)
@@ -533,6 +642,20 @@ async def current_tasks_handler(message: types.Message, state: FSMContext) -> No
 
 @state_handler_router.message(TasksState.single_task_state)
 async def single_task_handler(message: types.Message, state: FSMContext) -> None:
+    """
+    Обрабатывает команды пользователя в состоянии выполнения одиночной задачи.
+
+    Параметры:
+    - message (types.Message): Сообщение от пользователя.
+    - state (FSMContext): Контекст состояния конечного автомата.
+
+    Действия:
+    - Получает команду пользователя в состоянии выполнения одиночной задачи.
+    - Проверяет защиту задачи (скриншот, Twitter, пазл и т.д.).
+    - Если задача выполнена, добавляет очки пользователю и отмечает задачу как выполненную.
+    - Если требуется защита, переводит в соответствующее состояние для проверки.
+    - Обновляет состояние пользователя и отправляет соответствующее сообщение.
+    """
     print(f"def single_task_handler")
     language = await get_language_for_user(message.from_user.id)
     user = await get_user_details(message.from_user.id)
@@ -544,7 +667,6 @@ async def single_task_handler(message: types.Message, state: FSMContext) -> None
         if not await get_protection_from_task(index_task):
             points = await get_points_from_task(index_task)
             await add_points_to_user(message.from_user.id, points)
-
             task_marked = await mark_task_as_done(message.from_user.id, index_task)
             tasks_done = user.get("TASKS_DONE", [])
             if task_marked:
@@ -599,6 +721,20 @@ async def single_task_handler(message: types.Message, state: FSMContext) -> None
 
 @state_handler_router.message(TasksState.follow_twitter_state)
 async def follow_twitter_response_handler_in_reg(message: types.Message, state: FSMContext) -> None:
+    """
+    Обрабатывает ответ пользователя на запрос на подписку в Twitter в процессе регистрации.
+
+    Параметры:
+    - message (types.Message): Сообщение от пользователя.
+    - state (FSMContext): Контекст состояния конечного автомата.
+
+    Действия:
+    - Получает ответ пользователя на запрос подписки в Twitter.
+    - Проверяет валидность ссылки на Twitter.
+    - Если пользователь подписан на канал, обновляет данные пользователя и переводит его в состояние проверки скриншота.
+    - Если пользователь уже подписан, возвращает его в меню задач.
+    - Если ссылка на Twitter невалидна, возвращает пользователя в меню задач.
+    """
     print("def follow_twitter_response_handler")
     user_response = message.text
     language = await get_language_for_user(message.from_user.id)
@@ -636,6 +772,18 @@ async def follow_twitter_response_handler_in_reg(message: types.Message, state: 
 
 @state_handler_router.message(TasksState.achievements_state)
 async def achievements_handler(message: types.Message, state: FSMContext) -> None:
+    """
+    Обрабатывает команды пользователя в меню достижений.
+
+    Параметры:
+    - message (types.Message): Сообщение от пользователя.
+    - state (FSMContext): Контекст состояния конечного автомата.
+
+    Действия:
+    - Проверяет, выбрал ли пользователь команду "Вернуться Назад".
+    - Если команда выбрана, возвращает пользователя в меню текущих задач.
+    - Если введена неизвестная команда, отправляет сообщение с указанием на неизвестную команду.
+    """
     print(f"def achievements_handler")
     language = await get_language_for_user(message.from_user.id)
     user_response = message.text
@@ -656,6 +804,20 @@ async def achievements_handler(message: types.Message, state: FSMContext) -> Non
 
 @state_handler_router.message(TasksState.screen_check_state)
 async def handle_screen_check(message: types.Message, state: FSMContext) -> None:
+    """
+    Обрабатывает проверку скриншотов, отправленных пользователем для выполнения задания.
+
+    Параметры:
+    - message (types.Message): Сообщение от пользователя.
+    - state (FSMContext): Контекст состояния конечного автомата.
+
+    Действия:
+    - Получает скриншот от пользователя.
+    - Помечает задание как ожидающее проверки.
+    - Отправляет скриншот администраторам для проверки и начисления очков.
+    - Возвращает пользователя в меню текущих задач, если он выбирает опцию "Вернуться Назад".
+    - Если пользователь отправил неверный тип сообщения, запрашивает повторную отправку скриншота.
+    """
     user_id = message.from_user.id
     user = await get_user_details(user_id)
     language = await get_language_for_user(message.from_user.id)
@@ -679,7 +841,6 @@ async def handle_screen_check(message: types.Message, state: FSMContext) -> None
         await message.answer(text=reply)
         await state.set_state(TasksState.screen_check_state)
         return
-
     if screenshot:
         inline_kb = InlineKeyboardMarkup(inline_keyboard=[
             [InlineKeyboardButton(text="✅ Да",
@@ -700,8 +861,6 @@ async def handle_screen_check(message: types.Message, state: FSMContext) -> None
                     caption=f"Пользователь {user_id} отправил скриншот для задания {index_task}."
                             f" Начислить {points} очков?"
                 )
-                # Update the message with the keyboard that includes the message ID
-
                 await message.bot.edit_message_reply_markup(chat_id=admin_id_int, message_id=sent_message.message_id,
                                                             reply_markup=inline_kb)
                 admin_messages[admin_id_int] = sent_message.message_id
@@ -719,21 +878,35 @@ async def handle_screen_check(message: types.Message, state: FSMContext) -> None
         reply2 = await get_message(other_messages, "YOUR_PIC_SEND_TEXT", language)
         await message.answer(text=reply2, reply_markup=tasks_keyboard)
         await state.set_state(TasksState.current_tasks_state)
-
         asyncio.create_task(auto_reject_task(user_id, index_task, admin_messages, message, 36000))
-
     else:
         reply = await get_message(other_messages, "PLS_SEND_PIC_TEXT", language)
         await message.answer(text=reply)
 
 
-async def auto_reject_task(user_id: int, index_task: int, admin_messages: dict, message, delay: int):
+async def auto_reject_task(user_id: int, index_task: int, admin_messages: dict, message, delay: int) -> None:
+    """
+    Автоматически отклоняет задание, если оно не было проверено в течение заданного времени.
+
+    Параметры:
+    - user_id (int): Идентификатор пользователя.
+    - index_task (int): Индекс задания.
+    - admin_messages (dict): Словарь с сообщениями администраторов, ожидающих проверки.
+    - message: Сообщение, инициировавшее проверку задания.
+    - delay (int): Задержка в секундах перед автоматическим отклонением задания.
+
+    Действия:
+    - Ждет указанное время (delay).
+    - Проверяет, находится ли задание в списке ожидающих.
+    - Удаляет задание из списка ожидающих.
+    - Удаляет сообщения администраторов, связанные с этим заданием.
+    - Отправляет пользователю сообщение о необходимости повторной попытки выполнения задания.
+    """
     await asyncio.sleep(delay)
     user = await get_user_details(user_id)
     tasks_await = user.get("TASKS_AWAIT", [])
     if index_task in tasks_await:
         await remove_task_from_await(user_id, index_task)
-
         if index_task in admin_messages:
             await delete_admin_message(index_task, user_id)
         user_language = await get_language_for_user(user_id)
@@ -743,14 +916,27 @@ async def auto_reject_task(user_id: int, index_task: int, admin_messages: dict, 
 
 
 @state_handler_router.callback_query(lambda callback_query: callback_query.data.startswith("approve_"))
-async def approve_task(callback_query: types.CallbackQuery):
+async def approve_task(callback_query: types.CallbackQuery) -> None:
+    """
+    Обрабатывает одобрение задания администратором.
+
+    Параметры:
+    - callback_query (types.CallbackQuery): Объект входящего callback запроса.
+
+    Действия:
+    - Проверяет, имеет ли пользователь права администратора.
+    - Извлекает данные из callback запроса.
+    - Получает сообщения администраторов и данные о пользователе.
+    - Если задание все еще ожидает проверки, удаляет его из списка ожидающих, добавляет очки и отмечает как выполненное.
+    - Отправляет пользователю сообщение об успешном выполнении задания.
+    - Если задание больше не ожидает проверки, удаляет сообщения администраторов.
+    """
     admin_user_id = callback_query.from_user.id
     language = await get_language_for_user(admin_user_id)
     if callback_query.from_user.id not in ADMINS_IDS:
         reply = await get_message(other_messages, "NO_PERMISSION_TEXT", language)
         await callback_query.answer(text=reply)
         return
-
     data = callback_query.data.split("_")
     user_id = int(data[1])
     index_task = int(data[2])
@@ -766,7 +952,6 @@ async def approve_task(callback_query: types.CallbackQuery):
                 await callback_query.message.bot.delete_message(chat_id=admin_id, message_id=message_id)
             except Exception as e:
                 print(f"Failed to delete message {message_id} for admin {admin_id}: {e}")
-
         if index_task in admin_messages_dict:
             await delete_admin_message(index_task, user_id)
         task_done = user.get("TASKS_DONE", [])
@@ -790,14 +975,28 @@ async def approve_task(callback_query: types.CallbackQuery):
 
 
 @state_handler_router.callback_query(lambda callback_query: callback_query.data.startswith("reject_"))
-async def reject_task(callback_query: types.CallbackQuery):
+async def reject_task(callback_query: types.CallbackQuery) -> None:
+    """
+    Обрабатывает запрос на одобрение задания администратором.
+
+    Параметры:
+    - callback_query (types.CallbackQuery): Объект входящего запроса обратного вызова.
+
+    Действия:
+    - Проверяет, является ли пользователь администратором.
+    - Извлекает данные из запроса.
+    - Удаляет задание из списка ожидающих заданий.
+    - Удаляет сообщения администраторов, связанные с этим заданием.
+    - Начисляет очки пользователю за выполнение задания.
+    - Отправляет пользователю сообщение о успешном выполнении задания.
+    - Отправляет администратору подтверждение о выполнении задания.
+    """
     admins_user_id = callback_query.from_user.id
     language = await get_language_for_user(admins_user_id)
     if callback_query.from_user.id not in ADMINS_IDS:
         reply = await get_message(other_messages, "NO_PERMISSION_TEXT", language)
         await callback_query.answer(text=reply)
         return
-
     data = callback_query.data.split("_")
     user_id = int(data[1])
     index_task = int(data[2])
@@ -817,7 +1016,6 @@ async def reject_task(callback_query: types.CallbackQuery):
                 print(f"Failed to delete message {message_id} for admin {admin_id}: {e}")
         if index_task in admin_messages_dict:
             await delete_admin_message(index_task, user_id)
-        # user_language = user.get("LANGUAGE", "")
         user_language = await get_language_for_user(user_id)
         reply = await get_message(other_messages, "TRY_AGAIN_TEXT", user_language)
         await callback_query.message.bot.send_message(chat_id=user_id,
@@ -836,17 +1034,28 @@ async def reject_task(callback_query: types.CallbackQuery):
 
 
 @state_handler_router.message(AdminMessageState.waiting_for_message)
-async def handle_admin_message(message: types.Message, state: FSMContext):
+async def handle_admin_message(message: types.Message, state: FSMContext) -> None:
+    """
+    Обрабатывает сообщение администратора для рассылки всем пользователям.
+
+    Параметры:
+    - message (types.Message): Входящее сообщение от администратора.
+    - state (FSMContext): Контекст состояния конечного автомата.
+
+    Действия:
+    - Проверяет, является ли отправитель администратором.
+    - Определяет тип контента сообщения (текст, фото, видео, анимация).
+    - Отправляет сообщение всем пользователям.
+    - Обновляет состояние конечного автомата.
+    """
     user_id = message.from_user.id
     language = await get_language_for_user(user_id)
     if message.from_user.id not in ADMINS_IDS:
         reply = await get_message(other_messages, "NO_PERMISSION_TEXT", language)
         await message.answer(text=reply)
         return
-
     content_type = message.content_type
     user_message = message.text if content_type == types.ContentType.TEXT else (message.caption or "")
-
     if content_type == types.ContentType.TEXT:
         reply = await get_message(other_messages, "SEND_MESSAGE_TEXT", language, message=user_message)
         await message.answer(text=reply)
@@ -859,10 +1068,7 @@ async def handle_admin_message(message: types.Message, state: FSMContext):
     elif content_type == types.ContentType.ANIMATION:
         reply = await get_message(other_messages, "SEND_GIF_TEXT", language)
         await message.answer(text=reply)
-
-    # Получение всех пользователей из базы данных
     all_users = await get_all_users()
-
     for user in all_users:
         try:
             if content_type == types.ContentType.TEXT:
@@ -881,14 +1087,27 @@ async def handle_admin_message(message: types.Message, state: FSMContext):
                                                  parse_mode="Markdown")
         except Exception as e:
             print(f"Не удалось отправить сообщение пользователю с ID {user['USER_ID']}: {e}")
-
     await state.set_state(RegistrationState.main_menu_state)
     reply = await get_message(other_messages, "MESSAGE_SENT_TEXT", language)
     await message.answer(text=reply)
 
 
 @state_handler_router.message(RegistrationState.change_address_state)
-async def change_address(message: types.Message, state: FSMContext):
+async def change_address(message: types.Message, state: FSMContext) -> None:
+    """
+    Обрабатывает запрос пользователя на изменение адреса криптокошелька.
+
+    Параметры:
+    - message (types.Message): Сообщение от пользователя.
+    - state (FSMContext): Контекст состояния конечного автомата.
+
+    Действия:
+    - Проверяет, хочет ли пользователь вернуться назад.
+    - Проверяет, существует ли указанный кошелек.
+    - Проверяет валидность указанного адреса криптокошелька.
+    - Обновляет адрес криптокошелька пользователя.
+    - Обрабатывает ошибки и отправляет соответствующие сообщения.
+    """
     user_id = message.from_user.id
     language = await get_language_for_user(user_id)
     user_response = message.text
@@ -918,7 +1137,20 @@ async def change_address(message: types.Message, state: FSMContext):
 
 
 @state_handler_router.message(TasksState.puzzle_check_state)
-async def puzzle_check(message: types.Message, state: FSMContext):
+async def puzzle_check(message: types.Message, state: FSMContext) -> None:
+    """
+    Обрабатывает ответ пользователя на задание-головоломку.
+
+    Параметры:
+    - message (types.Message): Сообщение от пользователя.
+    - state (FSMContext): Контекст состояния конечного автомата.
+
+    Действия:
+    - Проверяет, хочет ли пользователь вернуться назад.
+    - Проверяет ответ пользователя на головоломку.
+    - Начисляет очки пользователю, если головоломка решена верно.
+    - Отправляет пользователю соответствующие сообщения и обновляет состояние.
+    """
     user = await get_user_details(message.from_user.id)
     language = await get_language_for_user(message.from_user.id)
     if message.text in ["⏪Вернуться Назад", "⏪Return Back"]:

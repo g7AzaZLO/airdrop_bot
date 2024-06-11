@@ -1,7 +1,7 @@
 import re
 
 
-def is_valid_crypto_address(crypto_address):
+def is_valid_crypto_address(crypto_address: str) -> bool:
     """
     Проверяет, является ли криптоадрес допустимым.
 

@@ -1,3 +1,5 @@
+from typing import Optional, Any
+
 from aiogram.fsm.state import StatesGroup, State
 from keyboards.small_kb import language_choose_kb, join_kb, sub_cancel_kb, social_join_kb
 from keyboards.menu_kb import menu_kb
@@ -8,7 +10,7 @@ from aiogram import types
 
 class CaptchaState(StatesGroup):
     wait_captcha_state = State()
-    null_state = State()  # idle when the user decided to leave the bot
+    null_state = State()
 
 
 class RegistrationState(StatesGroup):
@@ -20,19 +22,19 @@ class RegistrationState(StatesGroup):
     follow_twitter_state = State()
     submit_address_state = State()
 
-    main_menu_state = State()  # State for the main menu
-    menu_settings = State()  # State for the main menu
-    lang_choose_state_again = State()  # changing the language second time
+    main_menu_state = State()
+    menu_settings = State()
+    lang_choose_state_again = State()
     yes_no_state = State()
     change_address_state = State()
 
 
 class TasksState(StatesGroup):
-    current_tasks_state = State()  # State for the all the tasks available
-    single_task_state = State()  # State for the all the tasks available
-    achievements_state = State()  # State for the all the tasks available
-    screen_check_state = State()  # Новое состояние для отправки фото на проверку
-    waiting_for_approval = State()  # Новое состояние ожидания проверки
+    current_tasks_state = State()
+    single_task_state = State()
+    achievements_state = State()
+    screen_check_state = State()
+    waiting_for_approval = State()
     follow_twitter_state = State()
     puzzle_check_state = State()
 
@@ -77,20 +79,31 @@ state_keyboards = {
 }
 
 
-async def get_state_from_string(state_string):
+async def get_state_from_string(state_string: str) -> Optional[Any]:
     parts = state_string.replace('.', ':').split(':')
     if len(parts) == 2:
         class_name, state_name = parts
-        # Assuming the class is defined in the current module or properly imported
-        module = globals()  # Gets a dictionary of global symbol table
-        state_class = module.get(class_name)  # Get the class by name
-
+        module = globals()
+        state_class = module.get(class_name)
         if state_class:
-            return getattr(state_class, state_name, None)  # Get the state from the class
+            return getattr(state_class, state_name, None)
     return None
 
 
-async def get_clean_state_identifier(state):
+async def get_clean_state_identifier(state: Any) -> str:
+    """
+    Получает чистый идентификатор состояния из объекта состояния.
+
+    Параметры:
+    - state (Any): Объект состояния, из которого необходимо извлечь чистый идентификатор.
+
+    Возвращает:
+    - str: Чистый идентификатор состояния в формате "ClassName:StateName".
+
+    Примечания:
+    - Ожидается, что строковое представление объекта состояния будет в формате "<State 'ClassName:StateName'>".
+    - Функция удаляет префикс "<State '" и суффикс "'>", чтобы получить чистый идентификатор.
+    """
     full_str = str(state)
     # Typically, the format is "<State 'RegistrationState:lang_choose_state'>"
     # We need to remove the "<State '" prefix and "'>" suffix.

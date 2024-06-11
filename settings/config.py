@@ -62,5 +62,5 @@ tasks_init = {
     #     "points": 200,
     #     "type": "telegram_comment",
     #     "protection": "screen_check"
-    # }
+    #
 }

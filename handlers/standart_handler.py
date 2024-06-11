@@ -4,20 +4,20 @@ from messages.basic_messages import messages
 from messages.other_messages import other_messages
 from logic.captcha import generate_captcha
 from aiogram.fsm.context import FSMContext
-from FSM.states import CaptchaState, RegistrationState, AdminMessageState, get_clean_state_identifier,\
+from FSM.states import CaptchaState, RegistrationState, AdminMessageState, get_clean_state_identifier, \
     state_keyboards, state_menus, state_messages
 from DB.database_logic import check_is_user_already_here, add_user_to_db, add_referrer_to_user, get_language_for_user, \
     add_admin, remove_admin, get_state_for_user
 from logic.refs import get_refferer_id
 from logic.admins import ADMINS_IDS, update_admins_ids
 from DB.get_all_admins import get_all_admins
-from tasks.task_dict import update_tasks, change_tasks
+from tasks.task_dict import change_tasks
 
 standard_handler_router = Router()
 garbage_handler_router = Router()
 
 
-async def get_message(messages: dict, message_key: str, language: str, **kwargs) -> str:
+async def get_message(msg: dict, message_key: str, language: str, **kwargs) -> str:
     """
     Retrieve a message based on the key and language,
     formatting it with any provided keyword arguments.
@@ -27,27 +27,33 @@ async def get_message(messages: dict, message_key: str, language: str, **kwargs)
         capture_message = get_message(messages, "WELCOME_MESSAGE", "RU", user_name='дурачок')
         print(capture_message)
     """
-    # print("def get_message")
-    # Retrieve the default values and specific message template
-    defaults = messages.get("default_values", {})
-    message_template = messages.get(message_key, {}).get(language)
-
-    # If the message template exists, use it; otherwise, return a fallback message
+    defaults = msg.get("default_values", {})
+    message_template = msg.get(message_key, {}).get(language)
     if message_template:
-        # Update the default values dictionary with any keyword arguments provided
         all_kwargs = {**defaults, **kwargs}
         return message_template.format(**all_kwargs)
     else:
         return "Message not available."
 
 
-# Handler под команду /start
 @standard_handler_router.message(CommandStart(), F.chat.type == "private")
 async def start(message: types.Message, state: FSMContext) -> None:
+    """
+    Обрабатывает команду /start для пользователя. Проверяет, зарегистрирован ли пользователь, и запускает процесс капчи.
+
+    Параметры:
+    - message (types.Message): Сообщение, содержащее команду /start.
+    - state (FSMContext): Контекст конечного автомата состояний (FSM) для отслеживания состояния пользователя.
+
+    Действия: - Если пользователь уже зарегистрирован, генерирует капчу и устанавливает состояние ожидания ответа
+    капчи. - Если пользователь не зарегистрирован, добавляет пользователя в базу данных, обрабатывает реферера (если
+    имеется), генерирует капчу и устанавливает состояние капчи. - Отправляет соответствующее сообщение пользователю в
+    зависимости от его состояния.
+    """
     print("Processing /start command...")
     user_id = message.from_user.id
     if await check_is_user_already_here(user_id):
-        # print("User already in db")
+        print("User already in db")
         await generate_captcha(message)
         await state.set_state(CaptchaState.wait_captcha_state)
         capture_message = await get_message(messages, "CAPTCHA_MESSAGE", "ENG")
@@ -66,7 +72,21 @@ async def start(message: types.Message, state: FSMContext) -> None:
 
 
 @standard_handler_router.message(Command("message"), F.chat.type == "private")
-async def start_message_command(message: types.Message, state: FSMContext):
+async def start_message_command(message: types.Message, state: FSMContext) -> None:
+    """
+    Обрабатывает команду /message для администраторов. Проверяет права администратора и устанавливает состояние
+    для ожидания ввода сообщения.
+
+    Параметры:
+    - message (types.Message): Сообщение, содержащее команду /message.
+    - state (FSMContext): Контекст конечного автомата состояний (FSM) для отслеживания состояния пользователя.
+
+    Действия:
+    - Проверяет, является ли пользователь администратором.
+    - Если пользователь не администратор, отправляет сообщение о недостатке прав.
+    - Если пользователь администратор, отправляет сообщение с просьбой ввести сообщение и устанавливает соответствующее
+      состояние.
+    """
     user_id = message.from_user.id
     language = await get_language_for_user(user_id)
     if message.from_user.id not in ADMINS_IDS:
@@ -79,7 +99,19 @@ async def start_message_command(message: types.Message, state: FSMContext):
 
 
 @standard_handler_router.message(Command("update_admin"), F.chat.type == "private")
-async def start_update_admin_command(message: types.Message):
+async def start_update_admin_command(message: types.Message) -> None:
+    """
+    Обрабатывает команду /update_admin для обновления списка администраторов. Проверяет права администратора и
+    обновляет список администраторов в глобальной переменной.
+
+    Параметры:
+    - message (types.Message): Сообщение, содержащее команду /update_admin.
+
+    Действия:
+    - Проверяет, является ли пользователь администратором.
+    - Если пользователь не администратор, отправляет сообщение о недостатке прав.
+    - Если пользователь администратор, обновляет список администраторов и отправляет сообщение с новым списком.
+    """
     user_id = message.from_user.id
     language = await get_language_for_user(user_id)
     print(ADMINS_IDS)
@@ -94,7 +126,21 @@ async def start_update_admin_command(message: types.Message):
 
 
 @standard_handler_router.message(Command("add_admin"), F.chat.type == "private")
-async def start_add_admin_command(message: types.Message):
+async def start_add_admin_command(message: types.Message) -> None:
+    """
+    Обрабатывает команду /add_admin для добавления нового администратора. Проверяет права текущего пользователя
+    и добавляет нового администратора по указанному ID.
+
+    Параметры:
+    - message (types.Message): Сообщение, содержащее команду /add_admin и ID нового администратора.
+
+    Действия:
+    - Проверяет, является ли текущий пользователь администратором.
+    - Если пользователь не администратор, отправляет сообщение о недостатке прав.
+    - Если пользователь администратор, добавляет нового администратора по указанному ID и отправляет
+      подтверждающее сообщение.
+    - Если указан некорректный ID, отправляет сообщение об ошибке.
+    """
     user_id = message.from_user.id
     language = await get_language_for_user(user_id)
     print(ADMINS_IDS)
@@ -113,7 +159,20 @@ async def start_add_admin_command(message: types.Message):
 
 
 @standard_handler_router.message(Command("del_admin"), F.chat.type == "private")
-async def start_del_admin_command(message: types.Message):
+async def start_del_admin_command(message: types.Message) -> None:
+    """
+    Обрабатывает команду /del_admin для удаления администратора. Проверяет права текущего пользователя и удаляет
+    администратора по указанному ID.
+
+    Параметры:
+    - message (types.Message): Сообщение, содержащее команду /del_admin и ID удаляемого администратора.
+
+    Действия:
+    - Проверяет, является ли текущий пользователь администратором.
+    - Если пользователь не администратор, отправляет сообщение о недостатке прав.
+    - Если пользователь администратор, удаляет администратора по указанному ID и отправляет подтверждающее сообщение.
+    - Если указан некорректный ID или администратор не найден, отправляет сообщение об ошибке.
+    """
     user_id = message.from_user.id
     language = await get_language_for_user(user_id)
     print(ADMINS_IDS)
@@ -142,7 +201,20 @@ async def start_del_admin_command(message: types.Message):
 
 
 @standard_handler_router.message(Command("admin_info"), F.chat.type == "private")
-async def start_admin_info_command(message: types.Message):
+async def start_admin_info_command(message: types.Message) -> None:
+    """
+    Обрабатывает команду /admin_info для отображения информации о текущих администраторах.
+    Проверяет права текущего пользователя и отправляет сообщение с информацией, если пользователь
+    является администратором.
+
+    Параметры:
+    - message (types.Message): Сообщение, содержащее команду /admin_info.
+
+    Действия:
+    - Проверяет, является ли текущий пользователь администратором.
+    - Если пользователь не администратор, отправляет сообщение о недостатке прав.
+    - Если пользователь администратор, отправляет сообщение с информацией о текущих администраторах.
+    """
     user_id = message.from_user.id
     language = await get_language_for_user(user_id)
     print(ADMINS_IDS)
@@ -155,7 +227,19 @@ async def start_admin_info_command(message: types.Message):
 
 
 @standard_handler_router.message(Command("update_tasks"), F.chat.type == "private")
-async def start_change_tasks_command(message: types.Message):
+async def start_change_tasks_command(message: types.Message) -> None:
+    """
+    Обрабатывает команду /update_tasks для обновления задач.
+    Проверяет права текущего пользователя и обновляет задачи, если пользователь является администратором.
+
+    Параметры:
+    - message (types.Message): Сообщение, содержащее команду /update_tasks.
+
+    Действия:
+    - Проверяет, является ли текущий пользователь администратором.
+    - Если пользователь не администратор, отправляет сообщение о недостатке прав.
+    - Если пользователь администратор, обновляет задачи и отправляет сообщение с подтверждением.
+    """
     user_id = message.from_user.id
     language = await get_language_for_user(user_id)
     if message.from_user.id not in ADMINS_IDS:
@@ -168,26 +252,45 @@ async def start_change_tasks_command(message: types.Message):
 
 
 @standard_handler_router.message(Command("get_my_id"), F.chat.type == "private")
-async def start_change_tasks_command(message: types.Message):
+async def start_change_tasks_command(message: types.Message) -> None:
+    """
+    Обрабатывает команду /update_tasks и отвечает с ID пользователя.
+
+    Параметры:
+    - message (types.Message): Сообщение, содержащее команду /update_tasks.
+
+    Действия:
+    - Отправляет ответное сообщение с ID пользователя.
+    """
     await message.answer(text=str(message.from_user.id))
 
 
 @garbage_handler_router.message(F.chat.type == "private")
-async def all_other_text_handler(message: types.Message, state: FSMContext):
+async def all_other_text_handler(message: types.Message, state: FSMContext) -> None:
+    """
+    Обрабатывает любые другие текстовые сообщения, не относящиеся к определенным командам или состояниям.
+
+    Параметры:
+    - message (types.Message): Сообщение от пользователя.
+    - state (FSMContext): Контекст состояния конечного автомата.
+
+    Действия:
+    - Проверяет, существует ли пользователь в базе данных.
+    - Если пользователь существует, генерирует капчу и переводит в соответствующее состояние.
+    - Если пользователь не существует, добавляет его в базу данных, обрабатывает реферера и генерирует капчу.
+    - Если текущее состояние пользователя определено, восстанавливает его состояние и отвечает соответствующим сообщением.
+    """
     user_id = message.from_user.id
     current_state = await get_state_for_user(user_id)
-    # print(f"I am here, state {current_state}")
     if current_state is None:
         if await check_is_user_already_here(user_id):
-            # print("User already in db")
+            print("User already in db")
             await generate_captcha(message)
             await state.set_state(CaptchaState.wait_captcha_state)
             capture_message = await get_message(messages, "CAPTCHA_MESSAGE", "ENG")
             await message.answer(text=capture_message, reply_markup=types.ReplyKeyboardRemove())
-            
-            # Запуск меню после капчи
         else:
-            # print("User not in db")
+            print("User not in db")
             await add_user_to_db(user_id)
             refferer = await get_refferer_id(message.text)
             if refferer is not None:
