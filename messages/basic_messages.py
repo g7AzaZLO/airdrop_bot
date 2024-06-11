@@ -123,6 +123,7 @@ Please make sure your wallet supports the *{airdrop_network}*.
 
 Example:
 [UQBxCOstPWvIADbaYYBapGhwfRZCEZUui5p2OEFHU0a_wWem]
+*WARNING*: use non-custodial, non-exchange wallets such as TonKeeper, Ton Space, MyTonWallet 
         """,
         "RU": """
 Введите ваш адрес кошелька.
@@ -131,6 +132,8 @@ Example:
 
 Пример:
 [UQBxCOstPWvIADbaYYBapGhwfRZCEZUui5p2OEFHU0a_wWem]
+
+*ВНИМАНИЕ*: используйте некастодиальные, не биржевые кошельки, такие как TonKeeper, Ton Space, MyTonWallet
         """
     },
 

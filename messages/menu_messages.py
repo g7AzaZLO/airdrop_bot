@@ -58,7 +58,6 @@ For each referral, you get {referral_reward} points.
 
 ✏️ *Mandatory Tasks*:
 - Join our Telegram group(s)
-- Follow our Twitter page(s)
 
 😡*Prohibited*:
 - Unsubscribing from the channel
@@ -78,7 +77,6 @@ _NOTE: Users found cheating will be disqualified and banned immediately._
 
 ✏️ *Обязательные задания*:
 - Вступить в наши группы в Telegram
-- Подписаться на наш Twitter
 
 😡*Запрещено*:
 - Отписываться от наших каналов
