@@ -7,11 +7,12 @@ messages = {
         "coin_symbol": COIN_SYMBOL,
         "airdrop_amount": AIRDROP_AMOUNT,
         "referral_reward": REFERRAL_REWARD,
+        "airdrop_total": AIRDROP_TOTAL,
         "website_url": WEBSITE_URL,
         "telegram_links": TELEGRAM_LINKS,
         "twitter_links": TWITTER_LINKS,
         "airdrop_network": AIRDROP_NETWORK,
-        "referral_link": "https://t.me/Rcrvynjibot"
+        "referral_link": "https://t.me/goichev_bot"
     },
 
     "CAPTCHA_MESSAGE": {
@@ -23,7 +24,7 @@ messages = {
         "ENG": """
 Hello, [{user_name}]! I am your friendly {coin_name} Airdrop bot.
 
-Total tokens allocated to airdrop: *50,000,000 ${coin_symbol}*
+Total tokens allocated to airdrop: *{airdrop_total} ${coin_symbol}*
 
 ⭐️ For joining you get *{airdrop_amount}* points
 ⭐️ For each referral you get *{referral_reward}* points
@@ -35,7 +36,7 @@ Click "🚀 Join Airdrop" to proceed._
         "RU": """
 Привет, [{user_name}]! Я твой дружелюбный {coin_name} аирдроп бот.
 
-Общее количество токенов, выделенных для аирдропа: *50,000,000 ${coin_symbol}*
+Общее количество токенов, выделенных для аирдропа: *{airdrop_total} ${coin_symbol}*
 
 ⭐️ За присоединение - Получи *{airdrop_amount}* очков
 ⭐️ За каждого реферала - Получи *{referral_reward}* очков
