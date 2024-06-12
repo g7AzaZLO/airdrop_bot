@@ -1,8 +1,9 @@
 import os
-
 from multicolorcaptcha import CaptchaGenerator
 from aiogram import types
+from settings.logging_config import get_logger
 
+logger = get_logger()
 captcha_data = {}
 
 
@@ -17,11 +18,10 @@ async def check_captcha(message: types.Message) -> bool:
     Возвращает:
     - True, если ответ пользователя правильный, иначе False.
     """
-    print("def check_captcha")
+    logger.info("def check_captcha")
     try:
         user_id = message.from_user.id
         if user_id not in captcha_data:
-            # Generate a CAPTCHA if it's not already there, perhaps in case of error or restart
             await generate_captcha(message)
             return False
 
@@ -30,13 +30,16 @@ async def check_captcha(message: types.Message) -> bool:
 
         if captcha_text != user_input:
             await message.reply("Incorrect CAPTCHA, please try again.")
+            logger.warning(f"User {user_id} entered incorrect CAPTCHA: {user_input}")
             await generate_captcha(message)
             return False
         else:
             await message.reply("Correct CAPTCHA!")
+            logger.info(f"User {user_id} entered correct CAPTCHA.")
             return True
     except Exception as e:
-        print("Error while checking CAPTCHA:", e)
+        user_id = message.from_user.id
+        logger.error(f"Error while checking CAPTCHA for user {user_id}: {e}")
         return False
 
 
@@ -47,26 +50,15 @@ async def generate_captcha(message: types.Message) -> None:
     Параметры:
     - message: сообщение для отправки капчи.
     """
-    print("def generate_captcha")
+    logger.info("def generate_captcha")
     try:
         captcha_generator = CaptchaGenerator()
         captcha = captcha_generator.gen_captcha_image()
-
-        # Сохраняем сгенерированный текст капчи для пользователя
         captcha_data[message.from_user.id] = captcha.characters
-
-        # Сохраняем картинку для отправки
         filename = f"{message.from_user.id}.png"
         captcha.image.save(filename, "PNG")
-
-        # Отправляем изображение капчи пользователю
         await message.reply_photo(photo=types.FSInputFile(path=filename))
-
-        # Удаляем файл после отправки
+        logger.info(f"CAPTCHA generated and sent to user {message.from_user.id}")
         os.remove(filename)
-
-
     except Exception as e:
-        print("Ошибка при генерации капчи:", e)
-        if os.path.exists(filename):
-            os.remove(filename)
+        logger.error(f"Error generating CAPTCHA for user {message.from_user.id}: {e}")

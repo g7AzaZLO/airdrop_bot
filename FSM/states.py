@@ -1,11 +1,14 @@
 from typing import Optional, Any
-
 from aiogram.fsm.state import StatesGroup, State
 from keyboards.small_kb import language_choose_kb, join_kb, sub_cancel_kb, social_join_kb
 from keyboards.menu_kb import menu_kb
 from messages.menu_messages import menu_messages
 from messages.basic_messages import messages
 from aiogram import types
+from settings.logging_config import get_logger
+
+
+logger = get_logger()
 
 
 class CaptchaState(StatesGroup):
@@ -80,14 +83,22 @@ state_keyboards = {
 
 
 async def get_state_from_string(state_string: str) -> Optional[Any]:
-    parts = state_string.replace('.', ':').split(':')
-    if len(parts) == 2:
-        class_name, state_name = parts
-        module = globals()
-        state_class = module.get(class_name)
-        if state_class:
-            return getattr(state_class, state_name, None)
-    return None
+    logger.debug(f"Преобразование строки состояния: {state_string}")
+    try:
+        parts = state_string.replace('.', ':').split(':')
+        if len(parts) == 2:
+            class_name, state_name = parts
+            module = globals()
+            state_class = module.get(class_name)
+            if state_class:
+                state = getattr(state_class, state_name, None)
+                logger.debug(f"Состояние найдено: {state}")
+                return state
+        logger.warning(f"Некорректная строка состояния: {state_string}")
+        return None
+    except Exception as e:
+        logger.error(f"Ошибка при преобразовании строки состояния: {e}")
+        return None
 
 
 async def get_clean_state_identifier(state: Any) -> str:
@@ -104,8 +115,14 @@ async def get_clean_state_identifier(state: Any) -> str:
     - Ожидается, что строковое представление объекта состояния будет в формате "<State 'ClassName:StateName'>".
     - Функция удаляет префикс "<State '" и суффикс "'>", чтобы получить чистый идентификатор.
     """
-    full_str = str(state)
-    # Typically, the format is "<State 'RegistrationState:lang_choose_state'>"
-    # We need to remove the "<State '" prefix and "'>" suffix.
-    clean_identifier = full_str.split("'")[1].replace('.', ':')
-    return clean_identifier
+    logger.debug(f"Преобразование состояния: {state}")
+    try:
+        full_str = str(state)
+        # Typically, the format is "<State 'RegistrationState:lang_choose_state'>"
+        # We need to remove the "<State '" prefix and "'>" suffix.
+        clean_identifier = full_str.split("'")[1].replace('.', ':')
+        logger.debug(f"Чистый идентификатор состояния: {clean_identifier}")
+        return clean_identifier
+    except Exception as e:
+        logger.error(f"Ошибка при преобразовании состояния: {e}")
+        return ""

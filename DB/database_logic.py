@@ -2,6 +2,10 @@ from logic.admins import update_admins_ids
 from settings.config import REFERRAL_REWARD, tasks_init
 from DB.mongo import users_collection, tasks_collection, admin_messages_collection, admins_collection
 from FSM.states import get_state_from_string
+from settings.logging_config import get_logger
+
+
+logger = get_logger()
 
 
 async def initialize_db() -> None:
@@ -13,13 +17,12 @@ async def initialize_db() -> None:
     try:
         existing_indexes = await users_collection.index_information()
         if 'USER_ID_1' in existing_indexes:
-            print("Database already initialized with required indexes.")
+            logger.info("Database already initialized with required indexes.")
         else:
             await users_collection.create_index("USER_ID", unique=True)
-
-            print("Database initialized successfully with indexes on USER_ID")
+            logger.info("Database initialized successfully with indexes on USER_ID")
     except Exception as e:
-        print(f"Error initializing database: {e}")
+        logger.error(f"Error initializing database: {e}")
 
 
 async def insert_tasks() -> None:
@@ -29,9 +32,13 @@ async def insert_tasks() -> None:
     Функция перебирает все задачи из словаря `tasks_init`, добавляет каждому
     из них идентификатор `_id` и вставляет их в коллекцию `tasks_collection`
     """
-    for task_id, task_data in tasks_init.items():
-        task_data["_id"] = task_id
-        await tasks_collection.update_one({"_id": task_id}, {"$set": task_data}, upsert=True)
+    try:
+        for task_id, task_data in tasks_init.items():
+            task_data["_id"] = task_id
+            await tasks_collection.update_one({"_id": task_id}, {"$set": task_data}, upsert=True)
+            logger.info(f"Task {task_id} inserted/updated successfully.")
+    except Exception as e:
+        logger.error(f"Error inserting tasks: {e}")
 
 
 async def get_admin_messages_dict(user_id: int) -> dict:
@@ -48,11 +55,17 @@ async def get_admin_messages_dict(user_id: int) -> dict:
     Возвращает:
     - dict: Словарь сообщений администраторов, где ключ - идентификатор задачи, а значение - данные задачи.
     """
-    user_doc = await admin_messages_collection.find_one({"user_id": user_id})
-    if not user_doc:
+    try:
+        user_doc = await admin_messages_collection.find_one({"user_id": user_id})
+        if not user_doc:
+            logger.info(f"No admin messages found for user_id: {user_id}")
+            return {}
+        admin_messages_dict = {task["_id"]: task for task in user_doc.get("tasks", [])}
+        logger.info(f"Admin messages retrieved for user_id: {user_id}")
+        return admin_messages_dict
+    except Exception as e:
+        logger.error(f"Error retrieving admin messages for user_id {user_id}: {e}")
         return {}
-    admin_messages_dict = {task["_id"]: task for task in user_doc.get("tasks", [])}
-    return admin_messages_dict
 
 
 async def delete_admin_message(task_id: int, user_id: int) -> None:
@@ -72,17 +85,23 @@ async def delete_admin_message(task_id: int, user_id: int) -> None:
     Возвращает:
     - None
     """
-    user_doc = await admin_messages_collection.find_one({"user_id": user_id})
-    if not user_doc:
-        return
-    updated_tasks = [task for task in user_doc.get("tasks", []) if task["_id"] != task_id]
-    if updated_tasks:
-        await admin_messages_collection.update_one(
-            {"user_id": user_id},
-            {"$set": {"tasks": updated_tasks}}
-        )
-    else:
-        await admin_messages_collection.delete_one({"user_id": user_id})
+    try:
+        user_doc = await admin_messages_collection.find_one({"user_id": user_id})
+        if not user_doc:
+            logger.info(f"No admin messages found for user_id: {user_id}")
+            return
+        updated_tasks = [task for task in user_doc.get("tasks", []) if task["_id"] != task_id]
+        if updated_tasks:
+            await admin_messages_collection.update_one(
+                {"user_id": user_id},
+                {"$set": {"tasks": updated_tasks}}
+            )
+            logger.info(f"Task with task_id: {task_id} deleted for user_id: {user_id}. Updated tasks list.")
+        else:
+            await admin_messages_collection.delete_one({"user_id": user_id})
+            logger.info(f"All tasks deleted for user_id: {user_id}. Document removed from collection.")
+    except Exception as e:
+        logger.error(f"Error deleting task with task_id {task_id} for user_id {user_id}: {e}")
 
 
 async def insert_admin_messages(admin_messages: dict, user_id: int) -> None:
@@ -102,27 +121,36 @@ async def insert_admin_messages(admin_messages: dict, user_id: int) -> None:
     Возвращает:
     - None
        """
-    user_doc = await admin_messages_collection.find_one({"user_id": user_id})
-    if user_doc is None:
-        user_doc = {"user_id": user_id, "tasks": []}
-    tasks_dict = {task_id: message_data for task_id, message_data in admin_messages.items()}
-    for task_id, message_data in tasks_dict.items():
-        message_data["_id"] = task_id
-        message_data["user_id"] = user_id
-        message_data = {str(k): v for k, v in message_data.items()}
-        task_exists = False
-        for task in user_doc["tasks"]:
-            if task["_id"] == task_id:
-                task.update(message_data)
-                task_exists = True
-                break
-        if not task_exists:
-            user_doc["tasks"].append(message_data)
-    await admin_messages_collection.update_one(
-        {"user_id": user_id},
-        {"$set": {"tasks": user_doc["tasks"]}},
-        upsert=True
-    )
+    try:
+        user_doc = await admin_messages_collection.find_one({"user_id": user_id})
+        if user_doc is None:
+            user_doc = {"user_id": user_id, "tasks": []}
+            logger.info(f"New user document created for user_id: {user_id}")
+
+        tasks_dict = {task_id: message_data for task_id, message_data in admin_messages.items()}
+        for task_id, message_data in tasks_dict.items():
+            message_data["_id"] = task_id
+            message_data["user_id"] = user_id
+            message_data = {str(k): v for k, v in message_data.items()}
+            task_exists = False
+            for task in user_doc["tasks"]:
+                if task["_id"] == task_id:
+                    task.update(message_data)
+                    task_exists = True
+                    logger.info(f"Task with task_id: {task_id} updated for user_id: {user_id}")
+                    break
+            if not task_exists:
+                user_doc["tasks"].append(message_data)
+                logger.info(f"Task with task_id: {task_id} added for user_id: {user_id}")
+
+        await admin_messages_collection.update_one(
+            {"user_id": user_id},
+            {"$set": {"tasks": user_doc["tasks"]}},
+            upsert=True
+        )
+        logger.info(f"Admin messages updated for user_id: {user_id}")
+    except Exception as e:
+        logger.error(f"Error inserting admin messages for user_id {user_id}: {e}")
 
 
 async def get_all_tasks() -> dict:
@@ -135,10 +163,15 @@ async def get_all_tasks() -> dict:
     Возвращает:
     - dict: Словарь, содержащий все задачи, где ключами являются идентификаторы задач, а значениями - данные задач.
       """
-    tasks_cursor = tasks_collection.find()
-    tasks_list = await tasks_cursor.to_list(length=None)
-    tasks_dict = {task["_id"]: task for task in tasks_list}
-    return tasks_dict
+    try:
+        tasks_cursor = tasks_collection.find()
+        tasks_list = await tasks_cursor.to_list(length=None)
+        tasks_dict = {task["_id"]: task for task in tasks_list}
+        logger.info(f"Retrieved {len(tasks_dict)} tasks from the collection.")
+        return tasks_dict
+    except Exception as e:
+        logger.error(f"Error retrieving tasks: {e}")
+        return {}
 
 
 async def delete_user_from_db(user_id: int) -> bool:
@@ -155,13 +188,13 @@ async def delete_user_from_db(user_id: int) -> bool:
     try:
         result = await users_collection.delete_one({"USER_ID": user_id})
         if result.deleted_count > 0:
-            print(f"User {user_id} deleted successfully.")
+            logger.info(f"User {user_id} deleted successfully.")
             return True
         else:
-            print(f"User {user_id} not found in database.")
+            logger.warning(f"User {user_id} not found in database.")
             return False
     except Exception as e:
-        print(f"Error deleting user {user_id} from database: {e}")
+        logger.error(f"Error deleting user {user_id} from database: {e}")
         return False
 
 
@@ -181,7 +214,7 @@ async def check_is_user_already_here(user_id: int) -> bool:
         user = await users_collection.find_one({"USER_ID": user_id})
         return user is not None
     except Exception as e:
-        print(f"Error checking if user {user_id} is already in database: {e}")
+        logger.error(f"Error checking if user {user_id} is already in database: {e}")
         return False
 
 
@@ -198,17 +231,17 @@ async def update_user_details(user_id: int, **kwargs) -> bool:
     - True, если обновление прошло успешно.
     - False, если обновление не удалось.
     """
-    print("def update_user_details")
+    logger.debug("def update_user_details")
     try:
         update_fields = {key: value for key, value in kwargs.items()}
         await users_collection.update_one(
             {"USER_ID": user_id},
             {"$set": update_fields}
         )
-        print(f"User details updated for user {user_id}.")
+        logger.info(f"User details updated for user {user_id}.")
         return True
     except Exception as e:
-        print(f"Error updating user details: {e}")
+        logger.error(f"Error updating user details for user {user_id}: {e}")
         return False
 
 
@@ -223,17 +256,17 @@ async def get_user_details(user_id: int) -> dict | None:
     - dict: Словарь с деталями пользователя, если пользователь найден.
     - None, если пользователь не найден или произошла ошибка.
     """
-    print("def get_user_details")
+    logger.debug("def get_user_details")
     try:
         user = await users_collection.find_one({"USER_ID": user_id})
         if user:
-            print(f"User details retrieved for user {user_id}.")
+            logger.info(f"User details retrieved for user {user_id}.")
             return user
         else:
-            print(f"User {user_id} not found in database.")
+            logger.info(f"User {user_id} not found in database.")
             return None
     except Exception as e:
-        print(f"Error retrieving user details for user {user_id}: {e}")
+        logger.error(f"Error retrieving user details for user {user_id}: {e}")
         return None
 
 
@@ -249,16 +282,16 @@ async def update_language_in_db(user_id: int, language: str) -> bool:
     - True, если обновление прошло успешно.
     - False, если обновление не удалось.
     """
-    print("def update_language_in_db")
+    logger.debug("def update_language_in_db")
     try:
         await users_collection.update_one(
             {"USER_ID": user_id},
             {"$set": {"LANGUAGE": language}}
         )
-        print(f"Language updated to {language} for user {user_id}.")
+        logger.info(f"Language updated to {language} for user {user_id}.")
         return True
     except Exception as e:
-        print(f"Error updating language for user {user_id}: {e}")
+        logger.error(f"Error updating language for user {user_id}: {e}")
         return False
 
 
@@ -273,7 +306,7 @@ async def add_user_to_db(user_id: int) -> bool:
     - True, если добавление прошло успешно.
     - False, если добавление не удалось.
     """
-    print("def add_user_to_db")
+    logger.debug("def add_user_to_db")
     try:
         user_data = {
             "USER_ID": user_id,
@@ -289,10 +322,10 @@ async def add_user_to_db(user_id: int) -> bool:
             "STATE": "RegistrationState.lang_choose_state"
         }
         await users_collection.insert_one(user_data)
-        print(f"User {user_id} added to database with default values.")
+        logger.info(f"User {user_id} added to database with default values.")
         return True
     except Exception as e:
-        print(f"Error adding user {user_id} to database: {e}")
+        logger.error(f"Error adding user {user_id} to database: {e}")
         return False
 
 
@@ -307,17 +340,17 @@ async def get_language_for_user(user_id: int) -> str | None:
     - str: Язык пользователя, если он найден.
     - None, если пользователь не найден или произошла ошибка.
     """
-    print("def get_language_for_user")
+    logger.debug("def get_language_for_user")
     try:
         user = await users_collection.find_one({"USER_ID": user_id}, {"LANGUAGE": 1, "_id": 0})
         if user and "LANGUAGE" in user:
-            print(f"Language for user {user_id} is {user['LANGUAGE']}.")
+            logger.info(f"Language for user {user_id} is {user['LANGUAGE']}.")
             return user["LANGUAGE"]
         else:
-            print(f"Language for user {user_id} not found.")
+            logger.info(f"Language for user {user_id} not found. Defaulting to 'ENG'.")
             return "ENG"
     except Exception as e:
-        print(f"Error retrieving language for user {user_id}: {e}")
+        logger.error(f"Error retrieving language for user {user_id}: {e}")
         return None
 
 
@@ -333,16 +366,16 @@ async def add_referrer_to_user(user_id: int, referrer_id: int) -> bool:
     - True, если обновление прошло успешно.
     - False, если обновление не удалось.
     """
-    print("def add_referrer_to_user")
+    logger.debug("def add_referrer_to_user")
     try:
         await users_collection.update_one(
             {"USER_ID": user_id},
             {"$set": {"REF_BY_USER": referrer_id}}
         )
-        print(f"Referrer {referrer_id} added to user {user_id}.")
+        logger.info(f"Referrer {referrer_id} added to user {user_id}.")
         return True
     except Exception as e:
-        print(f"Error adding referrer to user {user_id}: {e}")
+        logger.error(f"Error adding referrer to user {user_id}: {e}")
         return False
 
 
@@ -353,7 +386,7 @@ async def increment_referrer_count(referrer_id: int) -> None:
     Параметры:
     - referrer_id (int): Уникальный идентификатор пользователя-реферера.
     """
-    print("def increment_refferer_count")
+    logger.debug("def increment_refferer_count")
     try:
         user = await users_collection.find_one({"USER_ID": referrer_id})
         if user:
@@ -365,12 +398,12 @@ async def increment_referrer_count(referrer_id: int) -> None:
                 {"USER_ID": referrer_id},
                 {"$set": {"NUM_OF_REFS": new_ref_count, "REF_POINTS": new_ref_points}}
             )
-            print(f"Referral count for user {referrer_id} incremented to {new_ref_count}.")
-            print(f"Referral points for user {referrer_id} incremented to {new_ref_points}.")
+            logger.info(f"Referral count for user {referrer_id} incremented to {new_ref_count}.")
+            logger.info(f"Referral points for user {referrer_id} incremented to {new_ref_points}.")
         else:
-            print(f"User {referrer_id} not found in database.")
+            logger.warning(f"User {referrer_id} not found in database.")
     except Exception as e:
-        print(f"Error incrementing referral count or points for user {referrer_id}: {e}")
+        logger.error(f"Error incrementing referral count or points for user {referrer_id}: {e}")
 
 
 async def decrement_referrer_count(referrer_id: int) -> None:
@@ -380,24 +413,24 @@ async def decrement_referrer_count(referrer_id: int) -> None:
     Параметры:
     - referrer_id (int): Уникальный идентификатор пользователя-реферера.
     """
-    print("def decrement_refferer_count")
+    logger.debug("def decrement_referrer_count")
     try:
         user = await users_collection.find_one({"USER_ID": referrer_id})
         if user:
             current_ref_count = user.get("NUM_OF_REFS", 0)
             current_ref_points = user.get("REF_POINTS", 0)
-            new_ref_count = max(0, current_ref_count - 1)  # Убедимся, что количество рефералов не отрицательное
-            new_ref_points = max(0, current_ref_points - REFERRAL_REWARD)  # Убедимся, что очки не отрицательные
+            new_ref_count = max(0, current_ref_count - 1)
+            new_ref_points = max(0, current_ref_points - REFERRAL_REWARD)
             await users_collection.update_one(
                 {"USER_ID": referrer_id},
                 {"$set": {"NUM_OF_REFS": new_ref_count, "REF_POINTS": new_ref_points}}
             )
-            print(f"Referral count for user {referrer_id} decremented to {new_ref_count}.")
-            print(f"Referral points for user {referrer_id} decremented to {new_ref_points}.")
+            logger.info(f"Referral count for user {referrer_id} decremented to {new_ref_count}.")
+            logger.info(f"Referral points for user {referrer_id} decremented to {new_ref_points}.")
         else:
-            print(f"User {referrer_id} not found in database.")
+            logger.warning(f"User {referrer_id} not found in database.")
     except Exception as e:
-        print(f"Error decrementing referral count or points for user {referrer_id}: {e}")
+        logger.error(f"Error decrementing referral count or points for user {referrer_id}: {e}")
 
 
 async def get_referrer(user_id: int) -> int | None:
@@ -411,14 +444,16 @@ async def get_referrer(user_id: int) -> int | None:
     - referrer_id (int): Идентификатор пользователя-реферера, если он существует.
     - None, если реферер не найден или произошла ошибка.
     """
+    logger.debug("def get_referrer")
     try:
         user = await users_collection.find_one({"USER_ID": user_id})
         if user:
             return user.get("REF_BY_USER")
         else:
+            logger.info(f"Referrer not found for user {user_id}")
             return None
     except Exception as e:
-        print(f"Error retrieving referrer for user {user_id}: {e}")
+        logger.error(f"Error retrieving referrer for user {user_id}: {e}")
         return None
 
 
@@ -433,11 +468,12 @@ async def check_wallet_exists(wallet_address: str) -> bool:
     - True, если запись с указанным кошельком отсутствует в MongoDB.
     - False, если запись с указанным кошельком найдена в MongoDB.
     """
+    logger.debug("def check_wallet_exists")
     try:
         result = await users_collection.find_one({"ADDR": wallet_address})
         return result is None
     except Exception as e:
-        print(f"Error checking wallet address in MongoDB: {e}")
+        logger.error(f"Error checking wallet address in MongoDB: {e}")
         return False
 
 
@@ -453,19 +489,20 @@ async def mark_task_as_done(user_id: int, task_index: int) -> bool:
     - True, если обновление прошло успешно.
     - False, если в процессе обновления произошла ошибка.
     """
+    logger.debug("def mark_task_as_done")
     try:
         result = await users_collection.update_one(
             {"USER_ID": user_id},
             {"$addToSet": {"TASKS_DONE": task_index}}
         )
         if result.modified_count > 0:
-            print(f"Task {task_index} marked as done for user {user_id}.")
+            logger.debug(f"Task {task_index} marked as done for user {user_id}.")
             return True
         else:
-            print(f"Task {task_index} was already marked as done or user {user_id} not found.")
+            logger.debug(f"Task {task_index} was already marked as done or user {user_id} not found.")
             return False
     except Exception as e:
-        print(f"Error marking task {task_index} as done for user {user_id}: {e}")
+        logger.error(f"Error marking task {task_index} as done for user {user_id}: {e}")
         return False
 
 
@@ -481,19 +518,20 @@ async def mark_task_as_await(user_id: int, task_index: int) -> bool:
     - True, если обновление прошло успешно.
     - False, если в процессе обновления произошла ошибка.
     """
+    logger.debug("def mark_task_as_await")
     try:
         result = await users_collection.update_one(
             {"USER_ID": user_id},
             {"$addToSet": {"TASKS_AWAIT": task_index}}
         )
         if result.modified_count > 0:
-            print(f"Task {task_index} marked as await for user {user_id}.")
+            logger.debug(f"Task {task_index} marked as await for user {user_id}.")
             return True
         else:
-            print(f"Task {task_index} was already marked as await or user {user_id} not found.")
+            logger.debug(f"Task {task_index} was already marked as await or user {user_id} not found.")
             return False
     except Exception as e:
-        print(f"Error marking task {task_index} as await for user {user_id}: {e}")
+        logger.error(f"Error marking task {task_index} as await for user {user_id}: {e}")
         return False
 
 
@@ -504,19 +542,20 @@ async def remove_task_from_await(user_id: int, task_index: int) -> bool:
     - True if the update was successful.
     - False if there was an error during the update.
     """
+    logger.debug("def remove_task_from_await")
     try:
         result = await users_collection.update_one(
             {"USER_ID": user_id},
             {"$pull": {"TASKS_AWAIT": task_index}}
         )
         if result.modified_count > 0:
-            print(f"Task {task_index} removed from pending tasks for user {user_id}.")
+            logger.debug(f"Task {task_index} removed from pending tasks for user {user_id}.")
             return True
         else:
-            print(f"Task {task_index} was not found in pending tasks or user {user_id} not found.")
+            logger.debug(f"Task {task_index} was not found in pending tasks or user {user_id} not found.")
             return False
     except Exception as e:
-        print(f"Error removing task {task_index} from pending tasks for user {user_id}: {e}")
+        logger.error(f"Error removing task {task_index} from pending tasks for user {user_id}: {e}")
         return False
 
 
@@ -532,19 +571,20 @@ async def add_points_to_user(user_id: int, points: int) -> bool:
     - True, если обновление прошло успешно.
     - False, если в процессе обновления произошла ошибка.
     """
+    logger.debug("def add_points_to_user")
     try:
         result = await users_collection.update_one(
             {"USER_ID": user_id},
             {"$inc": {"POINTS": points}}
         )
         if result.modified_count > 0:
-            print(f"Added {points} points to user {user_id}.")
+            logger.debug(f"Added {points} points to user {user_id}.")
             return True
         else:
-            print(f"User {user_id} not found or no points added.")
+            logger.debug(f"User {user_id} not found or no points added.")
             return False
     except Exception as e:
-        print(f"Error adding points to user {user_id}: {e}")
+        logger.error(f"Error adding points to user {user_id}: {e}")
         return False
 
 
@@ -558,14 +598,14 @@ async def set_user_state(user_id: int, state: str):
     - state_context (FSMContext): The FSM context to manipulate state data.
     """
     try:
-        # Additionally, save or update the state in the MongoDB
         await users_collection.update_one(
             {"USER_ID": user_id},
             {"$set": {"STATE": state}},
             upsert=True
         )
+        logger.debug(f"User {user_id} state set to {state}.")
     except Exception as e:
-        print(f"Error setting state for user {user_id}: {e}")
+        logger.error(f"Error setting state for user {user_id}: {e}")
 
 
 async def get_state_for_user(user_id: int) -> str | None:
@@ -579,17 +619,17 @@ async def get_state_for_user(user_id: int) -> str | None:
     - str: The state of the user if found.
     - None, if the user is not found or an error occurred.
     """
-    print("def get_state_for_user")
+    logger.debug("def get_state_for_user")
     try:
         user = await users_collection.find_one({"USER_ID": user_id}, {"STATE": 1, "_id": 0})
         if user and "STATE" in user:
-            print(f"State for user {user_id} is {user['STATE']}.")
+            logger.debug(f"State for user {user_id} is {user['STATE']}.")
             return await get_state_from_string(user["STATE"])
         else:
-            print(f"State for user {user_id} not found.")
+            logger.debug(f"State for user {user_id} not found.")
             return None
     except Exception as e:
-        print(f"Error retrieving state for user {user_id}: {e}")
+        logger.error(f"Error retrieving state for user {user_id}: {e}")
         return None
 
 
@@ -603,9 +643,15 @@ async def get_all_users() -> list:
     Возвращает:
     - list: Список всех пользователей, содержащих документы с данными пользователей.
     """
-    users_cursor = users_collection.find()
-    users_list = await users_cursor.to_list(length=None)
-    return users_list
+    logger.debug("Запрос всех пользователей из базы данных.")
+    try:
+        users_cursor = users_collection.find()
+        users_list = await users_cursor.to_list(length=None)
+        logger.debug(f"Получено {len(users_list)} пользователей из базы данных.")
+        return users_list
+    except Exception as e:
+        logger.error(f"Ошибка при получении всех пользователей: {e}")
+        return []
 
 
 async def add_admin(admin_id: int) -> None:
@@ -618,8 +664,13 @@ async def add_admin(admin_id: int) -> None:
     Параметры:
     - admin_id (int): Идентификатор администратора, который нужно добавить.
     """
-    await admins_collection.update_one({"_id": admin_id}, {"$set": {"_id": admin_id}}, upsert=True)
-    await update_admins_ids()
+    try:
+        logger.debug(f"Добавление администратора с ID {admin_id}.")
+        await admins_collection.update_one({"_id": admin_id}, {"$set": {"_id": admin_id}}, upsert=True)
+        await update_admins_ids()
+        logger.debug(f"Администратор с ID {admin_id} успешно добавлен и список администраторов обновлен.")
+    except Exception as e:
+        logger.error(f"Ошибка при добавлении администратора с ID {admin_id}: {e}")
 
 
 async def remove_admin(admin_id: int) -> None:
@@ -632,5 +683,10 @@ async def remove_admin(admin_id: int) -> None:
     Параметры:
     - admin_id (int): Идентификатор администратора, который нужно удалить.
     """
-    await admins_collection.delete_one({"_id": admin_id})
-    await update_admins_ids()
+    try:
+        logger.debug(f"Удаление администратора с ID {admin_id}.")
+        await admins_collection.delete_one({"_id": admin_id})
+        await update_admins_ids()
+        logger.debug(f"Администратор с ID {admin_id} успешно удален и список администраторов обновлен.")
+    except Exception as e:
+        logger.error(f"Ошибка при удалении администратора с ID {admin_id}: {e}")

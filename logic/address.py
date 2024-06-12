@@ -1,4 +1,8 @@
 import re
+import logging
+from settings.logging_config import get_logger
+
+logger = get_logger()
 
 
 def is_valid_crypto_address(crypto_address: str) -> bool:
@@ -19,4 +23,9 @@ def is_valid_crypto_address(crypto_address: str) -> bool:
     """
     crypto_regex = re.compile(r'^[UE]?[0-9A-Za-z\-_]{48}$')
     match = crypto_regex.match(crypto_address)
-    return match is not None
+    if match:
+        logger.info(f"Crypto address {crypto_address} is valid.")
+        return True
+    else:
+        logger.warning(f"Crypto address {crypto_address} is invalid.")
+        return False
