@@ -13,7 +13,7 @@ menu_kb = {
 			],
 			[
 				KeyboardButton(text="🥇Задачи"),
-				KeyboardButton(text="🔒Смартконтракт"),
+				KeyboardButton(text="🔒Токеномика"),
 			],
 			[
 				KeyboardButton(text="🔧Настройки"),
@@ -34,7 +34,7 @@ menu_kb = {
 			],
 			[
 				KeyboardButton(text="🥇Tasks"),
-				KeyboardButton(text="🔒Smartcontract"),
+				KeyboardButton(text="🔒Tokenomics"),
 			],
 			[
 				KeyboardButton(text="🔧Settings"),

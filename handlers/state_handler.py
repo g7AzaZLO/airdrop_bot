@@ -374,9 +374,9 @@ async def main_menu_handler(message: types.Message, state: FSMContext) -> None:
                                   tasks_total_points=tasks_total_points)
         await message.answer(text=reply, reply_markup=tasks_keyboard)
         await state.set_state(TasksState.current_tasks_state)
-    elif user_response in ["🔒Смартконтракт", "🔒Smartcontract"]:
-        reply = await get_message(menu_messages, "SMARTCONTRACT_TEXT", language)
-        await message.answer_photo(caption=reply, photo=types.FSInputFile(path="settings/image/smartcontract.png"),
+    elif user_response in ["🔒Токеномика", "🔒Tokenomics"]:
+        reply = await get_message(menu_messages, "TOKENOMICS_TEXT", language)
+        await message.answer_photo(caption=reply, photo=types.FSInputFile(path="settings/image/tokenomic.jpg"),
                                    reply_markup=menu_kb[language],
                                    parse_mode="HTML")
         return

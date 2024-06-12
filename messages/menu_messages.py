@@ -135,49 +135,23 @@ Unknown command. Please choose from the menu.
 Неизвестная команда. Пожалуйста, выберите команду из меню.
 		"""
     },
-    "SMARTCONTRACT_TEXT": {
+    "TOKENOMICS_TEXT": {
         "ENG": """
-35% of the total supply is locked in the smart contract = 350,000,000 ${coin_symbol}
-
-The smart contract rewards holders with <b>more than 100,000 ${coin_symbol}.</b>
-
-Rewards distribution occurs once every T period. This period can be calculated using the formula:
-
-<code>
-T = max(30 - (29 * (holder_count - 1) / 49999), 1)
-</code>
-<i>holder_count is the number of token holders, and T is measured in days.</i>
-
-If a holder has more than 100,000 ${coin_symbol} in their balance, they are assigned a weight:
-
-<code>
-weight = balance / 100000
-</code>
-<i>where balance is the number of tokens in the holder's balance.</i>
-
-Weight is a coefficient to the reward, so keep as many tokens on your balance as possible!
-		""",
+40% Presale
+40% LP
+10% Comminuty and team
+5% CEX
+3% For Andrei Grachev
+2% Airdrop      
+        """,
         "RU": """
-35% от общего количества токенов заблокировано в смарт-контракте = 350 000 000 ${coin_symbol}
-
-Смарт-контракт вознаграждает держателей с <b>более чем 100 000 ${coin_symbol}.</b>
-
-Распределение наград происходит раз в период T. Этот период можно вычислить по формуле:
-
-<code>
-T = max(30 - (29 * (holder_count - 1) / 49999), 1)
-</code>
-<i>holder_count - количество держателей токенов, а T измеряется в днях.</i>
-
-Если держатель имеет более 100,000 ${coin_symbol} на балансе, ему присваивается вес:
-
-<code>
-weight = balance / 100000
-</code>
-<i>где balance - количество токенов на балансе держателя.</i>
-
-Вес явялется коэффициентом к награде, поэтому держите на балансе как можно больше токенов!
-		"""
+40% Пресейл
+40% Ликвидность
+10% Комьюнити и команда
+5% CEX
+3% Для Андрея Грачева
+2% Аирдроп           
+        """
     },
     "CHANGE_ADDRESS_TEXT": {
         "ENG": "Are you sure you want to change your address?",
