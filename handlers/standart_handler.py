@@ -351,3 +351,17 @@ async def all_other_text_handler(message: types.Message, state: FSMContext) -> N
         await state.set_state(current_state)
         await message.answer(text=current_reply, reply_markup=current_keyboard, parse_mode="MARKDOWN")
         logger.debug(f"User {user_id} state restored to {current_state_str} and responded with appropriate message.")
+
+
+@standard_handler_router.message(F.photo, F.chat.type == "private")
+async def start_get_photo_id_command(message: types.Message) -> None:
+    user_id = message.from_user.id
+    language = await get_language_for_user(user_id)
+    logger.debug(f"Received /update_tasks command from user {user_id}")
+    if user_id not in ADMINS_IDS:
+        reply = await get_message(other_messages, "NO_PERMISSION_TEXT", language)
+        await message.answer(text=reply)
+        logger.warning(f"User {user_id} attempted to use /get_photo_id command without sufficient permissions.")
+        return
+    photo_id = message.photo[-1]
+    print(photo_id)

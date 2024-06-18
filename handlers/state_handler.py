@@ -28,21 +28,12 @@ from DB.database_logic import update_language_in_db, get_language_for_user, dele
     get_admin_messages_dict, get_all_users
 from DB.database_logic import check_is_user_already_here, add_user_to_db, add_referrer_to_user, get_referrer, \
     increment_referrer_count, add_points_to_user
-from settings.config import AIRDROP_AMOUNT
+from settings.config import AIRDROP_AMOUNT, IMAGE_PATHS
 from handlers.standart_handler import get_message
 from settings.logging_config import get_logger
 
 logger = get_logger()
 state_handler_router = Router()
-
-IMAGE_PATHS = {
-    "profile": "settings/image/profile.jpg",
-    "information": "settings/image/info.jpg",
-    "invite_friends": "settings/image/refferal.jpg",
-    "balance": "settings/image/balance.jpg",
-    "tasks": "settings/image/task.jpg",
-    "tokenomics": "settings/image/tokenomic.jpg"
-}
 
 
 @state_handler_router.message(CaptchaState.wait_captcha_state)
@@ -298,11 +289,11 @@ async def main_menu_handler(callback_query: types.CallbackQuery, state: FSMConte
         photo_path = IMAGE_PATHS["profile"]
     elif user_response == "information":
         reply = await get_message(menu_messages, "INFORMATION_TEXT", language)
-        photo_path = IMAGE_PATHS["information"]
+        photo_path = IMAGE_PATHS["info"]
     elif user_response == "invite_friends":
         ref_link = await get_refferal_link(callback_query.from_user.id)
         reply = await get_message(menu_messages, "INVITE_FRIENDS_TEXT", language, referral_link=ref_link)
-        photo_path = IMAGE_PATHS["invite_friends"]
+        photo_path = IMAGE_PATHS["invite"]
     elif user_response == "balance":
         balance = user.get("POINTС", 0)
         balance_by_refs = user.get("REF_POINTS", 0)
@@ -338,14 +329,14 @@ async def main_menu_handler(callback_query: types.CallbackQuery, state: FSMConte
     if photo_path:
         if callback_query.message.photo:
             await callback_query.message.edit_media(
-                media=types.InputMediaPhoto(media=types.FSInputFile(photo_path), caption=reply),
+                media=types.InputMediaPhoto(media=photo_path, caption=reply),
                 reply_markup=menu_kb[language],
                 parse_mode="MARKDOWN"
             )
         else:
             await callback_query.message.delete()
             await callback_query.message.answer_photo(
-                photo=types.FSInputFile(photo_path), caption=reply, reply_markup=menu_kb[language],
+                photo=photo_path, caption=reply, reply_markup=menu_kb[language],
                 parse_mode="MARKDOWN"
             )
     else:
