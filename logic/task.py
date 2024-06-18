@@ -91,39 +91,38 @@ async def get_num_of_tasks() -> int:
     return num_tasks
 
 
-async def get_index_by_text_task(user_response: str, language: str) -> int | None:
+async def get_index_by_text_task(task_text: str, language: str) -> int | None:
     """
-    Берет на вход строку с заданием и выдает индекс задания в словаре
+    Получает индекс задачи по тексту задачи.
 
     Параметры:
-    - user_response (str): Ответ юзера в виде строки задания
-    - language (str): Язык пользователя
+    - task_text (str): Текст задачи.
+    - language (str): Язык ("RU" или "ENG").
 
     Возвращает:
-    - int: Индекс задания в словаре
+    - int: Индекс задачи.
     """
-    try:
-        logger.debug("def get_index_of_num")
-        if language == "RU":
-            index = user_response[9:]
-        elif language == "ENG":
-            index = user_response[6:]
-        else:
+    logger.debug("def get_index_by_text_task")
+    if task_text.startswith("task_"):
+        try:
+            index_task = int(task_text.replace("task_", "")) - 1
+            logger.debug(f"get_index_by_text_task ==== {index_task}")
+            return index_task
+        except ValueError as e:
+            logger.error(f"An error occurred: {e}")
             return None
-        logger.debug("get_index_by_text_task ==== " + index)
-        return int(index) - 1
-    except Exception as e:
-        logger.error("An error occurred: %s", e)
-        return None
+    return None
 
 
-async def send_task_info(message: types.Message, task_index: int):
+async def send_task_info(message: types.Message, task_index: int, reply_markup=None, edit=False):
     """
     Отправляет информацию о задании пользователю.
 
     Параметры:
     - message (types.Message): Сообщение от пользователя.
     - task_index (int): Индекс задания.
+    - reply_markup (Optional): Клавиатура для отправки вместе с сообщением.
+    - edit (bool): Указывает, нужно ли редактировать существующее сообщение.
 
     Возвращает:
     - None
@@ -140,15 +139,22 @@ async def send_task_info(message: types.Message, task_index: int):
             message_text = await get_message(other_messages, "TASK_TEXT", language, description=description,
                                              points=points)
             if image_path:
-                await message.answer_photo(photo=types.FSInputFile(path="tasks/" + image_path), caption=message_text,
-                                           parse_mode="MARKDOWN")
+                if edit:
+                    await message.edit_media(media=types.InputMediaPhoto(media="tasks/" + image_path, caption=message_text), reply_markup=reply_markup)
+                else:
+                    await message.answer_photo(photo=types.FSInputFile(path="tasks/" + image_path), caption=message_text,
+                                               reply_markup=reply_markup, parse_mode="MARKDOWN")
             else:
-                await message.answer(text=message_text, parse_mode="MARKDOWN")
+                if edit:
+                    await message.edit_text(text=message_text, reply_markup=reply_markup, parse_mode="MARKDOWN")
+                else:
+                    await message.answer(text=message_text, reply_markup=reply_markup, parse_mode="MARKDOWN")
         else:
             reply = await get_message(other_messages, "TASK_NOT_FOUND_TEXT", language)
             await message.answer(text=reply, parse_mode="MARKDOWN")
     except Exception as e:
         logger.error("An error occurred in send_task_info: %s", e)
+
 
 
 async def send_all_tasks_info(message: types.Message, tasks_done):
@@ -167,7 +173,8 @@ async def send_all_tasks_info(message: types.Message, tasks_done):
         all_tasks_info = []
 
         for task_index, task in enumerate(tasks_list):
-            description = task["description"].get(language, await get_message(other_messages, "NOT_DESC_TEXT", language))
+            description = task["description"].get(language,
+                                                  await get_message(other_messages, "NOT_DESC_TEXT", language))
             points = task["points"]
             task_info = await get_message(other_messages, "TASK_TEXT", language, description=description, points=points)
             all_tasks_info.append(f"Task #{task_index + 1}:{task_info}")

@@ -1,120 +1,137 @@
-from aiogram.types import KeyboardButton, ReplyKeyboardMarkup
+from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 
 join_kb = {
-    "ENG": ReplyKeyboardMarkup(
-        keyboard=[
-            [KeyboardButton(text="🚀Join Airdrop"), KeyboardButton(text="❌Cancel")]
-        ],
-        resize_keyboard=True,
+    "ENG": InlineKeyboardMarkup(
+        inline_keyboard=[
+            [
+                InlineKeyboardButton(text="🚀Join Airdrop", callback_data="join_airdrop"),
+                InlineKeyboardButton(text="❌Cancel", callback_data="cancel")
+            ]
+        ]
     ),
-    "RU": ReplyKeyboardMarkup(
-        keyboard=[
-            [KeyboardButton(text="🚀Присоединиться к аирдропу"), KeyboardButton(text="❌Отказаться")]
-        ],
-        resize_keyboard=True,
+    "RU": InlineKeyboardMarkup(
+        inline_keyboard=[
+            [
+                InlineKeyboardButton(text="🚀Присоединиться к аирдропу", callback_data="join_airdrop"),
+                InlineKeyboardButton(text="❌Отказаться", callback_data="cancel")
+            ]
+        ]
     )
 }
 
 done_cancel_kb = {
-    "ENG": ReplyKeyboardMarkup(
-        keyboard=[
-            [KeyboardButton(text="✅Done"), KeyboardButton(text="❌Cancel")]
-        ],
-        resize_keyboard=True,
+    "ENG": InlineKeyboardMarkup(
+        inline_keyboard=[
+            [
+                InlineKeyboardButton(text="✅Done", callback_data="done"),
+                InlineKeyboardButton(text="❌Cancel", callback_data="cancel")
+            ]
+        ]
     ),
-    "RU": ReplyKeyboardMarkup(
-        keyboard=[
-            [KeyboardButton(text="✅Принять"), KeyboardButton(text="❌Отказаться")]
-        ],
-        resize_keyboard=True,
+    "RU": InlineKeyboardMarkup(
+        inline_keyboard=[
+            [
+                InlineKeyboardButton(text="✅Принять", callback_data="done"),
+                InlineKeyboardButton(text="❌Отказаться", callback_data="cancel")
+            ]
+        ]
     )
 }
 
 sub_cancel_kb = {
-    "ENG": ReplyKeyboardMarkup(
-        keyboard=[
-            [KeyboardButton(text="✅Submit Details"), KeyboardButton(text="❌Cancel")]
-        ],
-        resize_keyboard=True,
+    "ENG": InlineKeyboardMarkup(
+        inline_keyboard=[
+            [
+                InlineKeyboardButton(text="✅Submit Details", callback_data="submit_details"),
+                InlineKeyboardButton(text="❌Cancel", callback_data="cancel")
+            ]
+        ]
     ),
-    "RU": ReplyKeyboardMarkup(
-        keyboard=[
-            [KeyboardButton(text="✅Согласен с правилами"), KeyboardButton(text="❌Отказаться")]
-        ],
-        resize_keyboard=True,
+    "RU": InlineKeyboardMarkup(
+        inline_keyboard=[
+            [
+                InlineKeyboardButton(text="✅Согласен с правилами", callback_data="submit_details"),
+                InlineKeyboardButton(text="❌Отказаться", callback_data="cancel")
+            ]
+        ]
     )
 }
 
-language_choose_kb = ReplyKeyboardMarkup(
-    keyboard=[
-        [KeyboardButton(text="ENG English"), KeyboardButton(text="RU Русский")]
-    ],
-    resize_keyboard=True
+language_choose_kb = InlineKeyboardMarkup(
+    inline_keyboard=[
+        [
+            InlineKeyboardButton(text="ENG English", callback_data="language_eng"),
+            InlineKeyboardButton(text="RU Русский", callback_data="language_ru")
+        ]
+    ]
 )
 
 yes_no_kb = {
-    "RU": ReplyKeyboardMarkup(
-        keyboard=[
-            [KeyboardButton(text="Да"), KeyboardButton(text="Нет")]
-        ],
-        resize_keyboard=True
+    "RU": InlineKeyboardMarkup(
+        inline_keyboard=[
+            [
+                InlineKeyboardButton(text="Да", callback_data="yes"),
+                InlineKeyboardButton(text="Нет", callback_data="no")
+            ]
+        ]
     ),
-    "ENG": ReplyKeyboardMarkup(
-        keyboard=[
-            [KeyboardButton(text="Yes"), KeyboardButton(text="No")]
-        ],
-        resize_keyboard=True
+    "ENG": InlineKeyboardMarkup(
+        inline_keyboard=[
+            [
+                InlineKeyboardButton(text="Yes", callback_data="yes"),
+                InlineKeyboardButton(text="No", callback_data="no")
+            ]
+        ]
     )
 }
 
 social_join_kb = {
-    "RU": ReplyKeyboardMarkup(
-        keyboard=[
-            [KeyboardButton(text="✅Вступил")]
-        ],
-        resize_keyboard=True
+    "RU": InlineKeyboardMarkup(
+        inline_keyboard=[
+            [InlineKeyboardButton(text="✅Вступил", callback_data="joined")]
+        ]
     ),
-    "ENG": ReplyKeyboardMarkup(
-        keyboard=[
-            [KeyboardButton(text="✅Joined")]
-        ],
-        resize_keyboard=True
+    "ENG": InlineKeyboardMarkup(
+        inline_keyboard=[
+            [InlineKeyboardButton(text="✅Joined", callback_data="joined")]
+        ]
     )
 }
 
-kb_start = ReplyKeyboardMarkup(
-    keyboard=[
-        [KeyboardButton(text="Start")]
-    ],
-    resize_keyboard=True
+kb_start = InlineKeyboardMarkup(
+    inline_keyboard=[
+        [InlineKeyboardButton(text="Start", callback_data="start")]
+    ]
 )
 
 kb_task_done_back = {
-    "RU": ReplyKeyboardMarkup(
-        keyboard=[
-            [KeyboardButton(text="✅Выполнил"), KeyboardButton(text="⏪Вернуться Назад")]
-        ],
-        resize_keyboard=True
+    "RU": InlineKeyboardMarkup(
+        inline_keyboard=[
+            [
+                InlineKeyboardButton(text="✅Выполнил", callback_data="task_done"),
+                InlineKeyboardButton(text="⏪Вернуться Назад", callback_data="return_back")
+            ]
+        ]
     ),
-    "ENG": ReplyKeyboardMarkup(
-        keyboard=[
-            [KeyboardButton(text="✅Done"), KeyboardButton(text="⏪Return Back")]
-        ],
-        resize_keyboard=True
+    "ENG": InlineKeyboardMarkup(
+        inline_keyboard=[
+            [
+                InlineKeyboardButton(text="✅Done", callback_data="task_done"),
+                InlineKeyboardButton(text="⏪Return Back", callback_data="return_back")
+            ]
+        ]
     )
 }
 
 kb_tasks_back = {
-    "RU": ReplyKeyboardMarkup(
-        keyboard=[
-            [KeyboardButton(text="⏪Вернуться Назад")]
-        ],
-        resize_keyboard=True
+    "RU": InlineKeyboardMarkup(
+        inline_keyboard=[
+            [InlineKeyboardButton(text="⏪Вернуться Назад", callback_data="return_back")]
+        ]
     ),
-    "ENG": ReplyKeyboardMarkup(
-        keyboard=[
-            [KeyboardButton(text="⏪Return Back")]
-        ],
-        resize_keyboard=True
+    "ENG": InlineKeyboardMarkup(
+        inline_keyboard=[
+            [InlineKeyboardButton(text="⏪Return Back", callback_data="return_back")]
+        ]
     )
 }

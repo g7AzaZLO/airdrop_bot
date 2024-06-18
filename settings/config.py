@@ -18,7 +18,7 @@ BOT_NICKNAME = "goichev_bot"
 
 # Links
 TWITTER_LINKS = "\n".join(["https://x.com/ondreigoichev"])
-TELEGRAM_LINKS = "\n".join(["https://t.me/ondreigoichev_ton", "https://t.me/ondreigoichev"])
+TELEGRAM_LINKS = "\n".join(["https://t.me/ondreigoichev_ton",]) #"https://t.me/ondreigoichev"
 WEBSITE_URL = "https://goichev.xyz/"
 MAX_USERS = 100000
 MAX_REFS = 100
