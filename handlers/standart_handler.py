@@ -59,23 +59,7 @@ async def start(message: types.Message, state: FSMContext) -> None:
     """
     logger.debug("Processing /start command...")
     user_id = message.from_user.id
-    if await check_is_user_already_here(user_id):
-        logger.info(f"User {user_id} already in db")
-        await generate_captcha(message)
-        await state.set_state(CaptchaState.wait_captcha_state)
-        capture_message = await get_message(messages, "CAPTCHA_MESSAGE", "ENG")
-        await message.answer(text=capture_message, reply_markup=types.ReplyKeyboardRemove())
-        # Запуск меню после капчи
-    else:
-        logger.info(f"User {user_id} not in db")
-        await add_user_to_db(user_id)
-        referrer = await get_refferer_id(message.text)
-        if referrer is not None:
-            await add_referrer_to_user(user_id, referrer)
-        await generate_captcha(message)
-        await state.set_state(RegistrationState.captcha_state)
-        capture_message = await get_message(messages, "CAPTCHA_MESSAGE", "ENG")
-        await message.answer(text=capture_message, reply_markup=types.ReplyKeyboardRemove())
+    await handle_user_state(user_id, message, state)
 
 
 @standard_handler_router.message(Command("message"), F.chat.type == "private")
@@ -287,6 +271,20 @@ async def start_change_tasks_command(message: types.Message) -> None:
     logger.info(f"Tasks updated successfully by user {user_id}.")
 
 
+@standard_handler_router.message(F.photo, F.chat.type == "private")
+async def start_get_photo_id_command(message: types.Message) -> None:
+    user_id = message.from_user.id
+    language = await get_language_for_user(user_id)
+    logger.debug(f"Received /update_tasks command from user {user_id}")
+    if user_id not in ADMINS_IDS:
+        reply = await get_message(other_messages, "NO_PERMISSION_TEXT", language)
+        await message.answer(text=reply)
+        logger.warning(f"User {user_id} attempted to use /get_photo_id command without sufficient permissions.")
+        return
+    photo_id = message.photo[-1]
+    print(photo_id)
+
+
 @standard_handler_router.message(Command("get_my_id"), F.chat.type == "private")
 async def start_change_tasks_command(message: types.Message) -> None:
     """
@@ -325,22 +323,7 @@ async def all_other_text_handler(message: types.Message, state: FSMContext) -> N
 
     current_state = await get_state_for_user(user_id)
     if current_state is None:
-        if await check_is_user_already_here(user_id):
-            logger.info(f"User {user_id} already in db")
-            await generate_captcha(message)
-            await state.set_state(CaptchaState.wait_captcha_state)
-            capture_message = await get_message(messages, "CAPTCHA_MESSAGE", "ENG")
-            await message.answer(text=capture_message, reply_markup=types.ReplyKeyboardRemove())
-        else:
-            logger.info(f"User {user_id} not in db")
-            await add_user_to_db(user_id)
-            refferer = await get_refferer_id(message.text)
-            if refferer is not None:
-                await add_referrer_to_user(user_id, refferer)
-            await generate_captcha(message)
-            await state.set_state(RegistrationState.captcha_state)
-            capture_message = await get_message(messages, "CAPTCHA_MESSAGE", "ENG")
-            await message.answer(text=capture_message, reply_markup=types.ReplyKeyboardRemove())
+        await handle_user_state(user_id, message, state)
     else:
         await state.set_state(current_state)
         language = await get_language_for_user(message.from_user.id)
@@ -351,3 +334,36 @@ async def all_other_text_handler(message: types.Message, state: FSMContext) -> N
         await state.set_state(current_state)
         await message.answer(text=current_reply, reply_markup=current_keyboard, parse_mode="MARKDOWN")
         logger.debug(f"User {user_id} state restored to {current_state_str} and responded with appropriate message.")
+
+
+async def handle_user_state(user_id: int, message: types.Message, state: FSMContext) -> None:
+    """
+    Обрабатывает состояние пользователя. Проверяет, зарегистрирован ли пользователь, и выполняет соответствующие действия.
+
+    Параметры:
+    - user_id (int): ID пользователя.
+    - message (types.Message): Сообщение от пользователя.
+    - state (FSMContext): Контекст конечного автомата состояний (FSM) для отслеживания состояния пользователя.
+
+    Действия:
+    - Если пользователь уже зарегистрирован, генерирует капчу и устанавливает состояние ожидания ответа капчи.
+    - Если пользователь не зарегистрирован, добавляет пользователя в базу данных, обрабатывает реферера (если имеется),
+      генерирует капчу и устанавливает состояние капчи.
+    - Отправляет соответствующее сообщение пользователю в зависимости от его состояния.
+    """
+    if await check_is_user_already_here(user_id):
+        logger.info(f"User {user_id} already in db")
+        await generate_captcha(message)
+        await state.set_state(CaptchaState.wait_captcha_state)
+        capture_message = await get_message(messages, "CAPTCHA_MESSAGE", "ENG")
+        await message.answer(text=capture_message, reply_markup=types.ReplyKeyboardRemove())
+    else:
+        logger.info(f"User {user_id} not in db")
+        await add_user_to_db(user_id)
+        referrer = await get_refferer_id(message.text)
+        if referrer is not None:
+            await add_referrer_to_user(user_id, referrer)
+        await generate_captcha(message)
+        await state.set_state(RegistrationState.captcha_state)
+        capture_message = await get_message(messages, "CAPTCHA_MESSAGE", "ENG")
+        await message.answer(text=capture_message, reply_markup=types.ReplyKeyboardRemove())

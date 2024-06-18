@@ -1,4 +1,7 @@
 import asyncio
+import time
+
+from aiocache import cached, caches
 from aiogram import types, Router
 from aiogram.fsm.context import FSMContext
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
@@ -25,7 +28,7 @@ from DB.database_logic import update_language_in_db, get_language_for_user, dele
     get_admin_messages_dict, get_all_users
 from DB.database_logic import check_is_user_already_here, add_user_to_db, add_referrer_to_user, get_referrer, \
     increment_referrer_count, add_points_to_user
-from settings.config import AIRDROP_AMOUNT
+from settings.config import AIRDROP_AMOUNT, PHOTO_IDS
 from handlers.standart_handler import get_message
 from settings.logging_config import get_logger
 
@@ -53,7 +56,7 @@ async def captcha_response_handler(message: types.Message, state: FSMContext) ->
     result = await check_captcha(message)
     if result:
         user_id = message.from_user.id
-        language = await get_language_for_user(message.from_user.id)
+        language = await get_language_cached(message.from_user.id)
         current_state = await get_state_for_user(user_id)
         current_state_str = await get_clean_state_identifier(current_state)
         current_keyboard = state_keyboards[(current_state_str, language)]
@@ -149,7 +152,7 @@ async def hello_response_handler_in_reg(message: types.Message, state: FSMContex
     """
     logger.debug("Executing hello_response_handler_in_reg")
     user_response = message.text
-    language = await get_language_for_user(message.from_user.id)
+    language = await get_language_cached(message.from_user.id)
     await state.update_data(user_hello_response=user_response)
 
     if user_response in ["🚀Join Airdrop", "🚀Присоединиться к аирдропу"]:
@@ -198,7 +201,7 @@ async def proceed_response_handler_in_reg(message: types.Message, state: FSMCont
     """
     logger.debug("Executing proceed_response_handler_in_reg")
     user_response = message.text
-    language = await get_language_for_user(message.from_user.id)
+    language = await get_language_cached(message.from_user.id)
     await state.update_data(user_proceed_response=user_response)
 
     if user_response in ["✅Согласен с правилами", "✅Submit Details"]:
@@ -247,7 +250,7 @@ async def follow_telegram_response_handler_in_reg(message: types.Message, state:
     """
     logger.debug("Executing follow_telegram_response_handler_in_reg")
     user_response = message.text
-    language = await get_language_for_user(message.from_user.id)
+    language = await get_language_cached(message.from_user.id)
     await state.update_data(user_follow_telegram_response=user_response)
 
     if user_response in ["✅Вступил", "✅Joined"]:
@@ -288,7 +291,7 @@ async def submit_address_response_handler_in_reg(message: types.Message, state: 
     """
     logger.debug("Executing submit_address_response_handler_in_reg")
     user_response = message.text
-    language = await get_language_for_user(message.from_user.id)
+    language = await get_language_cached(message.from_user.id)
     await state.update_data(user_submit_address_response=user_response)
 
     if await check_wallet_exists(user_response):
@@ -334,7 +337,7 @@ async def main_menu_handler(message: types.Message, state: FSMContext) -> None:
     user_response = message.text
     user = await get_user_details(message.from_user.id)
     logger.debug(f"Handling main menu command, user response {user_response}, user {message.from_user.id}")
-    language = await get_language_for_user(message.from_user.id)
+    language = await get_language_cached(message.from_user.id)
 
     if user_response in ["😈Профиль", "😈Profile"]:
         user_id = message.from_user.id
@@ -375,10 +378,14 @@ async def main_menu_handler(message: types.Message, state: FSMContext) -> None:
         await message.answer(text=reply, reply_markup=tasks_keyboard)
         await state.set_state(TasksState.current_tasks_state)
     elif user_response in ["🔒Токеномика", "🔒Tokenomics"]:
+        start_time = time.time()
         reply = await get_message(menu_messages, "TOKENOMICS_TEXT", language)
-        await message.answer_photo(caption=reply, photo=types.FSInputFile(path="settings/image/tokenomic.jpg"),
+        await message.answer_photo(caption=reply, photo=PHOTO_IDS["tokenomics"],
                                    reply_markup=menu_kb[language],
                                    parse_mode="HTML")
+        end_time = time.time()
+        execution_time = end_time - start_time
+        logger.debug(f"Execution time: {execution_time:.2f} seconds")
         return
     elif user_response in ["🔧Настройки", "🔧Settings"]:
         reply = await get_message(menu_messages, "MENU_SETTINGS", language)
@@ -406,7 +413,7 @@ async def menu_settings(message: types.Message, state: FSMContext) -> None:
     """
     user_response = message.text
     logger.debug("Handling menu settings")
-    language = await get_language_for_user(message.from_user.id)
+    language = await get_language_cached(message.from_user.id)
 
     if user_response in ["🌏Сменить Язык", "🌏Change Language"]:
         reply = await get_message(menu_messages, "LANGUAGE_CHOOSE", language)
@@ -506,7 +513,7 @@ async def yes_no_reply(message: types.Message, state: FSMContext) -> None:
     delete = data.get('delete')
     user_response = message.text
     await state.update_data(user_hello_response=user_response)
-    language = await get_language_for_user(message.from_user.id)
+    language = await get_language_cached(message.from_user.id)
     if user_response in ["Да", "Yes"]:
         if delete:
             refferer = await get_referrer(message.from_user.id)
@@ -546,7 +553,7 @@ async def null_state(message: types.Message, state: FSMContext) -> None:
     """
     logger.debug("Handling null state")
     user_response = message.text
-    language = await get_language_for_user(message.from_user.id)
+    language = await get_language_cached(message.from_user.id)
     if language is None:
         language = "ENG"
     if user_response.lower() in ["start", "начать", r"\начать", r"\start"]:
@@ -589,7 +596,7 @@ async def current_tasks_handler(message: types.Message, state: FSMContext) -> No
     - Обновляет состояние пользователя и отправляет соответствующее сообщение.
     """
     logger.debug(f"def current_tasks_handler, task #{message.text}")
-    language = await get_language_for_user(message.from_user.id)
+    language = await get_language_cached(message.from_user.id)
     user_response = message.text
     index_task = await get_index_by_text_task(user_response, language)
     logger.debug(f"index task == {index_task}")
@@ -679,7 +686,7 @@ async def single_task_handler(message: types.Message, state: FSMContext) -> None
     - Обновляет состояние пользователя и отправляет соответствующее сообщение.
     """
     logger.debug(f"def single_task_handler")
-    language = await get_language_for_user(message.from_user.id)
+    language = await get_language_cached(message.from_user.id)
     user = await get_user_details(message.from_user.id)
     user_response = message.text
     task_text = await state.get_data()
@@ -759,7 +766,7 @@ async def follow_twitter_response_handler_in_reg(message: types.Message, state: 
     """
     logger.debug("def follow_twitter_response_handler")
     user_response = message.text
-    language = await get_language_for_user(message.from_user.id)
+    language = await get_language_cached(message.from_user.id)
     await state.update_data(user_follow_twitter_response=user_response)
     if is_valid_twitter_link(user_response):
         if await check_joined_twitter_channel(user_response):
@@ -807,7 +814,7 @@ async def achievements_handler(message: types.Message, state: FSMContext) -> Non
     - Если введена неизвестная команда, отправляет сообщение с указанием на неизвестную команду.
     """
     logger.debug("def achievements_handler")
-    language = await get_language_for_user(message.from_user.id)
+    language = await get_language_cached(message.from_user.id)
     user_response = message.text
     user = await get_user_details(message.from_user.id)
     if user_response in ["⏪Вернуться Назад", "⏪Return Back"]:
@@ -842,7 +849,7 @@ async def handle_screen_check(message: types.Message, state: FSMContext) -> None
     """
     user_id = message.from_user.id
     user = await get_user_details(user_id)
-    language = await get_language_for_user(message.from_user.id)
+    language = await get_language_cached(message.from_user.id)
     task_text = await state.get_data()
     index_task = await get_index_by_text_task(task_text["num_of_task"], language)
     points = await get_points_from_task(index_task)
@@ -931,7 +938,7 @@ async def auto_reject_task(user_id: int, index_task: int, admin_messages: dict, 
         await remove_task_from_await(user_id, index_task)
         if index_task in admin_messages:
             await delete_admin_message(index_task, user_id)
-        user_language = await get_language_for_user(user_id)
+        user_language = await get_language_cached(message.from_user.id)
         reply = await get_message(other_messages, "TRY_AGAIN_TEXT", user_language)
         await message.answer(text=reply)
         logger.info(f"Task {index_task} rejected for user {user_id} due to timeout")
@@ -954,7 +961,7 @@ async def approve_task(callback_query: types.CallbackQuery) -> None:
     - Если задание больше не ожидает проверки, удаляет сообщения администраторов.
     """
     admin_user_id = callback_query.from_user.id
-    language = await get_language_for_user(admin_user_id)
+    language = await get_language_cached(admin_user_id)
     if callback_query.from_user.id not in ADMINS_IDS:
         reply = await get_message(other_messages, "NO_PERMISSION_TEXT", language)
         await callback_query.answer(text=reply)
@@ -1015,7 +1022,7 @@ async def reject_task(callback_query: types.CallbackQuery) -> None:
     - Отправляет администратору подтверждение о выполнении задания.
     """
     admin_user_id = callback_query.from_user.id
-    language = await get_language_for_user(admin_user_id)
+    language = await get_language_cached(admin_user_id)
     if callback_query.from_user.id not in ADMINS_IDS:
         reply = await get_message(other_messages, "NO_PERMISSION_TEXT", language)
         await callback_query.answer(text=reply)
@@ -1071,8 +1078,7 @@ async def handle_admin_message(message: types.Message, state: FSMContext) -> Non
     - Отправляет сообщение всем пользователям.
     - Обновляет состояние конечного автомата.
     """
-    user_id = message.from_user.id
-    language = await get_language_for_user(user_id)
+    language = await get_language_cached(message.from_user.id)
     if message.from_user.id not in ADMINS_IDS:
         reply = await get_message(other_messages, "NO_PERMISSION_TEXT", language)
         await message.answer(text=reply)
@@ -1131,8 +1137,7 @@ async def change_address(message: types.Message, state: FSMContext) -> None:
     - Обновляет адрес криптокошелька пользователя.
     - Обрабатывает ошибки и отправляет соответствующие сообщения.
     """
-    user_id = message.from_user.id
-    language = await get_language_for_user(user_id)
+    language = await get_language_cached(message.from_user.id)
     user_response = message.text
     if user_response in ["⏪Вернуться Назад", "⏪Return Back"]:
         reply = await get_message(menu_messages, "MENU_SETTINGS", language)
@@ -1175,7 +1180,7 @@ async def puzzle_check(message: types.Message, state: FSMContext) -> None:
     - Отправляет пользователю соответствующие сообщения и обновляет состояние.
     """
     user = await get_user_details(message.from_user.id)
-    language = await get_language_for_user(message.from_user.id)
+    language = await get_language_cached(message.from_user.id)
     if message.text in ["⏪Вернуться Назад", "⏪Return Back"]:
         tasks_done = user.get("TASKS_DONE", [])
         total_buttons = await get_num_of_tasks()
@@ -1213,3 +1218,20 @@ async def puzzle_check(message: types.Message, state: FSMContext) -> None:
             reply = await get_message(other_messages, "PUZZLE_REJECTED", language)
             await message.answer(text=reply, reply_markup=kb_tasks_back[language])
             await state.set_state(TasksState.puzzle_check_state)
+
+
+# Настройка кэша
+caches.set_config({
+    'default': {
+        'cache': 'aiocache.SimpleMemoryCache',
+        'serializer': {
+            'class': 'aiocache.serializers.StringSerializer'
+        },
+        'ttl': 300,
+    }
+})
+
+
+@cached(ttl=300, key_builder=lambda f, *args: f"{f.__name__}:{args[0]}")
+async def get_language_cached(user_id):
+    return await get_language_for_user(user_id)
