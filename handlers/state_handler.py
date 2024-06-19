@@ -1,7 +1,5 @@
 import asyncio
 from typing import Union
-
-import aiogram
 from aiogram import types, Router
 from aiogram.fsm.context import FSMContext
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
@@ -34,6 +32,21 @@ from settings.logging_config import get_logger
 
 logger = get_logger()
 state_handler_router = Router()
+
+
+@state_handler_router.callback_query(
+    lambda callback_query: callback_query.data.startswith("approve_") or callback_query.data.startswith("reject_"))
+async def handle_admin_command(callback_query: types.CallbackQuery) -> None:
+    admin_user_id = callback_query.from_user.id
+    language = await get_language_for_user(admin_user_id)
+    if callback_query.from_user.id not in ADMINS_IDS:
+        reply = await get_message(other_messages, "NO_PERMISSION_TEXT", language)
+        await callback_query.answer(text=reply)
+        return
+    if callback_query.data.startswith("approve_"):
+        await approve_task(callback_query)
+    elif callback_query.data.startswith("reject_"):
+        await reject_task(callback_query)
 
 
 @state_handler_router.message(CaptchaState.wait_captcha_state)
@@ -295,37 +308,47 @@ async def main_menu_handler(callback_query: types.CallbackQuery, state: FSMConte
         reply = await get_message(menu_messages, "INVITE_FRIENDS_TEXT", language, referral_link=ref_link)
         photo_path = IMAGE_PATHS["invite"]
     elif user_response == "balance":
-        balance = user.get("POINTС", 0)
+        balance = user.get("POINTS", 0)
         balance_by_refs = user.get("REF_POINTS", 0)
         reply = await get_message(menu_messages, "BALANCE_TEXT", language, balance=balance,
                                   user_referral_balance=balance_by_refs)
         photo_path = IMAGE_PATHS["balance"]
     elif user_response == "tasks":
-        tasks_done = user.get("TASKС_DONE", [])
+        tasks_done = user.get("TASKS_DONE", [])
         total_buttons = await get_num_of_tasks()
         task_done_points = await calculate_total_points(tasks_done)
         tasks_total_points = await get_all_points()
-        tasks_await = user.get("TASKС_AWAIT", [])
+        tasks_await = user.get("TASKS_AWAIT", [])
         tasks_keyboard = await create_numeric_keyboard(total_buttons, tasks_done + tasks_await, language)
         reply = await get_message(task_menu_messages, "CHOOSE_NUMBER_TASK_TEXT", language,
                                   tasks_done_points=task_done_points,
                                   tasks_total_points=tasks_total_points)
         photo_path = IMAGE_PATHS["tasks"]
+        if callback_query.message.text:
+            await callback_query.message.edit_text(text=reply, reply_markup=tasks_keyboard)
+        else:
+            await callback_query.message.delete()
+            await callback_query.message.answer(text=reply, reply_markup=tasks_keyboard)
         await state.set_state(TasksState.current_tasks_state)
+        return
     elif user_response == "tokenomics":
         reply = await get_message(menu_messages, "TOKENOMICS_TEXT", language)
         photo_path = IMAGE_PATHS["tokenomics"]
     elif user_response == "settings":
         reply = await get_message(menu_messages, "MENU_SETTINGS", language)
         photo_path = None
-        await callback_query.message.edit_text(text=reply, reply_markup=kb_menu_settings[language])
+        if callback_query.message.text:
+            await callback_query.message.edit_text(text=reply, reply_markup=kb_menu_settings[language])
+        else:
+            await callback_query.message.delete()
+            await callback_query.message.answer(text=reply, reply_markup=kb_menu_settings[language])
         await state.set_state(RegistrationState.menu_settings)
         return
     else:
         reply = await get_message(menu_messages, "UNKNOWN_COMMAND_TEXT", language)
         photo_path = None
 
-    # Universal media handling
+    # Универсальная обработка медиа контента
     if photo_path:
         if callback_query.message.photo:
             await callback_query.message.edit_media(
@@ -340,7 +363,11 @@ async def main_menu_handler(callback_query: types.CallbackQuery, state: FSMConte
                 parse_mode="MARKDOWN"
             )
     else:
-        await callback_query.message.edit_text(text=reply, reply_markup=menu_kb[language], parse_mode="MARKDOWN")
+        if callback_query.message.text:
+            await callback_query.message.edit_text(text=reply, reply_markup=menu_kb[language], parse_mode="MARKDOWN")
+        else:
+            await callback_query.message.delete()
+            await callback_query.message.answer(text=reply, reply_markup=menu_kb[language], parse_mode="MARKDOWN")
 
 
 @state_handler_router.callback_query(RegistrationState.menu_settings)
@@ -611,7 +638,7 @@ async def single_task_handler(callback_query: types.CallbackQuery, state: FSMCon
                 await state.set_state(TasksState.screen_check_state)
             elif protection == "twitter_screen_check":
                 reply = await get_message(task_menu_messages, "TYPE_TWITTER_TEXT", language)
-                await edit_message(callback_query.message, reply, None)
+                await edit_message(callback_query.message, reply, reply_markup=kb_tasks_back[language])
                 await state.set_state(TasksState.follow_twitter_state)
             elif protection == "puzzle":
                 reply = await get_message(other_messages, "PUZZLE_CHECK", language)
@@ -687,7 +714,7 @@ async def follow_twitter_response_handler_in_reg(event: Union[types.Message, typ
                 logger.info("User has joined the Twitter channel")
                 await update_user_details(user_id, TWITTER_USER=user_response)
                 reply = await get_message(other_messages, "SEND_TWITTER_CHECK", language)
-                await event.answer(text=reply, parse_mode="MARKDOWN")
+                await event.answer(text=reply, parse_mode="MARKDOWN", reply_markup=kb_tasks_back[language])
                 await state.set_state(TasksState.screen_check_state)
             else:
                 logger.info("User is already in the database")
@@ -737,33 +764,40 @@ async def achievements_handler(callback_query: types.CallbackQuery, state: FSMCo
 
 
 @state_handler_router.message(TasksState.screen_check_state)
-async def handle_screen_check(message: types.Message, state: FSMContext) -> None:
+@state_handler_router.callback_query(TasksState.screen_check_state)
+async def handle_screen_check(event: Union[types.Message, types.CallbackQuery], state: FSMContext) -> None:
     """
     Обрабатывает проверку скриншотов, отправленных пользователем для выполнения задания.
     """
-    user_id = message.from_user.id
+    user_id = event.from_user.id
     user = await get_user_details(user_id)
-    language = await get_language_for_user(message.from_user.id)
+    language = await get_language_for_user(user_id)
     task_text = await state.get_data()
     index_task = await get_index_by_text_task(task_text["num_of_task"], language)
     points = await get_points_from_task(index_task)
-    if message.photo:
-        screenshot = message.photo[-1]
-        await mark_task_as_await(message.from_user.id, index_task)
-    elif message.text in ["⏪Вернуться Назад", "⏪Return Back"]:
-        tasks_done = user.get("TASKС_DONE", [])
+
+    screenshot = None
+    message_instance = None
+    if isinstance(event, types.Message):
+        message_instance = event
+        if event.photo:
+            screenshot = event.photo[-1]
+            await mark_task_as_await(user_id, index_task)
+        else:
+            reply = await get_message(other_messages, "SEND_PIC_TO_CHECK_TEXT", language)
+            await event.answer(text=reply)
+            return
+
+    elif isinstance(event, types.CallbackQuery) and event.data == "return_back":
+        tasks_done = user.get("TASKS_DONE", [])
         total_buttons = await get_num_of_tasks()
-        tasks_await = user.get("TASKС_AWAIT", [])
+        tasks_await = user.get("TASKS_AWAIT", [])
         tasks_keyboard = await create_numeric_keyboard(total_buttons, tasks_done + tasks_await, language)
         reply = await get_message(task_menu_messages, "WE_ARE_BACK_CHOOSE_TEXT", language)
-        await message.answer(text=reply, reply_markup=tasks_keyboard)
+        await event.message.edit_text(text=reply, reply_markup=tasks_keyboard)
         await state.set_state(TasksState.current_tasks_state)
         return
-    else:
-        reply = await get_message(other_messages, "SEND_PIC_TO_CHECK_TEXT", language)
-        await message.answer(text=reply)
-        await state.set_state(TasksState.screen_check_state)
-        return
+
     if screenshot:
         inline_kb = InlineKeyboardMarkup(inline_keyboard=[
             [InlineKeyboardButton(text="✅ Да",
@@ -778,14 +812,14 @@ async def handle_screen_check(message: types.Message, state: FSMContext) -> None
                 continue
             try:
                 admin_id_int = int(admin_id)
-                sent_message = await message.bot.send_photo(
+                sent_message = await event.bot.send_photo(
                     chat_id=admin_id_int,
                     photo=screenshot.file_id,
                     caption=f"Пользователь {user_id} отправил скриншот для задания {index_task}."
                             f" Начислить {points} очков?"
                 )
-                await message.bot.edit_message_reply_markup(chat_id=admin_id_int, message_id=sent_message.message_id,
-                                                            reply_markup=inline_kb)
+                await event.bot.edit_message_reply_markup(chat_id=admin_id_int, message_id=sent_message.message_id,
+                                                          reply_markup=inline_kb)
                 admin_messages[admin_id_int] = sent_message.message_id
             except ValueError:
                 logger.error(f"Некорректный ID администратора: {admin_id}")
@@ -797,14 +831,30 @@ async def handle_screen_check(message: types.Message, state: FSMContext) -> None
         tasks_await = user.get("TASKС_AWAIT", [])
         tasks_keyboard = await create_numeric_keyboard(total_buttons, tasks_done + tasks_await, language)
         reply = await get_message(task_menu_messages, "WE_ARE_BACK_CHOOSE_TEXT", language)
-        await message.answer(text=reply, reply_markup=tasks_keyboard)
+
+        if isinstance(event, types.Message):
+            await event.answer(text=reply, reply_markup=tasks_keyboard)
+        elif isinstance(event, types.CallbackQuery):
+            await event.message.edit_text(text=reply, reply_markup=tasks_keyboard)
+
         reply2 = await get_message(other_messages, "YOUR_PIC_SEND_TEXT", language)
-        await message.answer(text=reply2, reply_markup=tasks_keyboard)
+        if isinstance(event, types.Message):
+            await event.answer(text=reply2, reply_markup=tasks_keyboard)
+        elif isinstance(event, types.CallbackQuery):
+            await event.message.answer(text=reply2, reply_markup=tasks_keyboard)
+
         await state.set_state(TasksState.current_tasks_state)
-        asyncio.create_task(auto_reject_task(user_id, index_task, admin_messages, message, 36000))
+
+        # Используем правильный источник сообщения для создания задачи auto_reject_task
+        message_instance = event.message if isinstance(event, types.CallbackQuery) else event
+
+        asyncio.create_task(auto_reject_task(user_id, index_task, admin_messages, message_instance, 36000))
     else:
         reply = await get_message(other_messages, "PLS_SEND_PIC_TEXT", language)
-        await message.answer(text=reply)
+        if isinstance(event, types.Message):
+            await event.answer(text=reply)
+        elif isinstance(event, types.CallbackQuery):
+            await event.message.answer(text=reply)
 
 
 async def auto_reject_task(user_id: int, index_task: int, admin_messages: dict, message, delay: int) -> None:

@@ -100,7 +100,7 @@ social_join_kb = {
 
 kb_start = InlineKeyboardMarkup(
     inline_keyboard=[
-        [InlineKeyboardButton(text="Start", callback_data="start")]
+        [InlineKeyboardButton(text="start", callback_data="start")]
     ]
 )
 
