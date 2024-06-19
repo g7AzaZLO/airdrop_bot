@@ -18,7 +18,7 @@ BOT_NICKNAME = "goichev_bot"
 
 # Links
 TWITTER_LINKS = "\n".join(["https://x.com/ondreigoichev"])
-TELEGRAM_LINKS = "\n".join(["https://t.me/ondreigoichev_ton", "https://t.me/ondreigoichev"])
+TELEGRAM_LINKS = "\n".join(["https://t.me/ondreigoichev_ton",]) #"https://t.me/ondreigoichev"
 WEBSITE_URL = "https://goichev.xyz/"
 MAX_USERS = 100000
 MAX_REFS = 100
@@ -65,11 +65,11 @@ tasks_init = {
     #
 }
 
-PHOTO_IDS = {
-    "profile": "",
-    "info": "",
-    "invite": "",
-    "balance": "",
-    "task": "",
-    "tokenomics": "AgACAgIAAxkBAAIj2GZx-XSzySnGln8M5ywbCLOGouvNAAJA4DEbY1eQS79eezLS9DPgAQADAgADeQADNQQ",
+IMAGE_PATHS = {
+    "profile": "AgACAgIAAxkBAAIkBWZx-93aJkUGV7Phbb7L05_WR2OwAAJO4DEbY1eQS30lVBAqYZKHAQADAgADeQADNQQ",
+    "info": "AgACAgIAAxkBAAIkBmZx--0xL9TIw_wCpplzDCBfUhWaAAJP4DEbY1eQSxkYOK-HT2GJAQADAgADeQADNQQ",
+    "invite": "AgACAgIAAxkBAAIkB2Zx_AYo4mX9tpA5oocGczl7PH6PAAJR4DEbY1eQS1oUPsTZd95ZAQADAgADeQADNQQ",
+    "balance": "AgACAgIAAxkBAAIkCGZx_BCEST2y5BTWFIfW8TdJOQABBAACUuAxG2NXkEt85cnpEAvb4wEAAwIAA3kAAzUE",
+    "tasks": "AgACAgIAAxkBAAIkCWZx_B0NDlpWlMmWwtk7QKIuKC-aAAJT4DEbY1eQSzUNiwTrQ5g5AQADAgADeQADNQQ",
+    "tokenomics": "AgACAgIAAxkBAAIkCmZx_CimB3PIsC2iO6MSFDijBj9sAAJU4DEbY1eQS1nid5PUd3wxAQADAgADeQADNQQ",
 }
