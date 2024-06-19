@@ -110,92 +110,26 @@ async def lang_choose_response_handler_in_reg(callback_query: types.CallbackQuer
         logger.warning(f"User {user_id} selected an invalid language: {user_response}")
         return
 
-    await state.set_state(RegistrationState.hello_state)
-    await set_user_state(user_id, await get_clean_state_identifier(RegistrationState.hello_state))
-    welcome_message = await get_message(messages, "WELCOME_MESSAGE", language,
-                                        user_name=callback_query.from_user.first_name)
-    await callback_query.message.answer(text=welcome_message, reply_markup=join_kb[language], parse_mode="MARKDOWN")
+    await state.set_state(RegistrationState.follow_telegram_state)
+    await set_user_state(user_id, await get_clean_state_identifier(RegistrationState.follow_telegram_state))
+    reply = await get_message(messages, "MAKE_SURE_TELEGRAM", language,
+                              user_name=callback_query.from_user.first_name)
+    photo_path = IMAGE_PATHS["profile"]
+    if photo_path:
+        if callback_query.message.photo:
+            await callback_query.message.edit_media(
+                media=types.InputMediaPhoto(media=photo_path, caption=reply),
+                reply_markup=social_join_kb[language],
+                parse_mode="MARKDOWN"
+            )
+        else:
+            await callback_query.message.delete()
+            await callback_query.message.answer_photo(
+                photo=photo_path, caption=reply, reply_markup=social_join_kb[language],
+                parse_mode="MARKDOWN"
+            )
     await update_language_in_db(user_id, language)
-
-    logger.info(f"User {user_id} selected language {language} and moved to hello_state.")
-
-
-@state_handler_router.callback_query(RegistrationState.hello_state)
-async def hello_response_handler_in_reg(callback_query: types.CallbackQuery, state: FSMContext) -> None:
-    """
-    Обрабатывает ответ пользователя на приветственное сообщение в процессе регистрации.
-    """
-    logger.debug("Executing hello_response_handler_in_reg")
-    user_response = callback_query.data
-    language = await get_language_for_user(callback_query.from_user.id)
-
-    if user_response == "join_airdrop":
-        await state.set_state(RegistrationState.proceed_state)
-        await set_user_state(callback_query.from_user.id,
-                             await get_clean_state_identifier(RegistrationState.proceed_state))
-        reply = await get_message(messages, "PROCEED_MESSAGE", language)
-        await callback_query.message.answer(text=reply, reply_markup=sub_cancel_kb[language], parse_mode="MARKDOWN")
-        logger.info(f"User {callback_query.from_user.id} agreed to join the airdrop and moved to proceed_state.")
-    elif user_response == "cancel":
-        await state.update_data(
-            state_end1=CaptchaState.null_state,
-            state_end2=RegistrationState.hello_state,
-            text1=await get_message(messages, "START_AGAIN_TEXT", language),
-            text2=await get_message(messages, "WELCOME_MESSAGE", language,
-                                    user_name=callback_query.from_user.first_name),
-            kb1=kb_start,
-            kb2=join_kb[language],
-            delete=True
-        )
-        reply = await get_message(menu_messages, "YES_NO", language)
-        await callback_query.message.answer(text=reply, reply_markup=yes_no_kb[language])
-        await state.set_state(RegistrationState.yes_no_state)
-        logger.info(f"User {callback_query.from_user.id} chose to cancel. Confirmation requested.")
-    else:
-        await callback_query.message.answer(
-            text=(await get_message(messages, "WELCOME_MESSAGE", language,
-                                    user_name=callback_query.from_user.first_name)),
-            reply_markup=join_kb[language],
-            parse_mode="MARKDOWN")
-        logger.warning(f"User {callback_query.from_user.id} provided an invalid response: {user_response}")
-        return
-
-
-@state_handler_router.callback_query(RegistrationState.proceed_state)
-async def proceed_response_handler_in_reg(callback_query: types.CallbackQuery, state: FSMContext) -> None:
-    """
-    Обрабатывает согласие пользователя с правилами и продолжение регистрации.
-    """
-    logger.debug("Executing proceed_response_handler_in_reg")
-    user_response = callback_query.data
-    language = await get_language_for_user(callback_query.from_user.id)
-
-    if user_response == "submit_details":
-        await state.set_state(RegistrationState.follow_telegram_state)
-        await set_user_state(callback_query.from_user.id,
-                             await get_clean_state_identifier(RegistrationState.follow_telegram_state))
-        reply = await get_message(messages, "MAKE_SURE_TELEGRAM", language)
-        await callback_query.message.answer(text=reply, reply_markup=social_join_kb[language])
-        logger.info(f"User {callback_query.from_user.id} agreed to the rules and moved to follow_telegram_state.")
-    elif user_response == "cancel":
-        await state.update_data(
-            state_end1=CaptchaState.null_state,
-            state_end2=RegistrationState.proceed_state,
-            text1=await get_message(messages, "START_AGAIN_TEXT", language),
-            text2=await get_message(messages, "PROCEED_MESSAGE", language),
-            kb1=kb_start,
-            kb2=sub_cancel_kb[language],
-            delete=True
-        )
-        reply = await get_message(menu_messages, "YES_NO", language)
-        await callback_query.message.answer(text=reply, reply_markup=yes_no_kb[language])
-        await state.set_state(RegistrationState.yes_no_state)
-        logger.info(f"User {callback_query.from_user.id} chose to cancel. Confirmation requested.")
-    else:
-        reply = await get_message(messages, "PROCEED_MESSAGE", language)
-        await callback_query.message.answer(text=reply, reply_markup=sub_cancel_kb[language], parse_mode="MARKDOWN")
-        logger.warning(f"User {callback_query.from_user.id} provided an invalid response: {user_response}")
-        return
+    logger.info(f"User {user_id} selected language {language} and moved to telegram_follow_state.")
 
 
 @state_handler_router.callback_query(RegistrationState.follow_telegram_state)
@@ -210,22 +144,55 @@ async def follow_telegram_response_handler_in_reg(callback_query: types.Callback
     if user_response == "joined":
         if await check_joined_telegram_channel(callback_query.from_user.id):
             logger.info(f"User {callback_query.from_user.id} is in all required Telegram channels.")
-            await state.set_state(RegistrationState.submit_address_state)
+            await state.set_state(RegistrationState.main_menu_state)
             await set_user_state(callback_query.from_user.id,
-                                 await get_clean_state_identifier(RegistrationState.submit_address_state))
-            reply = await get_message(messages, "SUBMIT_ADDRESS_TEXT", language)
-            await callback_query.message.answer(text=reply, reply_markup=types.ReplyKeyboardRemove(),
-                                                parse_mode="MARKDOWN")
+                                 await get_clean_state_identifier(RegistrationState.main_menu_state))
+            reply = await get_message(messages, "MENU_GOICHEV", language)
+            photo_path = IMAGE_PATHS["profile"]
+            reply_markup = menu_kb[language]
+            # await callback_query.message.answer(text=reply, reply_markup=menu_kb[language],
+            #                                    parse_mode="MARKDOWN")
         else:
             logger.warning(f"User {callback_query.from_user.id} is not in all required Telegram channels.")
             await state.set_state(RegistrationState.follow_telegram_state)
+            photo_path = IMAGE_PATHS["profile"]
+            reply_markup = social_join_kb[language]
             reply = await get_message(messages, "NOT_SUB_AT_GROUP_TEXT", language)
-            await callback_query.message.answer(text=reply, reply_markup=social_join_kb[language])
+
+            # await callback_query.message.answer(text=reply, reply_markup=social_join_kb[language])
+        if photo_path:
+            if callback_query.message.photo:
+                await callback_query.message.edit_media(
+                    media=types.InputMediaPhoto(media=photo_path, caption=reply),
+                    reply_markup=reply_markup,
+                    parse_mode="MarkdownV2"
+                )
+            else:
+                await callback_query.message.delete()
+                await callback_query.message.answer_photo(
+                    photo=photo_path, caption=reply, reply_markup=reply_markup,
+                    parse_mode="MarkdownV2"
+                )
     else:
-        reply = await get_message(menu_messages, "UNKNOWN_COMMAND_TEXT", language)
-        await callback_query.message.answer(text=reply, reply_markup=social_join_kb[language])
+        reply = await get_message(menu_messages, "UNKNOWN_COMMAND_TEXT", language, parse_mode="MarkdownV2")
+        reply_markup = social_join_kb[language]
+        photo_path = IMAGE_PATHS["profile"]
+        # await callback_query.message.answer(text=reply, reply_markup=social_join_kb[language])
         await state.set_state(RegistrationState.follow_telegram_state)
         logger.warning(f"User {callback_query.from_user.id} provided an unknown command: {user_response}")
+        if photo_path:
+            if callback_query.message.photo:
+                await callback_query.message.edit_media(
+                    media=types.InputMediaPhoto(media=photo_path, caption=reply),
+                    reply_markup=reply_markup,
+                    parse_mode="MarkdownV2"
+                )
+            else:
+                await callback_query.message.delete()
+                await callback_query.message.answer_photo(
+                    photo=photo_path, caption=reply, reply_markup=reply_markup,
+                    parse_mode="MarkdownV2"
+                )
 
 
 @state_handler_router.message(RegistrationState.submit_address_state)
@@ -325,10 +292,10 @@ async def main_menu_handler(callback_query: types.CallbackQuery, state: FSMConte
                                   tasks_total_points=tasks_total_points)
         photo_path = IMAGE_PATHS["tasks"]
         if callback_query.message.text:
-            await callback_query.message.edit_text(text=reply, reply_markup=tasks_keyboard)
+            await callback_query.message.edit_text(text=reply, reply_markup=tasks_keyboard, parse_mode="MARKDOWN")
         else:
             await callback_query.message.delete()
-            await callback_query.message.answer(text=reply, reply_markup=tasks_keyboard)
+            await callback_query.message.answer(text=reply, reply_markup=tasks_keyboard, parse_mode="MARKDOWN")
         await state.set_state(TasksState.current_tasks_state)
         return
     elif user_response == "tokenomics":
@@ -338,10 +305,12 @@ async def main_menu_handler(callback_query: types.CallbackQuery, state: FSMConte
         reply = await get_message(menu_messages, "MENU_SETTINGS", language)
         photo_path = None
         if callback_query.message.text:
-            await callback_query.message.edit_text(text=reply, reply_markup=kb_menu_settings[language])
+            await callback_query.message.edit_text(text=reply, reply_markup=kb_menu_settings[language],
+                                                   parse_mode="MARKDOWN")
         else:
             await callback_query.message.delete()
-            await callback_query.message.answer(text=reply, reply_markup=kb_menu_settings[language])
+            await callback_query.message.answer(text=reply, reply_markup=kb_menu_settings[language],
+                                                parse_mode="MARKDOWN")
         await state.set_state(RegistrationState.menu_settings)
         return
     else:

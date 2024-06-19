@@ -186,12 +186,28 @@ Your personal referral link (+*{referral_reward}* points for each referral):
     },
 
     "NOT_SUB_AT_GROUP_TEXT": {
-        "ENG": "First, subscribe to the channel.",
-        "RU": "Сначала подпишитесь на канал."
+        "ENG": "First, subscribe to the channel.\n{telegram_links}",
+        "RU": "Сначала подпишитесь на канал.\n{telegram_links}"
     },
 
     "START_AGAIN_TEXT": {
         "ENG": "Please, type /start or click the button below to begin.",
         "RU": "Пожалуйста, введите /start или нажмите на кнопку ниже, чтобы начать."
+    },
+    "MENU_GOICHEV": {
+        "ENG": """
+GOICHEV POINTS DROP 😎 SEASON 1
+
+How to not become a ~hamster~ goy and get shaved by Ondrej's company, DFW Bals? - the easiest way is to earn points!
+
+Earn GOICHEV-points by performing various tasks and inviting friends and acquaintances. For GOICHEV points you will be able to get $GOICHEV eirdrop in the future.
+        """,
+        "RU": """
+GOICHEV POINTS DROP 😎 SEASON 1
+
+Как не стать ~хомяком~ гоем и не быть побритым компанией Ондрея, DFW Bals? – самый простой способ – фармить поинты!
+
+Зарабатывайте GOICHEV-поинты выполняя различные задания и приглашая друзей, знакомых. За GOICHEV-поинты в дальнейшем можно будет получить эирдроп $GOICHEV
+        """
     }
 }
