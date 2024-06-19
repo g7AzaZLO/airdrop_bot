@@ -38,7 +38,7 @@ async def get_message(msg: dict, message_key: str, language: str, **kwargs) -> s
     if message_template:
         all_kwargs = {**defaults, **kwargs}
         formatted_message = message_template.format(**all_kwargs)
-        logger.debug(f"Получено сообщение: {formatted_message}")
+        # logger.debug(f"Получено сообщение: {formatted_message}")
         return formatted_message
     else:
         logger.warning(f"Сообщение с ключом '{message_key}' и языком '{language}' не найдено.")

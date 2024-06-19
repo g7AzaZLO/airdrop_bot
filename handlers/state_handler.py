@@ -171,13 +171,13 @@ async def follow_telegram_response_handler_in_reg(callback_query: types.Callback
             await callback_query.message.edit_media(
                 media=types.InputMediaPhoto(media=photo_path, caption=reply),
                 reply_markup=reply_markup,
-                parse_mode="MarkdownV2"
+                parse_mode="MARKDOWN"
             )
         else:
             await callback_query.message.delete()
             await callback_query.message.answer_photo(
                 photo=photo_path, caption=reply, reply_markup=reply_markup,
-                parse_mode="MarkdownV2"
+                parse_mode="MARKDOWN"
             )
 
 
