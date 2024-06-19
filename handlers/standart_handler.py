@@ -373,15 +373,30 @@ async def all_other_handler(event: Union[types.Message, types.CallbackQuery], st
         logger.debug(f"User {user_id} state restored to {current_state_str} and responded with appropriate message.")
 
 
-# @standard_handler_router.message(F.photo, F.chat.type == "private")
-# async def start_get_photo_id_command(message: types.Message) -> None:
-#     user_id = message.from_user.id
-#     language = await get_language_for_user(user_id)
-#     logger.debug(f"Received /update_tasks command from user {user_id}")
-#     if user_id not in ADMINS_IDS:
-#         reply = await get_message(other_messages, "NO_PERMISSION_TEXT", language)
-#         await message.answer(text=reply)
-#         logger.warning(f"User {user_id} attempted to use /get_photo_id command without sufficient permissions.")
-#         return
-#     photo_id = message.photo[-1]
-#     print(photo_id)
+@standard_handler_router.message(Command("get_photo_id"), F.photo, F.chat.type == "private")
+async def start_get_photo_id_command(message: types.Message) -> None:
+    """
+    Handles the /get_photo_id command to get the photo ID.
+    Checks the current user's permissions and retrieves the photo ID if the user is an administrator.
+
+    Parameters:
+    - message (types.Message): The message containing the /get_photo_id command and a photo.
+
+    Actions:
+    - Checks if the current user is an administrator.
+    - If the user is not an administrator, sends a message about insufficient permissions.
+    - If the user is an administrator, retrieves the photo ID and sends it back to the user.
+    """
+    user_id = message.from_user.id
+    language = await get_language_for_user(user_id)
+    logger.debug(f"Received /get_photo_id command from user {user_id}")
+
+    if user_id not in ADMINS_IDS:
+        reply = await get_message(other_messages, "NO_PERMISSION_TEXT", language)
+        await message.answer(text=reply)
+        logger.warning(f"User {user_id} attempted to use /get_photo_id command without sufficient permissions.")
+        return
+
+    photo_id = message.photo[-1].file_id  # Get the file ID of the highest quality photo
+    logger.info(f"Retrieved photo ID {photo_id} from user {user_id}")
+    await message.answer(text=f"Photo ID: {photo_id}")

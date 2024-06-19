@@ -39,7 +39,7 @@ state_handler_router = Router()
 async def handle_admin_command(callback_query: types.CallbackQuery) -> None:
     admin_user_id = callback_query.from_user.id
     language = await get_language_for_user(admin_user_id)
-    if callback_query.from_user.id not in ADMINS_IDS:
+    if admin_user_id not in ADMINS_IDS:
         reply = await get_message(other_messages, "NO_PERMISSION_TEXT", language)
         await callback_query.answer(text=reply)
         return
@@ -58,9 +58,9 @@ async def captcha_response_handler(message: types.Message, state: FSMContext) ->
     user_response = message.text
     await state.update_data(user_captcha_response=user_response)
     result = await check_captcha(message)
+    user_id = message.from_user.id
     if result:
-        user_id = message.from_user.id
-        language = await get_language_for_user(message.from_user.id)
+        language = await get_language_for_user(user_id)
         current_state = await get_state_for_user(user_id)
         current_state_str = await get_clean_state_identifier(current_state)
         current_keyboard = state_keyboards[(current_state_str, language)]
@@ -70,7 +70,7 @@ async def captcha_response_handler(message: types.Message, state: FSMContext) ->
         await message.answer(text=current_reply, reply_markup=current_keyboard, parse_mode="MARKDOWN")
         logger.info(f"User {user_id} passed the captcha and state restored to {current_state_str}.")
     else:
-        logger.warning(f"User {message.from_user.id} failed the captcha.")
+        logger.warning(f"User {user_id} failed the captcha.")
 
 
 @state_handler_router.message(RegistrationState.captcha_state)
@@ -82,13 +82,14 @@ async def captcha_response_handler_in_reg(message: types.Message, state: FSMCont
     user_response = message.text
     await state.update_data(user_captcha_response=user_response)
     result = await check_captcha(message)
+    user_id = message.from_user.id
     if result:
         await state.set_state(RegistrationState.lang_choose_state)
         reply = await get_message(menu_messages, "LANGUAGE_CHOOSE", "ENG")
         await message.answer(text=reply, reply_markup=language_choose_kb)
-        logger.info(f"User {message.from_user.id} passed the captcha and moved to lang_choose_state.")
+        logger.info(f"User {user_id} passed the captcha and moved to lang_choose_state.")
     else:
-        logger.warning(f"User {message.from_user.id} failed the captcha.")
+        logger.warning(f"User {user_id} failed the captcha.")
 
 
 @state_handler_router.callback_query(RegistrationState.lang_choose_state)
@@ -100,11 +101,14 @@ async def lang_choose_response_handler_in_reg(callback_query: types.CallbackQuer
     user_response = callback_query.data
     user_id = callback_query.from_user.id
 
+    language = None
+    
     if user_response == "language_eng":
         language = "ENG"
     elif user_response == "language_ru":
         language = "RU"
-    else:
+        
+    if not language:
         reply = await get_message(menu_messages, "LANGUAGE_CHOSEN_WRONG", "ENG")
         await callback_query.message.answer(text=reply, reply_markup=language_choose_kb)
         logger.warning(f"User {user_id} selected an invalid language: {user_response}")
@@ -114,7 +118,7 @@ async def lang_choose_response_handler_in_reg(callback_query: types.CallbackQuer
     await set_user_state(user_id, await get_clean_state_identifier(RegistrationState.follow_telegram_state))
     reply = await get_message(messages, "MAKE_SURE_TELEGRAM", language,
                               user_name=callback_query.from_user.first_name)
-    photo_path = IMAGE_PATHS["profile"]
+    photo_path = IMAGE_PATHS.get("profile")
     if photo_path:
         if callback_query.message.photo:
             await callback_query.message.edit_media(
@@ -139,60 +143,42 @@ async def follow_telegram_response_handler_in_reg(callback_query: types.Callback
     """
     logger.debug("Executing follow_telegram_response_handler_in_reg")
     user_response = callback_query.data
+    user_id = callback_query.from_user.id
     language = await get_language_for_user(callback_query.from_user.id)
 
     if user_response == "joined":
-        if await check_joined_telegram_channel(callback_query.from_user.id):
-            logger.info(f"User {callback_query.from_user.id} is in all required Telegram channels.")
+        if await check_joined_telegram_channel(user_id):
+            logger.info(f"User {user_id} is in all required Telegram channels.")
             await state.set_state(RegistrationState.main_menu_state)
-            await set_user_state(callback_query.from_user.id,
-                                 await get_clean_state_identifier(RegistrationState.main_menu_state))
+            await set_user_state(user_id, await get_clean_state_identifier(RegistrationState.main_menu_state))
             reply = await get_message(messages, "MENU_GOICHEV", language)
-            photo_path = IMAGE_PATHS["profile"]
             reply_markup = menu_kb[language]
-            # await callback_query.message.answer(text=reply, reply_markup=menu_kb[language],
-            #                                    parse_mode="MARKDOWN")
         else:
-            logger.warning(f"User {callback_query.from_user.id} is not in all required Telegram channels.")
+            logger.warning(f"User {user_id} is not in all required Telegram channels.")
             await state.set_state(RegistrationState.follow_telegram_state)
-            photo_path = IMAGE_PATHS["profile"]
-            reply_markup = social_join_kb[language]
             reply = await get_message(messages, "NOT_SUB_AT_GROUP_TEXT", language)
-
-            # await callback_query.message.answer(text=reply, reply_markup=social_join_kb[language])
-        if photo_path:
-            if callback_query.message.photo:
-                await callback_query.message.edit_media(
-                    media=types.InputMediaPhoto(media=photo_path, caption=reply),
-                    reply_markup=reply_markup,
-                    parse_mode="MarkdownV2"
-                )
-            else:
-                await callback_query.message.delete()
-                await callback_query.message.answer_photo(
-                    photo=photo_path, caption=reply, reply_markup=reply_markup,
-                    parse_mode="MarkdownV2"
-                )
+            reply_markup = social_join_kb[language]
     else:
-        reply = await get_message(menu_messages, "UNKNOWN_COMMAND_TEXT", language, parse_mode="MarkdownV2")
+        reply = await get_message(menu_messages, "UNKNOWN_COMMAND_TEXT", language)
         reply_markup = social_join_kb[language]
-        photo_path = IMAGE_PATHS["profile"]
-        # await callback_query.message.answer(text=reply, reply_markup=social_join_kb[language])
         await state.set_state(RegistrationState.follow_telegram_state)
-        logger.warning(f"User {callback_query.from_user.id} provided an unknown command: {user_response}")
-        if photo_path:
-            if callback_query.message.photo:
-                await callback_query.message.edit_media(
-                    media=types.InputMediaPhoto(media=photo_path, caption=reply),
-                    reply_markup=reply_markup,
-                    parse_mode="MarkdownV2"
-                )
-            else:
-                await callback_query.message.delete()
-                await callback_query.message.answer_photo(
-                    photo=photo_path, caption=reply, reply_markup=reply_markup,
-                    parse_mode="MarkdownV2"
-                )
+        logger.warning(f"User {user_id} provided an unknown command: {user_response}")
+
+    photo_path = IMAGE_PATHS.get("profile")
+
+    if photo_path:
+        if callback_query.message.photo:
+            await callback_query.message.edit_media(
+                media=types.InputMediaPhoto(media=photo_path, caption=reply),
+                reply_markup=reply_markup,
+                parse_mode="MarkdownV2"
+            )
+        else:
+            await callback_query.message.delete()
+            await callback_query.message.answer_photo(
+                photo=photo_path, caption=reply, reply_markup=reply_markup,
+                parse_mode="MarkdownV2"
+            )
 
 
 @state_handler_router.message(RegistrationState.submit_address_state)
@@ -202,29 +188,30 @@ async def submit_address_response_handler_in_reg(message: types.Message, state: 
     """
     logger.debug("Executing submit_address_response_handler_in_reg")
     user_response = message.text
+    user_id = message.from_user.id
     language = await get_language_for_user(message.from_user.id)
 
     if await check_wallet_exists(user_response):
         if is_valid_crypto_address(user_response):
-            logger.info(f"Valid crypto address provided by user {message.from_user.id}.")
-            await update_user_details(message.from_user.id, ADDR=user_response, NUM_OF_REFS=0, REF_POINTS=0,
-                                      POINTS=AIRDROP_AMOUNT)
+            logger.info(f"Valid crypto address provided by user {user_id}.")
+            await update_user_details(user_id, ADDR=user_response, NUM_OF_REFS=0, REF_POINTS=0, POINTS=AIRDROP_AMOUNT)
             await state.set_state(RegistrationState.main_menu_state)
-            await set_user_state(message.from_user.id,
-                                 await get_clean_state_identifier(RegistrationState.main_menu_state))
-            ref_link = await get_refferal_link(message.from_user.id)
+            await set_user_state(user_id, await get_clean_state_identifier(RegistrationState.main_menu_state))
+        
+            ref_link = await get_refferal_link(user_id)
             reply = await get_message(messages, "JOINED_TEXT", language, referral_link=ref_link)
             await message.answer(text=reply, reply_markup=menu_kb[language], parse_mode="MARKDOWN")
-            refferer = await get_referrer(message.from_user.id)
-            if refferer is not None:
-                await increment_referrer_count(refferer)
+        
+            referrer = await get_referrer(user_id)
+            if referrer is not None:
+                await increment_referrer_count(referrer)
         else:
-            logger.warning(f"Invalid crypto address provided by user {message.from_user.id}.")
+            logger.warning(f"Invalid crypto address provided by user {user_id}.")
             await state.set_state(RegistrationState.submit_address_state)
             reply = await get_message(messages, "INVALID_ADDRESS_TEXT", language)
             await message.answer(text=reply)
     else:
-        logger.warning(f"Crypto address already registered for user {message.from_user.id}.")
+        logger.warning(f"Crypto address already registered for user {user_id}.")
         await state.set_state(RegistrationState.submit_address_state)
         reply = await get_message(messages, "ADDRESS_ALREADY_REGISTERED_TEXT", language)
         await message.answer(text=reply)
@@ -253,12 +240,14 @@ async def main_menu_handler(callback_query: types.CallbackQuery, state: FSMConte
     Обрабатывает команды пользователя в основном меню.
     """
     user_response = callback_query.data
-    user = await get_user_details(callback_query.from_user.id)
-    logger.debug(f"Handling main menu command, user response {user_response}, user {callback_query.from_user.id}")
-    language = await get_language_for_user(callback_query.from_user.id)
+    user_id = callback_query.from_user.id
+    user = await get_user_details(user_id)
+    logger.debug(f"Handling main menu command, user response {user_response}, user {user_id}")
+    language = await get_language_for_user(user_id)
 
+    photo_path = None
+    
     if user_response == "profile":
-        user_id = callback_query.from_user.id
         user_name = callback_query.from_user.first_name
         num_of_refs = user.get("NUM_OF_REFS", 0)
         user_address = user.get("ADDR", "Not provided")
@@ -266,20 +255,20 @@ async def main_menu_handler(callback_query: types.CallbackQuery, state: FSMConte
         reply = await get_message(menu_messages, "PROFILE_MENU", language, user_name=user_name,
                                   refferal_number=num_of_refs,
                                   address=user_address, user_twitter_link=user_twi, user_id=user_id)
-        photo_path = IMAGE_PATHS["profile"]
+        photo_path = IMAGE_PATHS.get("profile")
     elif user_response == "information":
         reply = await get_message(menu_messages, "INFORMATION_TEXT", language)
-        photo_path = IMAGE_PATHS["info"]
+        photo_path = IMAGE_PATHS.get("info")
     elif user_response == "invite_friends":
-        ref_link = await get_refferal_link(callback_query.from_user.id)
+        ref_link = await get_refferal_link(user_id)
         reply = await get_message(menu_messages, "INVITE_FRIENDS_TEXT", language, referral_link=ref_link)
-        photo_path = IMAGE_PATHS["invite"]
+        photo_path = IMAGE_PATHS.get("invite")
     elif user_response == "balance":
         balance = user.get("POINTS", 0)
         balance_by_refs = user.get("REF_POINTS", 0)
         reply = await get_message(menu_messages, "BALANCE_TEXT", language, balance=balance,
                                   user_referral_balance=balance_by_refs)
-        photo_path = IMAGE_PATHS["balance"]
+        photo_path = IMAGE_PATHS.get("balance")
     elif user_response == "tasks":
         tasks_done = user.get("TASKS_DONE", [])
         total_buttons = await get_num_of_tasks()
@@ -288,9 +277,8 @@ async def main_menu_handler(callback_query: types.CallbackQuery, state: FSMConte
         tasks_await = user.get("TASKS_AWAIT", [])
         tasks_keyboard = await create_numeric_keyboard(total_buttons, tasks_done + tasks_await, language)
         reply = await get_message(task_menu_messages, "CHOOSE_NUMBER_TASK_TEXT", language,
-                                  tasks_done_points=task_done_points,
-                                  tasks_total_points=tasks_total_points)
-        photo_path = IMAGE_PATHS["tasks"]
+                                  tasks_done_points=task_done_points, tasks_total_points=tasks_total_points)
+        photo_path = IMAGE_PATHS.get("tasks")
         if callback_query.message.text:
             await callback_query.message.edit_text(text=reply, reply_markup=tasks_keyboard, parse_mode="MARKDOWN")
         else:
@@ -298,12 +286,13 @@ async def main_menu_handler(callback_query: types.CallbackQuery, state: FSMConte
             await callback_query.message.answer(text=reply, reply_markup=tasks_keyboard, parse_mode="MARKDOWN")
         await state.set_state(TasksState.current_tasks_state)
         return
+
     elif user_response == "tokenomics":
         reply = await get_message(menu_messages, "TOKENOMICS_TEXT", language)
-        photo_path = IMAGE_PATHS["tokenomics"]
+        photo_path = IMAGE_PATHS.get("tokenomics")
+
     elif user_response == "settings":
         reply = await get_message(menu_messages, "MENU_SETTINGS", language)
-        photo_path = None
         if callback_query.message.text:
             await callback_query.message.edit_text(text=reply, reply_markup=kb_menu_settings[language],
                                                    parse_mode="MARKDOWN")
@@ -313,11 +302,10 @@ async def main_menu_handler(callback_query: types.CallbackQuery, state: FSMConte
                                                 parse_mode="MARKDOWN")
         await state.set_state(RegistrationState.menu_settings)
         return
+
     else:
         reply = await get_message(menu_messages, "UNKNOWN_COMMAND_TEXT", language)
-        photo_path = None
 
-    # Универсальная обработка медиа контента
     if photo_path:
         if callback_query.message.photo:
             await callback_query.message.edit_media(

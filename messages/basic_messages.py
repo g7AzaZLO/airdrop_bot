@@ -186,7 +186,7 @@ Your personal referral link (+*{referral_reward}* points for each referral):
     },
 
     "NOT_SUB_AT_GROUP_TEXT": {
-        "ENG": "First, subscribe to the channel.\n{telegram_links}",
+        "ENG": "First, subscribe to the channel\.\n{telegram_links}",
         "RU": "Сначала подпишитесь на канал.\n{telegram_links}"
     },
 
