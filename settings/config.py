@@ -64,3 +64,12 @@ tasks_init = {
     #     "protection": "screen_check"
     #
 }
+
+PHOTO_IDS = {
+    "profile": "",
+    "info": "",
+    "invite": "",
+    "balance": "",
+    "task": "",
+    "tokenomics": "AgACAgIAAxkBAAIj2GZx-XSzySnGln8M5ywbCLOGouvNAAJA4DEbY1eQS79eezLS9DPgAQADAgADeQADNQQ",
+}
