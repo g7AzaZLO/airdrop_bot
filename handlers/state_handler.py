@@ -29,7 +29,7 @@ from DB.database_logic import check_is_user_already_here, add_user_to_db, add_re
 from settings.config import AIRDROP_AMOUNT, IMAGE_PATHS
 from handlers.standart_handler import get_message
 from settings.logging_config import get_logger
-
+from aiogram import exceptions
 logger = get_logger()
 state_handler_router = Router()
 
@@ -135,6 +135,9 @@ async def lang_choose_response_handler_in_reg(callback_query: types.CallbackQuer
     await update_language_in_db(user_id, language)
     logger.info(f"User {user_id} selected language {language} and moved to telegram_follow_state.")
 
+def strip_something(textish):
+    text = str(textish).strip()
+    return text
 
 @state_handler_router.callback_query(RegistrationState.follow_telegram_state)
 async def follow_telegram_response_handler_in_reg(callback_query: types.CallbackQuery, state: FSMContext) -> None:
@@ -167,18 +170,30 @@ async def follow_telegram_response_handler_in_reg(callback_query: types.Callback
     photo_path = IMAGE_PATHS.get("profile")
 
     if photo_path:
-        if callback_query.message.photo:
-            await callback_query.message.edit_media(
-                media=types.InputMediaPhoto(media=photo_path, caption=reply),
-                reply_markup=reply_markup,
-                parse_mode="MARKDOWN"
-            )
-        else:
+        try:
+            if callback_query.message.photo:
+                await callback_query.message.edit_media(
+                    media=types.InputMediaPhoto(media=photo_path, caption=reply),
+                    reply_markup=reply_markup,
+                    parse_mode="Markdown"
+                )
+            else:
+                await callback_query.message.delete()
+                await callback_query.message.answer_photo(
+                    photo=photo_path, caption=reply, reply_markup=reply_markup,
+                    parse_mode="Markdown"
+                )
+        except exceptions.TelegramBadRequest as e:
+            if "message is not modified" in str(e):
+                logger.warning("No changes detected in the message content or markup.")
+            else:
+                logger.error(f"An error occurred: {e}")
             await callback_query.message.delete()
             await callback_query.message.answer_photo(
                 photo=photo_path, caption=reply, reply_markup=reply_markup,
-                parse_mode="MARKDOWN"
+                parse_mode="Markdown"
             )
+        
 
 
 @state_handler_router.message(RegistrationState.submit_address_state)
