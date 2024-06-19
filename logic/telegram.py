@@ -1,5 +1,9 @@
+import logging
 from settings.config import bot
 from settings.config import TELEGRAM_LINKS
+from settings.logging_config import get_logger
+
+logger = get_logger()
 
 
 async def check_joined_telegram_channel(user_id):
@@ -34,6 +38,6 @@ async def check_joined_telegram_channel(user_id):
             if member.status in ('left', 'kicked', 'banned'):
                 return False
     except Exception as e:
-        print(f"Error checking channel membership: {e}")
+        logger.error(f"Error checking channel membership: {e}")
         return False
     return True

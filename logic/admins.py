@@ -1,6 +1,8 @@
 import os
-
+from settings.logging_config import get_logger
 from DB.get_all_admins import get_all_admins
+
+logger = get_logger()
 
 ADMINS_IDS = []
 
@@ -14,5 +16,11 @@ async def update_admins_ids() -> None:
     - Заполняет его новыми значениями, полученными из базы данных.
     """
     global ADMINS_IDS
-    ADMINS_IDS.clear()
-    ADMINS_IDS.extend(await get_all_admins())
+    try:
+        logger.info("Starting update of admin IDs.")
+        ADMINS_IDS.clear()
+        admins = await get_all_admins()
+        ADMINS_IDS.extend(admins)
+        logger.info(f"Updated admin IDs: {ADMINS_IDS}")
+    except Exception as e:
+        logger.error(f"Error updating admin IDs: {e}")

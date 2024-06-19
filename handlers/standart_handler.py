@@ -12,6 +12,9 @@ from logic.refs import get_refferer_id
 from logic.admins import ADMINS_IDS, update_admins_ids
 from DB.get_all_admins import get_all_admins
 from tasks.task_dict import change_tasks
+from settings.logging_config import get_logger
+
+logger = get_logger()
 
 standard_handler_router = Router()
 garbage_handler_router = Router()
@@ -27,12 +30,16 @@ async def get_message(msg: dict, message_key: str, language: str, **kwargs) -> s
         capture_message = get_message(messages, "WELCOME_MESSAGE", "RU", user_name='дурачок')
         print(capture_message)
     """
+    logger.debug(f"Запрос сообщения с ключом '{message_key}' и языком '{language}' с параметрами {kwargs}")
     defaults = msg.get("default_values", {})
     message_template = msg.get(message_key, {}).get(language)
     if message_template:
         all_kwargs = {**defaults, **kwargs}
-        return message_template.format(**all_kwargs)
+        formatted_message = message_template.format(**all_kwargs)
+        logger.debug(f"Получено сообщение: {formatted_message}")
+        return formatted_message
     else:
+        logger.warning(f"Сообщение с ключом '{message_key}' и языком '{language}' не найдено.")
         return "Message not available."
 
 
@@ -50,21 +57,21 @@ async def start(message: types.Message, state: FSMContext) -> None:
     имеется), генерирует капчу и устанавливает состояние капчи. - Отправляет соответствующее сообщение пользователю в
     зависимости от его состояния.
     """
-    print("Processing /start command...")
+    logger.debug("Processing /start command...")
     user_id = message.from_user.id
     if await check_is_user_already_here(user_id):
-        print("User already in db")
+        logger.info(f"User {user_id} already in db")
         await generate_captcha(message)
         await state.set_state(CaptchaState.wait_captcha_state)
         capture_message = await get_message(messages, "CAPTCHA_MESSAGE", "ENG")
         await message.answer(text=capture_message, reply_markup=types.ReplyKeyboardRemove())
         # Запуск меню после капчи
     else:
-        print("User not in db")
+        logger.info(f"User {user_id} not in db")
         await add_user_to_db(user_id)
-        refferer = await get_refferer_id(message.text)
-        if refferer is not None:
-            await add_referrer_to_user(user_id, refferer)
+        referrer = await get_refferer_id(message.text)
+        if referrer is not None:
+            await add_referrer_to_user(user_id, referrer)
         await generate_captcha(message)
         await state.set_state(RegistrationState.captcha_state)
         capture_message = await get_message(messages, "CAPTCHA_MESSAGE", "ENG")
@@ -92,10 +99,13 @@ async def start_message_command(message: types.Message, state: FSMContext) -> No
     if message.from_user.id not in ADMINS_IDS:
         reply = await get_message(other_messages, "NO_PERMISSION_TEXT", language)
         await message.answer(text=reply)
+        logger.warning(f"User {user_id} attempted to use /message command without sufficient permissions.")
         return
+
     reply = await get_message(other_messages, "ENTER_MESSAGE_TEXT", language)
     await message.answer(text=reply)
     await state.set_state(AdminMessageState.waiting_for_message)
+    logger.info(f"User {user_id} is authorized as admin and prompted to enter a message.")
 
 
 @standard_handler_router.message(Command("update_admin"), F.chat.type == "private")
@@ -114,15 +124,19 @@ async def start_update_admin_command(message: types.Message) -> None:
     """
     user_id = message.from_user.id
     language = await get_language_for_user(user_id)
-    print(ADMINS_IDS)
-    if message.from_user.id not in ADMINS_IDS:
+    logger.debug(f"Received /update_admin command from user {user_id}")
+
+    if user_id not in ADMINS_IDS:
         reply = await get_message(other_messages, "NO_PERMISSION_TEXT", language)
         await message.answer(text=reply)
+        logger.warning(f"User {user_id} attempted to use /update_admin command without sufficient permissions.")
         return
+
     await update_admins_ids()
-    reply = await get_message(other_messages, "ADMINS_BEEN_UPDATE", language) + str(await get_all_admins())
+    updated_admins = await get_all_admins()
+    reply = await get_message(other_messages, "ADMINS_BEEN_UPDATE", language) + str(updated_admins)
     await message.answer(text=reply)
-    return
+    logger.info(f"Admin list updated by user {user_id}. New admin list: {updated_admins}")
 
 
 @standard_handler_router.message(Command("add_admin"), F.chat.type == "private")
@@ -143,19 +157,24 @@ async def start_add_admin_command(message: types.Message) -> None:
     """
     user_id = message.from_user.id
     language = await get_language_for_user(user_id)
-    print(ADMINS_IDS)
-    if message.from_user.id not in ADMINS_IDS:
+    logger.debug(f"Received /add_admin command from user {user_id}")
+
+    if user_id not in ADMINS_IDS:
         reply = await get_message(other_messages, "NO_PERMISSION_TEXT", language)
         await message.answer(text=reply)
+        logger.warning(f"User {user_id} attempted to use /add_admin command without sufficient permissions.")
         return
+
     try:
         admin_id = int(message.text.split()[1])
         await add_admin(admin_id)
         reply = await get_message(other_messages, "ADD_ADMIN_TEXT", language, admin_id=admin_id)
         await message.answer(text=reply)
+        logger.info(f"User {user_id} added new admin with ID {admin_id}.")
     except (IndexError, ValueError):
         reply = await get_message(other_messages, "INCORRECT_ADD_ADMIN_TEXT", language)
         await message.answer(text=reply)
+        logger.error(f"User {user_id} provided an incorrect admin ID format for /add_admin command.")
 
 
 @standard_handler_router.message(Command("del_admin"), F.chat.type == "private")
@@ -175,29 +194,37 @@ async def start_del_admin_command(message: types.Message) -> None:
     """
     user_id = message.from_user.id
     language = await get_language_for_user(user_id)
-    print(ADMINS_IDS)
+    logger.debug(f"Received /del_admin command from user {user_id}")
+
     all_admin = await get_all_admins()
-    if message.from_user.id not in ADMINS_IDS:
+    if user_id not in ADMINS_IDS:
         reply = await get_message(other_messages, "NO_PERMISSION_TEXT", language)
         await message.answer(text=reply)
+        logger.warning(f"User {user_id} attempted to use /del_admin command without sufficient permissions.")
         return
+
     try:
         admin_id = int(message.text.split()[1])
     except ValueError:
         reply = await get_message(other_messages, "INCORRECT_DEL_ADMIN_TEXT", language)
         await message.answer(text=reply)
+        logger.error(f"User {user_id} provided an incorrect admin ID format for /del_admin command.")
         return
+
     if admin_id in all_admin:
         try:
             await remove_admin(admin_id)
             reply = await get_message(other_messages, "ADMIN_DEL_SUCCESS", language, admin_id=admin_id)
             await message.answer(text=reply)
-        except (IndexError, ValueError):
-            reply = await get_message(other_messages, "INCORRECT_DEL_ADMIN_TEXT", language, admin_id=admin_id)
+            logger.info(f"User {user_id} removed admin with ID {admin_id}.")
+        except Exception as e:
+            reply = await get_message(other_messages, "ERROR_DEL_ADMIN_TEXT", language, admin_id=admin_id)
             await message.answer(text=reply)
+            logger.error(f"Error removing admin with ID {admin_id}: {e}")
     else:
         reply = await get_message(other_messages, "ADMINS_NOT_FOUND_TEXT", language, admin_id=admin_id)
         await message.answer(text=reply)
+        logger.warning(f"Admin with ID {admin_id} not found when user {user_id} attempted to delete.")
 
 
 @standard_handler_router.message(Command("admin_info"), F.chat.type == "private")
@@ -217,13 +244,17 @@ async def start_admin_info_command(message: types.Message) -> None:
     """
     user_id = message.from_user.id
     language = await get_language_for_user(user_id)
-    print(ADMINS_IDS)
-    if message.from_user.id not in ADMINS_IDS:
+    logger.debug(f"Received /admin_info command from user {user_id}")
+
+    if user_id not in ADMINS_IDS:
         reply = await get_message(other_messages, "NO_PERMISSION_TEXT", language)
         await message.answer(text=reply)
+        logger.warning(f"User {user_id} attempted to use /admin_info command without sufficient permissions.")
         return
+
     reply = await get_message(other_messages, "ADMIN_INFO", language)
     await message.answer(text=reply)
+    logger.info(f"User {user_id} received admin info.")
 
 
 @standard_handler_router.message(Command("update_tasks"), F.chat.type == "private")
@@ -242,13 +273,18 @@ async def start_change_tasks_command(message: types.Message) -> None:
     """
     user_id = message.from_user.id
     language = await get_language_for_user(user_id)
-    if message.from_user.id not in ADMINS_IDS:
+    logger.debug(f"Received /update_tasks command from user {user_id}")
+
+    if user_id not in ADMINS_IDS:
         reply = await get_message(other_messages, "NO_PERMISSION_TEXT", language)
         await message.answer(text=reply)
+        logger.warning(f"User {user_id} attempted to use /update_tasks command without sufficient permissions.")
         return
+
     await change_tasks()
     reply = await get_message(other_messages, "TASKS_UPDATED_INFO", language)
     await message.answer(text=reply)
+    logger.info(f"Tasks updated successfully by user {user_id}.")
 
 
 @standard_handler_router.message(Command("get_my_id"), F.chat.type == "private")
@@ -262,7 +298,11 @@ async def start_change_tasks_command(message: types.Message) -> None:
     Действия:
     - Отправляет ответное сообщение с ID пользователя.
     """
-    await message.answer(text=str(message.from_user.id))
+    user_id = message.from_user.id
+    logger.debug(f"Received /update_tasks command from user {user_id}")
+
+    await message.answer(text=str(user_id))
+    logger.info(f"Responded to /update_tasks command with user ID: {user_id}")
 
 
 @garbage_handler_router.message(F.chat.type == "private")
@@ -281,16 +321,18 @@ async def all_other_text_handler(message: types.Message, state: FSMContext) -> N
     - Если текущее состояние пользователя определено, восстанавливает его состояние и отвечает соответствующим сообщением.
     """
     user_id = message.from_user.id
+    logger.debug(f"Received message from user {user_id}: {message.text}")
+
     current_state = await get_state_for_user(user_id)
     if current_state is None:
         if await check_is_user_already_here(user_id):
-            print("User already in db")
+            logger.info(f"User {user_id} already in db")
             await generate_captcha(message)
             await state.set_state(CaptchaState.wait_captcha_state)
             capture_message = await get_message(messages, "CAPTCHA_MESSAGE", "ENG")
             await message.answer(text=capture_message, reply_markup=types.ReplyKeyboardRemove())
         else:
-            print("User not in db")
+            logger.info(f"User {user_id} not in db")
             await add_user_to_db(user_id)
             refferer = await get_refferer_id(message.text)
             if refferer is not None:
@@ -308,3 +350,4 @@ async def all_other_text_handler(message: types.Message, state: FSMContext) -> N
         current_reply = await get_message(current_reply_messages, state_messages[current_state_str], language)
         await state.set_state(current_state)
         await message.answer(text=current_reply, reply_markup=current_keyboard, parse_mode="MARKDOWN")
+        logger.debug(f"User {user_id} state restored to {current_state_str} and responded with appropriate message.")

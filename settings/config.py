@@ -7,19 +7,19 @@ env_path = '.env'
 load_dotenv(env_path)
 
 # General
-COIN_SYMBOL = "TIME"
-COIN_NAME = "Buy or Die"
+COIN_SYMBOL = "GOICHEV"
+COIN_NAME = "Ondrei Goichev"
 AIRDROP_TOTAL = 50000000
 REFERRAL_REWARD = 1000
 AIRDROP_AMOUNT = 10000
 AIRDROP_NETWORK = "TON"
 DATABASE_FILE = "airdrop.db"
-BOT_NICKNAME = "Rcrvynjibot"
+BOT_NICKNAME = "goichev_bot"
 
 # Links
-TWITTER_LINKS = "\n".join(["https://twitter.com/buyordie_ton"])
-TELEGRAM_LINKS = "\n".join(["https://t.me/buyordie_ton", "https://t.me/buyordie_chat"])
-WEBSITE_URL = "https://buyordie.fun/"
+TWITTER_LINKS = "\n".join(["https://x.com/ondreigoichev"])
+TELEGRAM_LINKS = "\n".join(["https://t.me/ondreigoichev_ton", "https://t.me/ondreigoichev"])
+WEBSITE_URL = "https://goichev.xyz/"
 MAX_USERS = 100000
 MAX_REFS = 100
 
@@ -41,11 +41,11 @@ tasks_init = {
         'description': {
             "ENG": """
     🔹 *Follow our Twitter page*:
-    [https://twitter.com/buyordie_ton]
+    [https://x.com/ondreigoichev]
             """,
             "RU": """
     🔹 *Подпишитесь на наш Twitter*:
-    [https://twitter.com/buyordie_ton]
+    [https://x.com/ondreigoichev]
             """
         },
         'image': '',

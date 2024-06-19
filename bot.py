@@ -8,8 +8,10 @@ from dotenv import load_dotenv
 from DB.database_logic import initialize_db, insert_tasks, insert_admin_messages, add_admin
 from aiogram.fsm.storage.memory import MemoryStorage
 from tasks.task_dict import change_tasks
+from settings.logging_config import get_logger
 
 
+logger = get_logger()
 env_path = '.env'
 load_dotenv(env_path)
 
@@ -26,6 +28,7 @@ dp.include_router(task_router)
 
 
 async def main() -> None:
+    logger.info("Starting bot")
     await initialize_db()
     await insert_tasks()
     await insert_admin_messages(admin_messages={}, user_id=0)

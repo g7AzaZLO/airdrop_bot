@@ -27,7 +27,9 @@ from DB.database_logic import check_is_user_already_here, add_user_to_db, add_re
     increment_referrer_count, add_points_to_user
 from settings.config import AIRDROP_AMOUNT
 from handlers.standart_handler import get_message
+from settings.logging_config import get_logger
 
+logger = get_logger()
 state_handler_router = Router()
 
 
@@ -45,7 +47,7 @@ async def captcha_response_handler(message: types.Message, state: FSMContext) ->
     - Проверяет правильность ответа.
     - Если ответ правильный, восстанавливает предыдущее состояние пользователя и отправляет соответствующее сообщение.
     """
-    print("def captcha_response_handler")
+    logger.debug("Executing captcha_response_handler")
     user_response = message.text
     await state.update_data(user_captcha_response=user_response)
     result = await check_captcha(message)
@@ -59,6 +61,9 @@ async def captcha_response_handler(message: types.Message, state: FSMContext) ->
         current_reply = await get_message(current_reply_messages, state_messages[current_state_str], language)
         await state.set_state(current_state)
         await message.answer(text=current_reply, reply_markup=current_keyboard, parse_mode="MARKDOWN")
+        logger.info(f"User {user_id} passed the captcha and state restored to {current_state_str}.")
+    else:
+        logger.warning(f"User {message.from_user.id} failed the captcha.")
 
 
 @state_handler_router.message(RegistrationState.captcha_state)
@@ -75,7 +80,7 @@ async def captcha_response_handler_in_reg(message: types.Message, state: FSMCont
     - Проверяет правильность ответа.
     - Если ответ правильный, переводит пользователя в состояние выбора языка.
     """
-    print("def captcha_response_handler_in_reg")
+    logger.debug("Executing captcha_response_handler_in_reg")
     user_response = message.text
     await state.update_data(user_captcha_response=user_response)
     result = await check_captcha(message)
@@ -83,6 +88,9 @@ async def captcha_response_handler_in_reg(message: types.Message, state: FSMCont
         await state.set_state(RegistrationState.lang_choose_state)
         reply = await get_message(menu_messages, "LANGUAGE_CHOOSE", "ENG")
         await message.answer(text=reply, reply_markup=language_choose_kb)
+        logger.info(f"User {message.from_user.id} passed the captcha and moved to lang_choose_state.")
+    else:
+        logger.warning(f"User {message.from_user.id} failed the captcha.")
 
 
 @state_handler_router.message(RegistrationState.lang_choose_state)
@@ -100,10 +108,11 @@ async def lang_choose_response_handler_in_reg(message: types.Message, state: FSM
     - Если язык выбран правильно, переводит пользователя в состояние приветствия.
     - Обновляет язык пользователя в базе данных.
     """
-    print("def lang_choose_response_handler_in_reg")
+    logger.debug("Executing lang_choose_response_handler_in_reg")
     user_response = message.text
     await state.update_data(user_lang_choose_response=user_response)
     user_id = message.from_user.id
+
     if user_response == "ENG English":
         language = "ENG"
     elif user_response == "RU Русский":
@@ -111,14 +120,16 @@ async def lang_choose_response_handler_in_reg(message: types.Message, state: FSM
     else:
         reply = await get_message(menu_messages, "LANGUAGE_CHOSEN_WRONG", "ENG")
         await message.answer(text=reply, reply_markup=language_choose_kb)
+        logger.warning(f"User {user_id} selected an invalid language: {user_response}")
         return
+
     await state.set_state(RegistrationState.hello_state)
     await set_user_state(user_id, await get_clean_state_identifier(RegistrationState.hello_state))
-    await message.answer(
-        text=(await get_message(messages, "WELCOME_MESSAGE", language, user_name=message.from_user.first_name)),
-        reply_markup=join_kb[language],
-        parse_mode="MARKDOWN")
+    welcome_message = await get_message(messages, "WELCOME_MESSAGE", language, user_name=message.from_user.first_name)
+    await message.answer(text=welcome_message, reply_markup=join_kb[language], parse_mode="MARKDOWN")
     await update_language_in_db(user_id, language)
+
+    logger.info(f"User {user_id} selected language {language} and moved to hello_state.")
 
 
 @state_handler_router.message(RegistrationState.hello_state)
@@ -136,15 +147,17 @@ async def hello_response_handler_in_reg(message: types.Message, state: FSMContex
     - Если пользователь отказывается, запрашивает подтверждение отказа.
     - В противном случае, повторно отправляет приветственное сообщение.
     """
-    print("def hello_response_handler_in_reg")
+    logger.debug("Executing hello_response_handler_in_reg")
     user_response = message.text
     language = await get_language_for_user(message.from_user.id)
     await state.update_data(user_hello_response=user_response)
+
     if user_response in ["🚀Join Airdrop", "🚀Присоединиться к аирдропу"]:
         await state.set_state(RegistrationState.proceed_state)
         await set_user_state(message.from_user.id, await get_clean_state_identifier(RegistrationState.proceed_state))
         reply = await get_message(messages, "PROCEED_MESSAGE", language)
         await message.answer(text=reply, reply_markup=sub_cancel_kb[language], parse_mode="MARKDOWN")
+        logger.info(f"User {message.from_user.id} agreed to join the airdrop and moved to proceed_state.")
     elif user_response in ["❌Cancel", "❌Отказаться"]:
         await state.update_data(
             state_end1=CaptchaState.null_state,
@@ -158,11 +171,13 @@ async def hello_response_handler_in_reg(message: types.Message, state: FSMContex
         reply = await get_message(menu_messages, "YES_NO", language)
         await message.answer(text=reply, reply_markup=yes_no_kb[language])
         await state.set_state(RegistrationState.yes_no_state)
+        logger.info(f"User {message.from_user.id} chose to cancel. Confirmation requested.")
     else:
         await message.answer(
             text=(await get_message(messages, "WELCOME_MESSAGE", language, user_name=message.from_user.first_name)),
             reply_markup=join_kb[language],
             parse_mode="MARKDOWN")
+        logger.warning(f"User {message.from_user.id} provided an invalid response: {user_response}")
         return
 
 
@@ -181,16 +196,18 @@ async def proceed_response_handler_in_reg(message: types.Message, state: FSMCont
     - Если пользователь отказывается, запрашивает подтверждение отказа.
     - В противном случае, повторно отправляет сообщение с правилами.
     """
-    print("def proceed_response_handler_in_reg")
+    logger.debug("Executing proceed_response_handler_in_reg")
     user_response = message.text
     language = await get_language_for_user(message.from_user.id)
     await state.update_data(user_proceed_response=user_response)
+
     if user_response in ["✅Согласен с правилами", "✅Submit Details"]:
         await state.set_state(RegistrationState.follow_telegram_state)
         await set_user_state(message.from_user.id,
                              await get_clean_state_identifier(RegistrationState.follow_telegram_state))
         reply = await get_message(messages, "MAKE_SURE_TELEGRAM", language)
         await message.answer(text=reply, reply_markup=social_join_kb[language])
+        logger.info(f"User {message.from_user.id} agreed to the rules and moved to follow_telegram_state.")
     elif user_response in ["❌Cancel", "❌Отказаться"]:
         await state.update_data(
             state_end1=CaptchaState.null_state,
@@ -204,9 +221,11 @@ async def proceed_response_handler_in_reg(message: types.Message, state: FSMCont
         reply = await get_message(menu_messages, "YES_NO", language)
         await message.answer(text=reply, reply_markup=yes_no_kb[language])
         await state.set_state(RegistrationState.yes_no_state)
+        logger.info(f"User {message.from_user.id} chose to cancel. Confirmation requested.")
     else:
         reply = await get_message(messages, "PROCEED_MESSAGE", language)
         await message.answer(text=reply, reply_markup=sub_cancel_kb[language], parse_mode="MARKDOWN")
+        logger.warning(f"User {message.from_user.id} provided an invalid response: {user_response}")
         return
 
 
@@ -226,20 +245,21 @@ async def follow_telegram_response_handler_in_reg(message: types.Message, state:
     - Если нет, просит пользователя вступить в канал.
     - В случае неизвестной команды, отправляет сообщение с инструкцией.
     """
-    print("def follow_telegram_response_handler")
+    logger.debug("Executing follow_telegram_response_handler_in_reg")
     user_response = message.text
     language = await get_language_for_user(message.from_user.id)
     await state.update_data(user_follow_telegram_response=user_response)
+
     if user_response in ["✅Вступил", "✅Joined"]:
         if await check_joined_telegram_channel(message.from_user.id):
-            print("Yes, user in all telegram channel")
+            logger.info(f"User {message.from_user.id} is in all required Telegram channels.")
             await state.set_state(RegistrationState.submit_address_state)
             await set_user_state(message.from_user.id,
                                  await get_clean_state_identifier(RegistrationState.submit_address_state))
             reply = await get_message(messages, "SUBMIT_ADDRESS_TEXT", language)
             await message.answer(text=reply, reply_markup=types.ReplyKeyboardRemove(), parse_mode="MARKDOWN")
         else:
-            print("NO HE ISNT HERE")
+            logger.warning(f"User {message.from_user.id} is not in all required Telegram channels.")
             await state.set_state(RegistrationState.follow_telegram_state)
             reply = await get_message(messages, "NOT_SUB_AT_GROUP_TEXT", language)
             await message.answer(text=reply, reply_markup=social_join_kb[language])
@@ -247,6 +267,7 @@ async def follow_telegram_response_handler_in_reg(message: types.Message, state:
         reply = await get_message(menu_messages, "UNKNOWN_COMMAND_TEXT", language)
         await message.answer(text=reply, reply_markup=social_join_kb[language])
         await state.set_state(RegistrationState.follow_telegram_state)
+        logger.warning(f"User {message.from_user.id} provided an unknown command: {user_response}")
 
 
 @state_handler_router.message(RegistrationState.submit_address_state)
@@ -265,13 +286,14 @@ async def submit_address_response_handler_in_reg(message: types.Message, state: 
     - Если адрес уже используется, просит ввести другой адрес.
     - Если адрес невалидный, просит ввести валидный адрес.
     """
-    print("def submit_address_response_handler_in_reg")
+    logger.debug("Executing submit_address_response_handler_in_reg")
     user_response = message.text
     language = await get_language_for_user(message.from_user.id)
     await state.update_data(user_submit_address_response=user_response)
+
     if await check_wallet_exists(user_response):
         if is_valid_crypto_address(user_response):
-            print("Valid crypto address")
+            logger.info(f"Valid crypto address provided by user {message.from_user.id}.")
             await update_user_details(message.from_user.id, ADDR=user_response, NUM_OF_REFS=0, REF_POINTS=0,
                                       POINTS=AIRDROP_AMOUNT)
             await state.set_state(RegistrationState.main_menu_state)
@@ -284,11 +306,12 @@ async def submit_address_response_handler_in_reg(message: types.Message, state: 
             if refferer is not None:
                 await increment_referrer_count(refferer)
         else:
-            print("Invalid crypto address")
+            logger.warning(f"Invalid crypto address provided by user {message.from_user.id}.")
             await state.set_state(RegistrationState.submit_address_state)
             reply = await get_message(messages, "INVALID_ADDRESS_TEXT", language)
             await message.answer(text=reply)
     else:
+        logger.warning(f"Crypto address already registered for user {message.from_user.id}.")
         await state.set_state(RegistrationState.submit_address_state)
         reply = await get_message(messages, "ADDRESS_ALREADY_REGISTERED_TEXT", language)
         await message.answer(text=reply)
@@ -310,8 +333,9 @@ async def main_menu_handler(message: types.Message, state: FSMContext) -> None:
     """
     user_response = message.text
     user = await get_user_details(message.from_user.id)
-    print(f"def main_menu_handler, user response {user_response}, user {message.from_user.id}")
+    logger.debug(f"Handling main menu command, user response {user_response}, user {message.from_user.id}")
     language = await get_language_for_user(message.from_user.id)
+
     if user_response in ["😈Профиль", "😈Profile"]:
         user_id = message.from_user.id
         user_name = message.from_user.first_name
@@ -333,13 +357,11 @@ async def main_menu_handler(message: types.Message, state: FSMContext) -> None:
         await message.answer(text=reply, reply_markup=menu_kb[language], parse_mode="MARKDOWN")
         return
     elif user_response in ["💰Баланс", "💰Balance"]:
-
         balance = user.get("POINTS", 0)
         balance_by_refs = user.get("REF_POINTS", 0)
         reply = await get_message(menu_messages, "BALANCE_TEXT", language, balance=balance,
                                   user_referral_balance=balance_by_refs)
         await message.answer(text=reply, reply_markup=menu_kb[language], parse_mode="MARKDOWN")
-
     elif user_response in ["🥇Задачи", "🥇Tasks"]:
         tasks_done = user.get("TASKS_DONE", [])
         total_buttons = await get_num_of_tasks()
@@ -352,9 +374,9 @@ async def main_menu_handler(message: types.Message, state: FSMContext) -> None:
                                   tasks_total_points=tasks_total_points)
         await message.answer(text=reply, reply_markup=tasks_keyboard)
         await state.set_state(TasksState.current_tasks_state)
-    elif user_response in ["🔒Смартконтракт", "🔒Smartcontract"]:
-        reply = await get_message(menu_messages, "SMARTCONTRACT_TEXT", language)
-        await message.answer_photo(caption=reply, photo=types.FSInputFile(path="settings/image/smartcontract.png"),
+    elif user_response in ["🔒Токеномика", "🔒Tokenomics"]:
+        reply = await get_message(menu_messages, "TOKENOMICS_TEXT", language)
+        await message.answer_photo(caption=reply, photo=types.FSInputFile(path="settings/image/tokenomic.jpg"),
                                    reply_markup=menu_kb[language],
                                    parse_mode="HTML")
         return
@@ -383,8 +405,9 @@ async def menu_settings(message: types.Message, state: FSMContext) -> None:
     - Обновляет состояние пользователя и отправляет соответствующее сообщение.
     """
     user_response = message.text
-    print(f"def menu_settings")
+    logger.debug("Handling menu settings")
     language = await get_language_for_user(message.from_user.id)
+
     if user_response in ["🌏Сменить Язык", "🌏Change Language"]:
         reply = await get_message(menu_messages, "LANGUAGE_CHOOSE", language)
         await message.answer(text=reply, reply_markup=language_choose_kb)
@@ -440,7 +463,7 @@ async def lang_choose_response_handler(message: types.Message, state: FSMContext
     - Проверяет правильность выбора языка.
     - Если язык выбран правильно, обновляет язык пользователя в базе данных и возвращает в меню настроек.
     """
-    print("def lang_choose_response_handler")
+    logger.debug("Handling language choice response")
     user_response = message.text
     await state.update_data(user_lang_choose_response=user_response)
     user_id = message.from_user.id
@@ -472,7 +495,7 @@ async def yes_no_reply(message: types.Message, state: FSMContext) -> None:
     - В зависимости от ответа выполняет соответствующие действия (удаление аккаунта, возврат в предыдущее состояние).
     - Обновляет состояние пользователя и отправляет соответствующее сообщение.
     """
-    print("def yes_no_reply")
+    logger.debug("Handling yes/no reply")
     data = await state.get_data()
     state_end1 = data.get('state_end1')
     state_end2 = data.get('state_end2')
@@ -521,21 +544,20 @@ async def null_state(message: types.Message, state: FSMContext) -> None:
     - Если пользователь не существует, добавляет его в базу данных, обрабатывает реферера и генерирует капчу.
     - Отправляет пользователю соответствующее сообщение.
     """
-    print("def null_state")
+    logger.debug("Handling null state")
     user_response = message.text
     language = await get_language_for_user(message.from_user.id)
-    if language is None: language = "ENG"
-    if user_response in ["start", "Start", "Начать", "начать",
-                         r"\Начать", r"\начать", r"\start", r"\Start", ]:
+    if language is None:
+        language = "ENG"
+    if user_response.lower() in ["start", "начать", r"\начать", r"\start"]:
         if await check_is_user_already_here(message.from_user.id):
-            print("User already in db")
+            logger.debug(f"User {message.from_user.id} already in db")
             await generate_captcha(message)
             await state.set_state(CaptchaState.wait_captcha_state)
             capture_message = await get_message(messages, "CAPTCHA_MESSAGE", language)
             await message.answer(text=capture_message, reply_markup=types.ReplyKeyboardRemove())
-        # Запуск меню после капчи
         else:
-            print("User not in db")
+            logger.debug(f"User {message.from_user.id} not in db")
             await add_user_to_db(message.from_user.id)
             referrer = await get_refferer_id(message.text)
             if referrer is not None:
@@ -566,11 +588,11 @@ async def current_tasks_handler(message: types.Message, state: FSMContext) -> No
     - Если задача новая, отправляет информацию о задаче.
     - Обновляет состояние пользователя и отправляет соответствующее сообщение.
     """
-    print(f"def current_tasks_handler, task #{message.text}")
+    logger.debug(f"def current_tasks_handler, task #{message.text}")
     language = await get_language_for_user(message.from_user.id)
     user_response = message.text
     index_task = await get_index_by_text_task(user_response, language)
-    print("index task == " + str(index_task))
+    logger.debug(f"index task == {index_task}")
     user = await get_user_details(message.from_user.id)
     tasks_done = user.get("TASKS_DONE", [])
     tasks_await = user.get("TASKS_AWAIT", [])
@@ -656,7 +678,7 @@ async def single_task_handler(message: types.Message, state: FSMContext) -> None
     - Если требуется защита, переводит в соответствующее состояние для проверки.
     - Обновляет состояние пользователя и отправляет соответствующее сообщение.
     """
-    print(f"def single_task_handler")
+    logger.debug(f"def single_task_handler")
     language = await get_language_for_user(message.from_user.id)
     user = await get_user_details(message.from_user.id)
     user_response = message.text
@@ -694,7 +716,7 @@ async def single_task_handler(message: types.Message, state: FSMContext) -> None
                 await message.answer(text=reply, reply_markup=kb_tasks_back[language])
                 await state.set_state(TasksState.puzzle_check_state)
             else:
-                print(f"THIS PROTECTION IS NOT IMPLEMENTED YET")
+                logger.warning(f"THIS PROTECTION IS NOT IMPLEMENTED YET")
                 reply = await get_message(other_messages, "PROTECTION_NOT_IMPLEMENTED", language)
                 await message.answer(text=reply)
                 await state.set_state(TasksState.screen_check_state)
@@ -735,19 +757,19 @@ async def follow_twitter_response_handler_in_reg(message: types.Message, state: 
     - Если пользователь уже подписан, возвращает его в меню задач.
     - Если ссылка на Twitter невалидна, возвращает пользователя в меню задач.
     """
-    print("def follow_twitter_response_handler")
+    logger.debug("def follow_twitter_response_handler")
     user_response = message.text
     language = await get_language_for_user(message.from_user.id)
     await state.update_data(user_follow_twitter_response=user_response)
     if is_valid_twitter_link(user_response):
         if await check_joined_twitter_channel(user_response):
-            print("all ok")
+            logger.info("User has joined the Twitter channel")
             await update_user_details(message.from_user.id, TWITTER_USER=user_response)
             reply = await get_message(other_messages, "SEND_TWITTER_CHECK", language, parse_mode="MARKDOWN")
             await message.answer(text=reply)
             await state.set_state(TasksState.screen_check_state)
         else:
-            print("already in base")
+            logger.info("User is already in the database")
             user = await get_user_details(message.from_user.id)
             reply1 = await get_message(messages, "TWITTER_ALREADY_REGISTERED_TEXT", language)
             tasks_done = user.get("TASKS_DONE", [])
@@ -758,7 +780,7 @@ async def follow_twitter_response_handler_in_reg(message: types.Message, state: 
             await message.answer(text=reply1 + '\n' + reply2, reply_markup=tasks_keyboard)
             await state.set_state(TasksState.current_tasks_state)
     else:
-        print("Invalid Twitter Link")
+        logger.warning("Invalid Twitter Link")
         reply1 = await get_message(messages, "TWITTER_INVALID_LINK_TEXT", language)
         user = await get_user_details(message.from_user.id)
         tasks_done = user.get("TASKS_DONE", [])
@@ -784,7 +806,7 @@ async def achievements_handler(message: types.Message, state: FSMContext) -> Non
     - Если команда выбрана, возвращает пользователя в меню текущих задач.
     - Если введена неизвестная команда, отправляет сообщение с указанием на неизвестную команду.
     """
-    print(f"def achievements_handler")
+    logger.debug("def achievements_handler")
     language = await get_language_for_user(message.from_user.id)
     user_response = message.text
     user = await get_user_details(message.from_user.id)
@@ -851,7 +873,7 @@ async def handle_screen_check(message: types.Message, state: FSMContext) -> None
         admin_messages = {}
         for admin_id in ADMINS_IDS:
             if not admin_id:
-                print(f"Пропущен пустой ID администратора: {admin_id}")
+                logger.debug(f"Пропущен пустой ID администратора: {admin_id}")
                 continue
             try:
                 admin_id_int = int(admin_id)
@@ -865,9 +887,9 @@ async def handle_screen_check(message: types.Message, state: FSMContext) -> None
                                                             reply_markup=inline_kb)
                 admin_messages[admin_id_int] = sent_message.message_id
             except ValueError:
-                print(f"Некорректный ID администратора: {admin_id}")
+                logger.error(f"Некорректный ID администратора: {admin_id}")
             except Exception as e:
-                print(f"Не удалось отправить сообщение администратору с ID {admin_id}: {e}")
+                logger.error(f"Не удалось отправить сообщение администратору с ID {admin_id}: {e}")
         await insert_admin_messages({index_task: admin_messages}, user_id)
         tasks_done = user.get("TASKS_DONE", [])
         total_buttons = await get_num_of_tasks()
@@ -912,7 +934,7 @@ async def auto_reject_task(user_id: int, index_task: int, admin_messages: dict, 
         user_language = await get_language_for_user(user_id)
         reply = await get_message(other_messages, "TRY_AGAIN_TEXT", user_language)
         await message.answer(text=reply)
-        print(f"Task {index_task} rejected for user {user_id} due to timeout")
+        logger.info(f"Task {index_task} rejected for user {user_id} due to timeout")
 
 
 @state_handler_router.callback_query(lambda callback_query: callback_query.data.startswith("approve_"))
@@ -951,7 +973,7 @@ async def approve_task(callback_query: types.CallbackQuery) -> None:
             try:
                 await callback_query.message.bot.delete_message(chat_id=admin_id, message_id=message_id)
             except Exception as e:
-                print(f"Failed to delete message {message_id} for admin {admin_id}: {e}")
+                logger.error(f"Failed to delete message {message_id} for admin {admin_id}: {e}")
         if index_task in admin_messages_dict:
             await delete_admin_message(index_task, user_id)
         task_done = user.get("TASKS_DONE", [])
@@ -964,12 +986,13 @@ async def approve_task(callback_query: types.CallbackQuery) -> None:
         reply2 = await get_message(other_messages, "TASK_CONFIRMED_TEXT", user_language)
         await callback_query.answer(text=reply2)
     else:
-        print("Tasks not in task_await, delete")
+        logger.info("Tasks not in task_await, delete")
         for admin_id, message_id in admin_messages.items():
             try:
                 await callback_query.message.bot.delete_message(chat_id=admin_id, message_id=message_id)
             except Exception as e:
-                print(f"Failed to delete message {message_id} for admin {admin_id}: {e} (task not in task_await)")
+                logger.error(
+                    f"Failed to delete message {message_id} for admin {admin_id}: {e} (task not in task_await)")
         if index_task in admin_messages_dict:
             await delete_admin_message(index_task, user_id)
 
@@ -991,8 +1014,8 @@ async def reject_task(callback_query: types.CallbackQuery) -> None:
     - Отправляет пользователю сообщение о успешном выполнении задания.
     - Отправляет администратору подтверждение о выполнении задания.
     """
-    admins_user_id = callback_query.from_user.id
-    language = await get_language_for_user(admins_user_id)
+    admin_user_id = callback_query.from_user.id
+    language = await get_language_for_user(admin_user_id)
     if callback_query.from_user.id not in ADMINS_IDS:
         reply = await get_message(other_messages, "NO_PERMISSION_TEXT", language)
         await callback_query.answer(text=reply)
@@ -1013,22 +1036,22 @@ async def reject_task(callback_query: types.CallbackQuery) -> None:
             try:
                 await callback_query.message.bot.delete_message(chat_id=admin_id, message_id=message_id)
             except Exception as e:
-                print(f"Failed to delete message {message_id} for admin {admin_id}: {e}")
+                logger.error(f"Failed to delete message {message_id} for admin {admin_id}: {e}")
         if index_task in admin_messages_dict:
             await delete_admin_message(index_task, user_id)
         user_language = await get_language_for_user(user_id)
         reply = await get_message(other_messages, "TRY_AGAIN_TEXT", user_language)
-        await callback_query.message.bot.send_message(chat_id=user_id,
-                                                      text=reply)
+        await callback_query.message.bot.send_message(chat_id=user_id, text=reply)
         reply2 = await get_message(other_messages, "TASK_REJECTED_TEXT", user_language)
         await callback_query.answer(text=reply2)
     else:
-        print("Tasks not in task_await, delete")
+        logger.info("Tasks not in task_await, delete")
         for admin_id, message_id in admin_messages.items():
             try:
                 await callback_query.message.bot.delete_message(chat_id=admin_id, message_id=message_id)
             except Exception as e:
-                print(f"Failed to delete message {message_id} for admin {admin_id}: {e} (task not in task_await)")
+                logger.error(
+                    f"Failed to delete message {message_id} for admin {admin_id}: {e} (task not in task_await)")
         if index_task in admin_messages_dict:
             await delete_admin_message(index_task, user_id)
 
@@ -1086,7 +1109,7 @@ async def handle_admin_message(message: types.Message, state: FSMContext) -> Non
                 await message.bot.send_animation(chat_id=user["USER_ID"], animation=animation, caption=user_message,
                                                  parse_mode="Markdown")
         except Exception as e:
-            print(f"Не удалось отправить сообщение пользователю с ID {user['USER_ID']}: {e}")
+            logger.error(f"Не удалось отправить сообщение пользователю с ID {user['USER_ID']}: {e}")
     await state.set_state(RegistrationState.main_menu_state)
     reply = await get_message(other_messages, "MESSAGE_SENT_TEXT", language)
     await message.answer(text=reply)
@@ -1118,13 +1141,13 @@ async def change_address(message: types.Message, state: FSMContext) -> None:
         return
     if await check_wallet_exists(user_response):
         if is_valid_crypto_address(user_response):
-            print("Valid crypto address")
+            logger.info("Valid crypto address")
             await update_user_details(message.from_user.id, ADDR=user_response)
             reply = await get_message(menu_messages, "SUCCESS_CHANGE_ADRESS", language)
             await message.answer(text=reply, reply_markup=kb_menu_settings[language])
             await state.set_state(RegistrationState.menu_settings)
         else:
-            print("Invalid crypto address")
+            logger.warning("Invalid crypto address")
             await state.set_state(RegistrationState.change_address_state)
             reply = await get_message(messages, "INVALID_ADDRESS_TEXT", language)
             await message.answer(text=reply, reply_markup=kb_tasks_back[language])
@@ -1169,7 +1192,7 @@ async def puzzle_check(message: types.Message, state: FSMContext) -> None:
         user_response = message.text
         puzzle = await get_puzzle_from_task(index_task)
         if user_response in puzzle:
-            print("Puzzle solved")
+            logger.info("Puzzle solved")
             await add_points_to_user(message.from_user.id, points)
             task_marked = await mark_task_as_done(message.from_user.id, index_task)
             tasks_done = user.get("TASKS_DONE", [])

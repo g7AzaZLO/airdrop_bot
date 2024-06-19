@@ -1,4 +1,7 @@
 from DB.mongo import admins_collection
+from settings.logging_config import get_logger
+
+logger = get_logger()
 
 
 async def get_all_admins() -> list:
@@ -11,7 +14,13 @@ async def get_all_admins() -> list:
     Возвращает:
     - list: Список идентификаторов администраторов.
     """
-    admins_cursor = admins_collection.find()
-    admins_list = await admins_cursor.to_list(length=None)
-    admin_ids = [admin["_id"] for admin in admins_list]
-    return admin_ids
+    try:
+        logger.debug("Запрос всех администраторов из коллекции.")
+        admins_cursor = admins_collection.find()
+        admins_list = await admins_cursor.to_list(length=None)
+        admin_ids = [admin["_id"] for admin in admins_list]
+        logger.debug(f"Получено {len(admin_ids)} администраторов.")
+        return admin_ids
+    except Exception as e:
+        logger.error(f"Ошибка при получении списка администраторов: {e}")
+        return []
