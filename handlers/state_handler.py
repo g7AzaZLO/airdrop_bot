@@ -368,7 +368,12 @@ async def menu_settings(callback_query: types.CallbackQuery, state: FSMContext) 
     elif user_response == "return_back":
         await state.set_state(RegistrationState.main_menu_state)
         reply = await get_message(menu_messages, "MENU", language)
-        await edit_message(callback_query.message, reply, menu_kb[language])
+        photo_path = IMAGE_PATHS["profile"]
+        await callback_query.message.delete()
+        await callback_query.message.answer_photo(
+            photo=photo_path, caption=reply, reply_markup=menu_kb[language],
+            parse_mode="HTML"
+        )
     elif user_response == "change_address":
         await state.set_state(RegistrationState.change_address_state)
         await state.update_data(
