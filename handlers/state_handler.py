@@ -30,6 +30,7 @@ from settings.config import AIRDROP_AMOUNT, IMAGE_PATHS
 from handlers.standart_handler import get_message
 from settings.logging_config import get_logger
 from aiogram import exceptions
+
 logger = get_logger()
 state_handler_router = Router()
 
@@ -102,12 +103,12 @@ async def lang_choose_response_handler_in_reg(callback_query: types.CallbackQuer
     user_id = callback_query.from_user.id
 
     language = None
-    
+
     if user_response == "language_eng":
         language = "ENG"
     elif user_response == "language_ru":
         language = "RU"
-        
+
     if not language:
         reply = await get_message(menu_messages, "LANGUAGE_CHOSEN_WRONG", "ENG")
         await callback_query.message.answer(text=reply, reply_markup=language_choose_kb)
@@ -135,9 +136,6 @@ async def lang_choose_response_handler_in_reg(callback_query: types.CallbackQuer
     await update_language_in_db(user_id, language)
     logger.info(f"User {user_id} selected language {language} and moved to telegram_follow_state.")
 
-def strip_something(textish):
-    text = str(textish).strip()
-    return text
 
 @state_handler_router.callback_query(RegistrationState.follow_telegram_state)
 async def follow_telegram_response_handler_in_reg(callback_query: types.CallbackQuery, state: FSMContext) -> None:
@@ -173,14 +171,14 @@ async def follow_telegram_response_handler_in_reg(callback_query: types.Callback
         try:
             if callback_query.message.photo:
                 await callback_query.message.edit_media(
-                    media=types.InputMediaPhoto(media=photo_path, caption=reply, parse_mode="Markdown"),
+                    media=types.InputMediaPhoto(media=photo_path, caption=reply, parse_mode="HTML"),
                     reply_markup=reply_markup,
                 )
             else:
                 await callback_query.message.delete()
                 await callback_query.message.answer_photo(
                     photo=photo_path, caption=reply, reply_markup=reply_markup,
-                    parse_mode="Markdown"
+                    parse_mode="HTML"
                 )
         except exceptions.TelegramBadRequest as e:
             if "message is not modified" in str(e):
@@ -190,9 +188,8 @@ async def follow_telegram_response_handler_in_reg(callback_query: types.Callback
             await callback_query.message.delete()
             await callback_query.message.answer_photo(
                 photo=photo_path, caption=reply, reply_markup=reply_markup,
-                parse_mode="Markdown"
+                parse_mode="HTML"
             )
-        
 
 
 @state_handler_router.message(RegistrationState.submit_address_state)
@@ -211,11 +208,11 @@ async def submit_address_response_handler_in_reg(message: types.Message, state: 
             await update_user_details(user_id, ADDR=user_response, NUM_OF_REFS=0, REF_POINTS=0, POINTS=AIRDROP_AMOUNT)
             await state.set_state(RegistrationState.main_menu_state)
             await set_user_state(user_id, await get_clean_state_identifier(RegistrationState.main_menu_state))
-        
+
             ref_link = await get_refferal_link(user_id)
             reply = await get_message(messages, "JOINED_TEXT", language, referral_link=ref_link)
             await message.answer(text=reply, reply_markup=menu_kb[language], parse_mode="MARKDOWN")
-        
+
             referrer = await get_referrer(user_id)
             if referrer is not None:
                 await increment_referrer_count(referrer)
@@ -260,7 +257,7 @@ async def main_menu_handler(callback_query: types.CallbackQuery, state: FSMConte
     language = await get_language_for_user(user_id)
 
     photo_path = None
-    
+
     if user_response == "profile":
         user_name = callback_query.from_user.first_name
         num_of_refs = user.get("NUM_OF_REFS", 0)
@@ -323,10 +320,11 @@ async def main_menu_handler(callback_query: types.CallbackQuery, state: FSMConte
     if photo_path:
         if callback_query.message.photo:
             await callback_query.message.edit_media(
-                media=types.InputMediaPhoto(media=photo_path, caption=reply),
-                reply_markup=menu_kb[language],
-                parse_mode="MARKDOWN"
+                media=types.InputMediaPhoto(media=photo_path)
             )
+            await callback_query.message.edit_caption(inline_message_id=str(callback_query.message.message_id),
+                                                      parse_mode="MARKDOWN", caption=reply,
+                                                      reply_markup=menu_kb[language])
         else:
             await callback_query.message.delete()
             await callback_query.message.answer_photo(

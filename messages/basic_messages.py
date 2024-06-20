@@ -198,14 +198,14 @@ Your personal referral link (+*{referral_reward}* points for each referral):
         "ENG": """
 GOICHEV POINTS DROP 😎 SEASON 1
 
-How to not become a ~hamster~ goy and get shaved by Ondrej's company, DFW Bals? - the easiest way is to earn points!
+How to not become a <s>hamster</s> goy and get shaved by Ondrej's company, DFW Bals? - the easiest way is to earn points!
 
 Earn GOICHEV-points by performing various tasks and inviting friends and acquaintances. For GOICHEV points you will be able to get $GOICHEV eirdrop in the future.
         """,
         "RU": """
 GOICHEV POINTS DROP 😎 SEASON 1
 
-Как не стать ~хомяком~ гоем и не быть побритым компанией Ондрея, DFW Bals? – самый простой способ – фармить поинты!
+Как не стать <s>хомяком</s> гоем и не быть побритым компанией Ондрея, DFW Bals? – самый простой способ – фармить поинты!
 
 Зарабатывайте GOICHEV-поинты выполняя различные задания и приглашая друзей, знакомых. За GOICHEV-поинты в дальнейшем можно будет получить эирдроп $GOICHEV
         """
