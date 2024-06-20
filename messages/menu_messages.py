@@ -91,14 +91,14 @@ _ВНИМАНИЕ: Пользователи, замеченные в мошен�
         "ENG": """
 GOICHEV POINTS DROP 😎 SEASON 1
 
-How to not become a <s>hamster</s> goy and get shaved by Ondrej's company, DFW Bals? - the easiest way is to earn points!
+How to not become a goy and get shaved by Ondrej's company, DFW Bals? - the easiest way is to earn points!
 
 Earn GOICHEV-points by performing various tasks and inviting friends and acquaintances. For GOICHEV points you will be able to get $GOICHEV eirdrop in the future.
                 """,
         "RU": """
 GOICHEV POINTS DROP 😎 SEASON 1
 
-Как не стать <s>хомяком</s> гоем и не быть побритым компанией Ондрея, DFW Bals? – самый простой способ – фармить поинты!
+Как не стать гоем и не быть побритым компанией Ондрея, DFW Bals? – самый простой способ – фармить поинты!
 
 Зарабатывайте GOICHEV-поинты выполняя различные задания и приглашая друзей, знакомых. За GOICHEV-поинты в дальнейшем можно будет получить эирдроп $GOICHEV
                 """
@@ -147,22 +147,47 @@ Unknown command. Please choose from the menu.
 Неизвестная команда. Пожалуйста, выберите команду из меню.
 		"""
     },
-    "TOKENOMICS_TEXT": {
+    "FAQ_TEXT": {
         "ENG": """
-40% Presale
-40% LP
-10% Comminuty and team
-5% CEX
-3% For Andrei Grachev
-2% Airdrop      
+1. What is $GOICHEV?
+This is an internal meme-token of the Ondrei Goichev project, which has not yet been listed on DEX/CEX exchanges. After listing it will be possible to exchange $GOICHEV for $TON and vice versa.
+
+2. What are GOICHEV points?
+These are points that will be converted into $GOICHEV tokens after the season is over.
+
+3. Who is Ondrej GOICHEV? What is the company DFW Bals?
+This is a fictional meme character dedicated to Andrey Grachev and his MM-company DWF Labs, BUT not related to them in any way!
+
+4. How not to become a goy hamster?
+You need to farm GOICHEV-points and prepare your TON's to exchange them for $GOICHEV, to become a holder!
+
+5. Can I become as awesome as Ondrej?
+Yes, if you hold a significant portion of $GOICHEV tokens.
+
+6. If I hold $GOICHEV tokens, will I get an internship at DFW Bals?
+Possibly
+
+Translated with DeepL.com (free version)
         """,
         "RU": """
-40% Пресейл
-40% Ликвидность
-10% Комьюнити и команда
-5% CEX
-3% Для Андрея Грачева
-2% Аирдроп           
+1. Что такое $GOICHEV?
+Это внутренний мем-токен проекта Ondrei Goichev, который еще не залистился на DEX/CEX биржи. После листинга можно будет обменивать $GOICHEV на $TON и наоборот.
+
+2. Что такое GOICHEV-поинты?
+Это очки, которые будут конвертированы в токены $GOICHEV после завершения сезона.
+
+3. Кто такой Ондрей Гойчев? Что за компания DFW Bals?
+Это вымышленный мем-персонаж посвященный Андрею Грачеву и его ММ-компании DWF Labs, НО никак не связан с ними!
+
+4. Как не стать хомяком гоем?
+Нужно фармить GOICHEV-поинты и готовить свои TON’ы, чтобы обменять их на $GOICHEV, стать холдером!
+
+5. Я смогу стать таким же крутым как Ондрей?
+Да, если будешь удерживать весомую часть токенов $GOICHEV
+
+6. Если держать токены $GOICHEV меня возьмут на стажировку в DFW Bals?
+Возможно
+      
         """
     },
     "CHANGE_ADDRESS_TEXT": {

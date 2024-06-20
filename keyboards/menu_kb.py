@@ -13,7 +13,7 @@ menu_kb = {
             ],
             [
                 InlineKeyboardButton(text="🥇Задачи", callback_data="tasks"),
-                InlineKeyboardButton(text="🔒Токеномика", callback_data="tokenomics"),
+                InlineKeyboardButton(text="🔒FAQ", callback_data="faq"),
             ],
             [
                 InlineKeyboardButton(text="🔧Настройки", callback_data="settings"),
@@ -33,7 +33,7 @@ menu_kb = {
             ],
             [
                 InlineKeyboardButton(text="🥇Tasks", callback_data="tasks"),
-                InlineKeyboardButton(text="🔒Tokenomics", callback_data="tokenomics"),
+                InlineKeyboardButton(text="🔒FAQ", callback_data="faq"),
             ],
             [
                 InlineKeyboardButton(text="🔧Settings", callback_data="settings"),

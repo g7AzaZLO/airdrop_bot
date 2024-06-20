@@ -298,9 +298,9 @@ async def main_menu_handler(callback_query: types.CallbackQuery, state: FSMConte
         await state.set_state(TasksState.current_tasks_state)
         return
 
-    elif user_response == "tokenomics":
-        reply = await get_message(menu_messages, "TOKENOMICS_TEXT", language)
-        photo_path = IMAGE_PATHS.get("tokenomics")
+    elif user_response == "faq":
+        reply = await get_message(menu_messages, "FAQ_TEXT", language)
+        photo_path = IMAGE_PATHS.get("faq")
 
     elif user_response == "settings":
         reply = await get_message(menu_messages, "MENU_SETTINGS", language)
@@ -367,7 +367,7 @@ async def menu_settings(callback_query: types.CallbackQuery, state: FSMContext) 
         await state.set_state(RegistrationState.yes_no_state)
     elif user_response == "return_back":
         await state.set_state(RegistrationState.main_menu_state)
-        reply = await get_message(menu_messages, "MENU", language)
+        reply = await get_message(messages, "MENU_GOICHEV", language)
         photo_path = IMAGE_PATHS["profile"]
         await callback_query.message.delete()
         await callback_query.message.answer_photo(
