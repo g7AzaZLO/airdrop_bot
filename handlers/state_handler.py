@@ -23,7 +23,7 @@ from logic.telegram import check_joined_telegram_channel
 from DB.database_logic import update_language_in_db, get_language_for_user, delete_user_from_db, get_user_details, \
     update_user_details, check_wallet_exists, decrement_referrer_count, mark_task_as_done, get_state_for_user, \
     set_user_state, remove_task_from_await, mark_task_as_await, delete_admin_message, insert_admin_messages, \
-    get_admin_messages_dict, get_all_users
+    get_admin_messages_dict, get_all_users, get_top_users, format_top_users
 from DB.database_logic import check_is_user_already_here, add_user_to_db, add_referrer_to_user, get_referrer, \
     increment_referrer_count, add_points_to_user
 from settings.config import AIRDROP_AMOUNT, IMAGE_PATHS
@@ -267,8 +267,9 @@ async def main_menu_handler(callback_query: types.CallbackQuery, state: FSMConte
                                   refferal_number=num_of_refs,
                                   address=user_address, user_twitter_link=user_twi, user_id=user_id)
         photo_path = IMAGE_PATHS.get("profile")
-    elif user_response == "information":
-        reply = await get_message(menu_messages, "INFORMATION_TEXT", language)
+    elif user_response == "leaderboard":
+        leaderboard = await get_top_users()
+        reply = await format_top_users(leaderboard)
         photo_path = IMAGE_PATHS.get("info")
     elif user_response == "invite_friends":
         ref_link = await get_refferal_link(user_id)

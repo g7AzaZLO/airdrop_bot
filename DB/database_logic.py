@@ -1,3 +1,5 @@
+from pymongo import DESCENDING
+
 from logic.admins import update_admins_ids
 from settings.config import REFERRAL_REWARD, tasks_init
 from DB.mongo import users_collection, tasks_collection, admin_messages_collection, admins_collection
@@ -690,3 +692,51 @@ async def remove_admin(admin_id: int) -> None:
         logger.debug(f"Администратор с ID {admin_id} успешно удален и список администраторов обновлен.")
     except Exception as e:
         logger.error(f"Ошибка при удалении администратора с ID {admin_id}: {e}")
+
+
+async def get_top_users() -> list:
+    """
+    Возвращает топ 20 пользователей по количеству очков (сумма POINTS и REF_POINTS).
+
+    Возвращает:
+    - list: Список из топ 20 пользователей, где каждый элемент - это список [user_id, points].
+    """
+    try:
+        # Запрос к базе данных для получения пользователей, отсортированных по сумме POINTS и REF_POINTS
+        cursor = users_collection.aggregate([
+            {
+                "$project": {
+                    "USER_ID": 1,
+                    "total_points": {"$add": ["$POINTS", "$REF_POINTS"]}
+                }
+            },
+            {"$sort": {"total_points": DESCENDING}},
+            {"$limit": 20}
+        ])
+
+        top_users = await cursor.to_list(length=15)
+
+        # Формирование списка с user_id и их общими очками
+        top_users_list = [[user["USER_ID"], user["total_points"]] for user in top_users]
+
+        return top_users_list
+    except Exception as e:
+        logger.error(f"Error retrieving top users: {e}")
+        return []
+
+
+async def format_top_users(top_users):
+    """
+    Форматирует список топ пользователей в строку с нумерацией и указанием ID и Points.
+
+    Параметры:
+    - top_users (list): Список топ пользователей в формате [["ID", points], ["ID", points], ...]
+
+    Возвращает:
+    - str: Форматированная строка с нумерацией и указанием ID и Points.
+    """
+    formatted_output = []
+    for index, user in enumerate(top_users, start=1):
+        formatted_output.append(f"{index}. ID {user[0]} - Points {user[1]}")
+
+    return "\n".join(formatted_output)

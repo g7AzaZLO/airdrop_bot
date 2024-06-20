@@ -5,15 +5,15 @@ menu_kb = {
         inline_keyboard=[
             [
                 InlineKeyboardButton(text="😈Профиль", callback_data="profile"),
-                InlineKeyboardButton(text="#️⃣Информация", callback_data="information"),
+                InlineKeyboardButton(text="🏆Лидерборд", callback_data="leaderboard"),
             ],
             [
                 InlineKeyboardButton(text="👥Пригласить друга", callback_data="invite_friends"),
                 InlineKeyboardButton(text="💰Баланс", callback_data="balance"),
             ],
             [
-                InlineKeyboardButton(text="🥇Задачи", callback_data="tasks"),
-                InlineKeyboardButton(text="🔒FAQ", callback_data="faq"),
+                InlineKeyboardButton(text="📄Задания", callback_data="tasks"),
+                InlineKeyboardButton(text="⁉FAQ", callback_data="faq"),
             ],
             [
                 InlineKeyboardButton(text="🔧Настройки", callback_data="settings"),
@@ -25,15 +25,15 @@ menu_kb = {
         inline_keyboard=[
             [
                 InlineKeyboardButton(text="😈Profile", callback_data="profile"),
-                InlineKeyboardButton(text="#️⃣Information", callback_data="information"),
+                InlineKeyboardButton(text="🏆Leaderboard", callback_data="leaderboard"),
             ],
             [
                 InlineKeyboardButton(text="👥Invite Friends", callback_data="invite_friends"),
                 InlineKeyboardButton(text="💰Balance", callback_data="balance"),
             ],
             [
-                InlineKeyboardButton(text="🥇Tasks", callback_data="tasks"),
-                InlineKeyboardButton(text="🔒FAQ", callback_data="faq"),
+                InlineKeyboardButton(text="📄Tasks", callback_data="tasks"),
+                InlineKeyboardButton(text="⁉FAQ", callback_data="faq"),
             ],
             [
                 InlineKeyboardButton(text="🔧Settings", callback_data="settings"),
