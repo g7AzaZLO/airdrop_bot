@@ -26,7 +26,6 @@ MAX_REFS = 100
 
 # Token
 BOT_TOKEN = os.getenv("BOT_TOKEN")
-AI_KEY = os.getenv("AI_KEY")
 
 # Admins
 ADMINS_IDS_INIT = [int(id.strip()) for id in os.getenv("ADMINS_IDS").split(",")]
@@ -41,12 +40,12 @@ tasks_init = {
     1: {
         'description': {
             "ENG": """
-    🔹 *Follow our Twitter page*:
-    [https://x.com/ondreigoichev]
+*Follow our Twitter page*:
+[https://x.com/ondreigoichev]
             """,
             "RU": """
-    🔹 *Подпишитесь на наш Twitter*:
-    [https://x.com/ondreigoichev]
+*Подпишитесь на наш Twitter*:
+[https://x.com/ondreigoichev]
             """
         },
         'image': '',
