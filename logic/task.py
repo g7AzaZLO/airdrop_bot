@@ -204,7 +204,7 @@ async def send_task_info(callback_query: types.CallbackQuery, task_index: int, r
 #             await message.answer(text=all_tasks_message, parse_mode="MARKDOWN")
 #     except Exception as e:
 #         logger.error("An error occurred in send_all_tasks_info: %s", e)
-async def send_all_tasks_info(message: types.Message):
+async def send_all_tasks_info(message: types.Message, language):
     """
     Отправляет информацию обо всех заданиях пользователю.
 
@@ -215,7 +215,6 @@ async def send_all_tasks_info(message: types.Message):
     - None
     """
     try:
-        language = await get_language_for_user(message.from_user.id)
         tasks_list = [task for index, task in enumerate(tasks.values())]
         all_tasks_info = []
 

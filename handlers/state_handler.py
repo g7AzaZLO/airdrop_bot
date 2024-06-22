@@ -197,7 +197,8 @@ async def follow_telegram_response_handler_in_reg(callback_query: types.Callback
 
 
 @state_handler_router.message(RegistrationState.submit_address_state)
-async def submit_address_response_handler_in_reg(event: Union[types.Message, types.CallbackQuery], state: FSMContext) -> None:
+async def submit_address_response_handler_in_reg(event: Union[types.Message, types.CallbackQuery],
+                                                 state: FSMContext) -> None:
     """
     Обрабатывает ответ пользователя с крипто-адресом в процессе привязки/перепривязки.
     """
@@ -605,21 +606,20 @@ async def current_tasks_handler(callback_query: types.CallbackQuery, state: FSMC
         await state.set_state(RegistrationState.main_menu_state)
     elif user_response == "achievements":
         user = await get_user_details(callback_query.from_user.id)
-        tasks_done = user.get("TASKС_DONE", [])
+        tasks_done = user.get("TASKS_DONE", [])
         points_done = await calculate_total_points(tasks_done)
         reply = await get_message(task_menu_messages, "ACHIEVEMENTS", language, tasks_done=len(tasks_done),
                                   points_done=points_done)
-        tasks_done = user.get("TASKС_DONE", [])
         total_buttons = await get_num_of_tasks()
-        tasks_await = user.get("TASKС_AWAIT", [])
+        tasks_await = user.get("TASKS_AWAIT", [])
         tasks_keyboard = await create_numeric_keyboard(total_buttons, tasks_done + tasks_await, language)
         await edit_message(callback_query.message, reply, tasks_keyboard)
         return
     elif user_response == "all_tasks":
-        all_tasks = await send_all_tasks_info(callback_query.message)
-        tasks_done = user.get("TASKС_DONE", [])
+        all_tasks = await send_all_tasks_info(callback_query.message, language)
+        tasks_done = user.get("TASKS_DONE", [])
         total_buttons = await get_num_of_tasks()
-        tasks_await = user.get("TASKС_AWAIT", [])
+        tasks_await = user.get("TASKS_AWAIT", [])
         tasks_keyboard = await create_numeric_keyboard(total_buttons, tasks_done + tasks_await, language)
         await edit_message(callback_query.message, all_tasks, tasks_keyboard)
         return
@@ -870,7 +870,6 @@ async def handle_screen_check(event: Union[types.Message, types.CallbackQuery], 
         elif isinstance(event, types.CallbackQuery):
             await event.message.answer(text=reply2)
             await event.message.edit_text(text=reply, reply_markup=tasks_keyboard)
-
 
         await state.set_state(TasksState.current_tasks_state)
 
