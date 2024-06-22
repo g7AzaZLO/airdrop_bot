@@ -167,7 +167,11 @@ Yes, if you hold a significant portion of $GOICHEV tokens.
 6. If I hold $GOICHEV tokens, will I get an internship at DFW Bals?
 Possibly
 
-Translated with DeepL.com (free version)
+7. What will be the total supply of $GOICHEV coins?
+1,000,000,000,000 $GOICHEV.
+
+8. How much will be allocated to Airdrop?
+2% = $20,000,000 $GOICHEV
         """,
         "RU": """
 1. Что такое $GOICHEV?
@@ -187,7 +191,12 @@ Translated with DeepL.com (free version)
 
 6. Если держать токены $GOICHEV меня возьмут на стажировку в DFW Bals?
 Возможно
-      
+
+7. Какое общее предложение монет $GOICHEV будет?
+1,000,000,000 $GOICHEV
+
+8. Сколько будет выделено на Airdrop?
+2% = 20,000,000 $GOICHEV
         """
     },
     "CHANGE_ADDRESS_TEXT": {

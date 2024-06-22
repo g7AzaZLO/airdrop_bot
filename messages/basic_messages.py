@@ -80,18 +80,16 @@ _ВНИМАНИЕ: Пользователи, замеченные в мошен�
 
     "MAKE_SURE_TELEGRAM": {
         "ENG": """
-🔹 Subscribe to our channel and join the chat room:
-[{telegram_links}]
+Join the official Telegram channel [@ondreigoichev_ton], once done click on "joined" button
         """,
         "RU": """
-🔹 Подпишитесь на наш канал и вступите в чат:
-[{telegram_links}]
+Присоединитесь к официальному телеграм каналу [@ondreigoichev_ton], после выполнения нажмите на кнопку «вступил»
         """
     },
 
     "FOLLOW_TWITTER_TEXT": {
         "ENG": """
-🔹 *Follow our Twitter page*:
+*Follow our Twitter page*:
 [{twitter_links}]
 
 Type in the link to your Twitter profile to proceed.
@@ -103,7 +101,7 @@ https://x.com/example
 _WARNING: this tweet will be used to verify assignments_
         """,
         "RU": """
-🔹 *Подпишитесь на наш Twitter*:
+*Подпишитесь на наш Twitter*:
 [{twitter_links}]
 
 Введите ссылку на ваш профиль в Twitter, чтобы продолжить.
@@ -138,30 +136,14 @@ Example:
         """
     },
 
-    "JOINED_TEXT": {
+    "LINK_WALLET": {
         "ENG": """
-*Thank you!*
-
-Rewards will be sent automatically to your {airdrop_network} address after the airdrop concludes.
-
-*Don't forget to*:
-🔸 Stay in the Telegram channels
-🔸 Follow all social media channels for updates
-
-Your personal referral link (+*{referral_reward}* points for each referral):
-[{referral_link}]
+You have successfully linked your wallet!
+[{address}]
         """,
         "RU": """
-*Спасибо!*
-
-Награды будут автоматически отправлены на ваш {airdrop_network} адрес после завершения аирдропа.
-
-*Не забывайте*:
-🔸 Оставаться в Telegram-каналах
-🔸 Подписаться на все соцсети, чтобы быть в курсе обновлений
-
-Ваша персональная реферальная ссылка (+*{referral_reward}* очков за каждого реферала):
-[{referral_link}]
+Вы успешно привязали кошелек!
+[{address}]
         """
     },
 
