@@ -389,7 +389,7 @@ async def menu_settings(callback_query: types.CallbackQuery, state: FSMContext) 
             state_end2=RegistrationState.menu_settings,
             text1=await get_message(messages, "START_AGAIN_TEXT", language),
             text2=await get_message(menu_messages, "MENU_SETTINGS", language),
-            kb1=kb_start,
+            kb1=None,
             kb2=kb_menu_settings[language],
             delete=True
         )
@@ -521,7 +521,7 @@ async def null_state(message: types.Message, state: FSMContext) -> None:
             await message.answer(text=capture_message, reply_markup=types.ReplyKeyboardRemove())
     else:
         reply = await get_message(messages, "START_AGAIN_TEXT", language)
-        await message.answer(text=reply, reply_markup=kb_start)
+        await message.answer(text=reply, reply_markup=types.ReplyKeyboardRemove())
         return
 
 

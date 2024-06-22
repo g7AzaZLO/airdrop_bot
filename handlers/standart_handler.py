@@ -331,6 +331,8 @@ async def all_other_handler(event: Union[types.Message, types.CallbackQuery], st
         user_id = event.from_user.id
         logger.debug(f"Received callback from user {user_id}: {event.data}")
         user_input = event.data
+        if user_input == "start":
+            await start(event.message, state)
         await event.answer()  # Просто отвечаем на callback, чтобы убрать часы ожидания
     user_id = event.from_user.id
     current_state = await get_state_for_user(user_id)

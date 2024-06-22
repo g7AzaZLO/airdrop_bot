@@ -173,8 +173,8 @@ You have successfully linked your wallet!
     },
 
     "START_AGAIN_TEXT": {
-        "ENG": "Please, type /start or click the button below to begin.",
-        "RU": "Пожалуйста, введите /start или нажмите на кнопку ниже, чтобы начать."
+        "ENG": "Please, type /start  to begin.",
+        "RU": "Пожалуйста, введите /start чтобы начать."
     },
     "MENU_GOICHEV": {
         "ENG": """
