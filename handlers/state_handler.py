@@ -23,7 +23,7 @@ from logic.telegram import check_joined_telegram_channel
 from DB.database_logic import update_language_in_db, get_language_for_user, delete_user_from_db, get_user_details, \
     update_user_details, check_wallet_exists, decrement_referrer_count, mark_task_as_done, get_state_for_user, \
     set_user_state, remove_task_from_await, mark_task_as_await, delete_admin_message, insert_admin_messages, \
-    get_admin_messages_dict, get_all_users, get_top_users, format_top_users
+    get_admin_messages_dict, get_all_users, get_top_users, format_top_users, get_user_address
 from DB.database_logic import check_is_user_already_here, add_user_to_db, add_referrer_to_user, get_referrer, \
     increment_referrer_count, add_points_to_user
 from settings.config import AIRDROP_AMOUNT, IMAGE_PATHS
@@ -154,6 +154,10 @@ async def follow_telegram_response_handler_in_reg(callback_query: types.Callback
             await set_user_state(user_id, await get_clean_state_identifier(RegistrationState.main_menu_state))
             reply = await get_message(messages, "MENU_GOICHEV", language)
             reply_markup = menu_kb[language]
+            await update_user_details(user_id, NUM_OF_REFS=0, REF_POINTS=0, POINTS=AIRDROP_AMOUNT)
+            referrer = await get_referrer(user_id)
+            if referrer is not None:
+                await increment_referrer_count(referrer)
         else:
             logger.warning(f"User {user_id} is not in all required Telegram channels.")
             await state.set_state(RegistrationState.follow_telegram_state)
@@ -193,39 +197,44 @@ async def follow_telegram_response_handler_in_reg(callback_query: types.Callback
 
 
 @state_handler_router.message(RegistrationState.submit_address_state)
-async def submit_address_response_handler_in_reg(message: types.Message, state: FSMContext) -> None:
+async def submit_address_response_handler_in_reg(event: Union[types.Message, types.CallbackQuery], state: FSMContext) -> None:
     """
-    Обрабатывает ответ пользователя с крипто-адресом в процессе регистрации.
+    Обрабатывает ответ пользователя с крипто-адресом в процессе привязки/перепривязки.
     """
     logger.debug("Executing submit_address_response_handler_in_reg")
-    user_response = message.text
-    user_id = message.from_user.id
-    language = await get_language_for_user(message.from_user.id)
+    user_response = event.text
+    user_id = event.from_user.id
+    language = await get_language_for_user(user_id)
 
-    if await check_wallet_exists(user_response):
-        if is_valid_crypto_address(user_response):
-            logger.info(f"Valid crypto address provided by user {user_id}.")
-            await update_user_details(user_id, ADDR=user_response, NUM_OF_REFS=0, REF_POINTS=0, POINTS=AIRDROP_AMOUNT)
-            await state.set_state(RegistrationState.main_menu_state)
-            await set_user_state(user_id, await get_clean_state_identifier(RegistrationState.main_menu_state))
-
-            ref_link = await get_refferal_link(user_id)
-            reply = await get_message(messages, "JOINED_TEXT", language, referral_link=ref_link)
-            await message.answer(text=reply, reply_markup=menu_kb[language], parse_mode="MARKDOWN")
-
-            referrer = await get_referrer(user_id)
-            if referrer is not None:
-                await increment_referrer_count(referrer)
+    if isinstance(event, types.CallbackQuery):
+        user_response = event.data
+        if user_response == "return_back":
+            reply = await get_message(menu_messages, "MENU_SETTINGS", language)
+            await event.message.edit_text(text=reply, reply_markup=kb_menu_settings[language])
+            await state.set_state(RegistrationState.menu_settings)
+            return
         else:
-            logger.warning(f"Invalid crypto address provided by user {user_id}.")
-            await state.set_state(RegistrationState.submit_address_state)
-            reply = await get_message(messages, "INVALID_ADDRESS_TEXT", language)
-            await message.answer(text=reply)
-    else:
-        logger.warning(f"Crypto address already registered for user {user_id}.")
-        await state.set_state(RegistrationState.submit_address_state)
-        reply = await get_message(messages, "ADDRESS_ALREADY_REGISTERED_TEXT", language)
-        await message.answer(text=reply)
+            await event.answer()  # Просто отвечаем на callback, чтобы убрать часы ожидания
+            return
+    elif isinstance(event, types.Message):
+        if await check_wallet_exists(user_response):
+            if is_valid_crypto_address(user_response):
+                logger.info(f"Valid crypto address provided by user {user_id}.")
+                await update_user_details(user_id, ADDR=user_response)
+                await state.set_state(RegistrationState.main_menu_state)
+                reply = await get_message(messages, "LINK_WALLET", language, address=user_response)
+                await event.answer(text=reply, reply_markup=kb_menu_settings[language], parse_mode="MARKDOWN")
+                await state.set_state(RegistrationState.menu_settings)
+            else:
+                logger.warning(f"Invalid crypto address provided by user {user_id}.")
+                await state.set_state(RegistrationState.menu_settings)
+                reply = await get_message(messages, "INVALID_ADDRESS_TEXT", language)
+                await event.answer(text=reply, reply_markup=kb_menu_settings[language])
+        else:
+            logger.warning(f"Crypto address already registered for user {user_id}.")
+            await state.set_state(RegistrationState.menu_settings)
+            reply = await get_message(messages, "ADDRESS_ALREADY_REGISTERED_TEXT", language)
+            await event.answer(text=reply, reply_markup=kb_menu_settings[language])
 
 
 async def edit_message(message, text: str, reply_markup):
@@ -270,7 +279,7 @@ async def main_menu_handler(callback_query: types.CallbackQuery, state: FSMConte
     elif user_response == "leaderboard":
         leaderboard = await get_top_users()
         reply = await format_top_users(leaderboard)
-        photo_path = IMAGE_PATHS.get("info")
+        photo_path = IMAGE_PATHS.get("leaderboard")
     elif user_response == "invite_friends":
         ref_link = await get_refferal_link(user_id)
         reply = await get_message(menu_messages, "INVITE_FRIENDS_TEXT", language, referral_link=ref_link)
@@ -291,11 +300,32 @@ async def main_menu_handler(callback_query: types.CallbackQuery, state: FSMConte
         reply = await get_message(task_menu_messages, "CHOOSE_NUMBER_TASK_TEXT", language,
                                   tasks_done_points=task_done_points, tasks_total_points=tasks_total_points)
         photo_path = IMAGE_PATHS.get("tasks")
-        if callback_query.message.text:
-            await callback_query.message.edit_text(text=reply, reply_markup=tasks_keyboard, parse_mode="MARKDOWN")
+        # if callback_query.message.text:
+        #     await callback_query.message.edit_text(text=reply, reply_markup=tasks_keyboard, parse_mode="MARKDOWN")
+        # else:
+        #     await callback_query.message.delete()
+        #     await callback_query.message.answer(text=reply, reply_markup=tasks_keyboard, parse_mode="MARKDOWN")
+        if photo_path:
+            if callback_query.message.photo:
+                await callback_query.message.edit_media(
+                    media=types.InputMediaPhoto(media=photo_path)
+                )
+                await callback_query.message.edit_caption(inline_message_id=str(callback_query.message.message_id),
+                                                          parse_mode="MARKDOWN", caption=reply,
+                                                          reply_markup=tasks_keyboard)
+            else:
+                await callback_query.message.delete()
+                await callback_query.message.answer_photo(
+                    photo=photo_path, caption=reply, reply_markup=tasks_keyboard,
+                    parse_mode="MARKDOWN"
+                )
         else:
-            await callback_query.message.delete()
-            await callback_query.message.answer(text=reply, reply_markup=tasks_keyboard, parse_mode="MARKDOWN")
+            if callback_query.message.text:
+                await callback_query.message.edit_text(text=reply, reply_markup=tasks_keyboard,
+                                                       parse_mode="MARKDOWN")
+            else:
+                await callback_query.message.delete()
+                await callback_query.message.answer(text=reply, reply_markup=tasks_keyboard, parse_mode="MARKDOWN")
         await state.set_state(TasksState.current_tasks_state)
         return
 
@@ -376,19 +406,24 @@ async def menu_settings(callback_query: types.CallbackQuery, state: FSMContext) 
             parse_mode="HTML"
         )
     elif user_response == "change_address":
-        await state.set_state(RegistrationState.change_address_state)
-        await state.update_data(
-            state_end1=RegistrationState.change_address_state,
-            state_end2=RegistrationState.menu_settings,
-            text1=await get_message(menu_messages, "GET_ADDRESS_TEXT", language),
-            text2=await get_message(menu_messages, "MENU_SETTINGS", language),
-            kb1=kb_tasks_back[language],
-            kb2=kb_menu_settings[language],
-            delete=False
-        )
-        reply = await get_message(menu_messages, "CHANGE_ADDRESS_TEXT", language)
-        await edit_message(callback_query.message, reply, yes_no_kb[language])
-        await state.set_state(RegistrationState.yes_no_state)
+        if await get_user_address(callback_query.from_user.id):
+            await state.set_state(RegistrationState.change_address_state)
+            await state.update_data(
+                state_end1=RegistrationState.change_address_state,
+                state_end2=RegistrationState.menu_settings,
+                text1=await get_message(menu_messages, "GET_ADDRESS_TEXT", language),
+                text2=await get_message(menu_messages, "MENU_SETTINGS", language),
+                kb1=kb_tasks_back[language],
+                kb2=kb_menu_settings[language],
+                delete=False
+            )
+            reply = await get_message(menu_messages, "CHANGE_ADDRESS_TEXT", language)
+            await edit_message(callback_query.message, reply, yes_no_kb[language])
+            await state.set_state(RegistrationState.yes_no_state)
+        else:
+            reply = await get_message(messages, "SUBMIT_ADDRESS_TEXT", language)
+            await edit_message(callback_query.message, reply, reply_markup=kb_tasks_back[language])
+            await state.set_state(RegistrationState.submit_address_state)
     else:
         reply = await get_message(menu_messages, "UNKNOWN_COMMAND_TEXT", language)
         await edit_message(callback_query.message, reply, kb_menu_settings[language])
@@ -540,32 +575,53 @@ async def current_tasks_handler(callback_query: types.CallbackQuery, state: FSMC
     elif index_task is not None and index_task in range(await get_num_of_tasks()):
         reply = await get_message(task_menu_messages, "TASK_DONE_BACK_TEXT", language)
         await state.update_data(num_of_task=user_response)
-        await send_task_info(callback_query.message, index_task, reply_markup=kb_task_done_back[language])
+        await send_task_info(callback_query, index_task, reply_markup=kb_task_done_back[language])
         await state.set_state(TasksState.single_task_state)
     elif user_response == "return_back_in_menu":
-        reply = await get_message(task_menu_messages, "WE_ARE_BACK_CHOOSE_TEXT", language)
+        reply = await get_message(messages, "MENU_GOICHEV", language)
+        photo_path = IMAGE_PATHS["profile"]
         await edit_message(callback_query.message, reply, menu_kb[language])
+        if photo_path:
+            if callback_query.message.photo:
+                await callback_query.message.edit_media(
+                    media=types.InputMediaPhoto(media=photo_path)
+                )
+                await callback_query.message.edit_caption(inline_message_id=str(callback_query.message.message_id),
+                                                          parse_mode="HTML", caption=reply,
+                                                          reply_markup=menu_kb[language])
+            else:
+                await callback_query.message.delete()
+                await callback_query.message.answer_photo(
+                    photo=photo_path, caption=reply, reply_markup=menu_kb[language],
+                    parse_mode="HTML"
+                )
+        else:
+            if callback_query.message.text:
+                await callback_query.message.edit_text(text=reply, reply_markup=menu_kb[language],
+                                                       parse_mode="HTML")
+            else:
+                await callback_query.message.delete()
+                await callback_query.message.answer(text=reply, reply_markup=menu_kb[language], parse_mode="HTML")
         await state.set_state(RegistrationState.main_menu_state)
     elif user_response == "achievements":
-        await state.set_state(TasksState.achievements_state)
         user = await get_user_details(callback_query.from_user.id)
         tasks_done = user.get("TASKС_DONE", [])
         points_done = await calculate_total_points(tasks_done)
         reply = await get_message(task_menu_messages, "ACHIEVEMENTS", language, tasks_done=len(tasks_done),
                                   points_done=points_done)
-        await edit_message(callback_query.message, reply, kb_tasks_back[language])
-    elif user_response == "all_tasks":
-        await send_all_tasks_info(callback_query.message, tasks_done)
         tasks_done = user.get("TASKС_DONE", [])
         total_buttons = await get_num_of_tasks()
-        task_done_points = await calculate_total_points(tasks_done)
-        tasks_total_points = await get_all_points()
         tasks_await = user.get("TASKС_AWAIT", [])
         tasks_keyboard = await create_numeric_keyboard(total_buttons, tasks_done + tasks_await, language)
-        reply = await get_message(task_menu_messages, "CHOOSE_NUMBER_TASK_TEXT", language,
-                                  tasks_done_points=task_done_points,
-                                  tasks_total_points=tasks_total_points)
         await edit_message(callback_query.message, reply, tasks_keyboard)
+        return
+    elif user_response == "all_tasks":
+        all_tasks = await send_all_tasks_info(callback_query.message)
+        tasks_done = user.get("TASKС_DONE", [])
+        total_buttons = await get_num_of_tasks()
+        tasks_await = user.get("TASKС_AWAIT", [])
+        tasks_keyboard = await create_numeric_keyboard(total_buttons, tasks_done + tasks_await, language)
+        await edit_message(callback_query.message, all_tasks, tasks_keyboard)
         return
     else:
         reply = await get_message(menu_messages, "UNKNOWN_COMMAND_TEXT", language)
@@ -700,7 +756,8 @@ async def follow_twitter_response_handler_in_reg(event: Union[types.Message, typ
                 tasks_await = user.get("TASKС_AWAIT", [])
                 tasks_keyboard = await create_numeric_keyboard(total_buttons, tasks_done + tasks_await, language)
                 reply2 = await get_message(task_menu_messages, "WE_ARE_BACK_CHOOSE_TEXT", language)
-                await event.answer(text=reply1 + '\n' + reply2, reply_markup=tasks_keyboard)
+                await event.answer(text=reply1)
+                await event.answer(text=reply2, reply_markup=tasks_keyboard)
                 await state.set_state(TasksState.current_tasks_state)
         else:
             logger.warning("Invalid Twitter Link")
@@ -806,17 +863,14 @@ async def handle_screen_check(event: Union[types.Message, types.CallbackQuery], 
         tasks_await = user.get("TASKС_AWAIT", [])
         tasks_keyboard = await create_numeric_keyboard(total_buttons, tasks_done + tasks_await, language)
         reply = await get_message(task_menu_messages, "WE_ARE_BACK_CHOOSE_TEXT", language)
-
-        if isinstance(event, types.Message):
-            await event.answer(text=reply, reply_markup=tasks_keyboard)
-        elif isinstance(event, types.CallbackQuery):
-            await event.message.edit_text(text=reply, reply_markup=tasks_keyboard)
-
         reply2 = await get_message(other_messages, "YOUR_PIC_SEND_TEXT", language)
         if isinstance(event, types.Message):
-            await event.answer(text=reply2, reply_markup=tasks_keyboard)
+            await event.answer(text=reply2)
+            await event.answer(text=reply, reply_markup=tasks_keyboard)
         elif isinstance(event, types.CallbackQuery):
-            await event.message.answer(text=reply2, reply_markup=tasks_keyboard)
+            await event.message.answer(text=reply2)
+            await event.message.edit_text(text=reply, reply_markup=tasks_keyboard)
+
 
         await state.set_state(TasksState.current_tasks_state)
 

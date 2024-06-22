@@ -114,7 +114,7 @@ async def get_index_by_text_task(task_text: str, language: str) -> int | None:
     return None
 
 
-async def send_task_info(message: types.Message, task_index: int, reply_markup=None, edit=False):
+async def send_task_info(callback_query: types.CallbackQuery, task_index: int, reply_markup=None, edit=False):
     """
     Отправляет информацию о задании пользователю.
 
@@ -128,36 +128,83 @@ async def send_task_info(message: types.Message, task_index: int, reply_markup=N
     - None
     """
     try:
-        language = await get_language_for_user(message.from_user.id)
+        language = await get_language_for_user(callback_query.from_user.id)
         tasks_list = list(tasks.values())
-        if task_index >= 0 and task_index < len(tasks_list):
+        if 0 <= task_index < len(tasks_list):
             task = tasks_list[task_index]
-            reply = await get_message(other_messages, "NOT_DESC_TEXT", language)
-            description = task["description"].get(language, reply)
+            no_desc = await get_message(other_messages, "NOT_DESC_TEXT", language)
+            description = task["description"].get(language, no_desc)
             points = task["points"]
-            image_path = task.get("image", "")
-            message_text = await get_message(other_messages, "TASK_TEXT", language, description=description,
+            photo_path = task.get("image", "")
+            reply = await get_message(other_messages, "TASK_TEXT", language, description=description,
                                              points=points)
-            if image_path:
-                if edit:
-                    await message.edit_media(media=types.InputMediaPhoto(media="tasks/" + image_path, caption=message_text), reply_markup=reply_markup)
+            if photo_path:
+                if callback_query.message.photo:
+                    await callback_query.message.edit_media(
+                        media=types.InputMediaPhoto(media=photo_path)
+                    )
+                    await callback_query.message.edit_caption(inline_message_id=str(callback_query.message.message_id),
+                                                              parse_mode="MARKDOWN", caption=reply,
+                                                              reply_markup=reply_markup)
                 else:
-                    await message.answer_photo(photo=types.FSInputFile(path="tasks/" + image_path), caption=message_text,
-                                               reply_markup=reply_markup, parse_mode="MARKDOWN")
+                    await callback_query.message.delete()
+                    await callback_query.message.answer_photo(
+                        photo=photo_path, caption=reply, reply_markup=reply_markup,
+                        parse_mode="MARKDOWN"
+                    )
             else:
-                if edit:
-                    await message.edit_text(text=message_text, reply_markup=reply_markup, parse_mode="MARKDOWN")
+                if callback_query.message.text:
+                    await callback_query.message.edit_text(text=reply, reply_markup=reply_markup,
+                                                           parse_mode="MARKDOWN")
                 else:
-                    await message.answer(text=message_text, reply_markup=reply_markup, parse_mode="MARKDOWN")
+                    await callback_query.message.delete()
+                    await callback_query.message.answer(text=reply, reply_markup=reply_markup,
+                                                        parse_mode="MARKDOWN")
         else:
             reply = await get_message(other_messages, "TASK_NOT_FOUND_TEXT", language)
-            await message.answer(text=reply, parse_mode="MARKDOWN")
+            if callback_query.message.text:
+                await callback_query.message.edit_text(text=reply, reply_markup=reply_markup,
+                                        parse_mode="MARKDOWN")
+            else:
+                await callback_query.message.delete()
+                await callback_query.message.answer(text=reply, reply_markup=reply_markup,
+                                     parse_mode="MARKDOWN")
     except Exception as e:
         logger.error("An error occurred in send_task_info: %s", e)
 
 
 
-async def send_all_tasks_info(message: types.Message, tasks_done):
+# async def send_all_tasks_info(message: types.Message, tasks_done):
+#     """
+#     Отправляет информацию обо всех заданиях пользователю.
+#
+#     Параметры:
+#     - message (types.Message): Сообщение от пользователя.
+#
+#     Возвращает:
+#     - None
+#     """
+#     try:
+#         language = await get_language_for_user(message.from_user.id)
+#         tasks_list = [task for index, task in enumerate(tasks.values()) if index not in tasks_done]
+#         all_tasks_info = []
+#
+#         for task_index, task in enumerate(tasks_list):
+#             description = task["description"].get(language,
+#                                                   await get_message(other_messages, "NOT_DESC_TEXT", language))
+#             points = task["points"]
+#             task_info = await get_message(other_messages, "TASK_TEXT", language, description=description, points=points)
+#             all_tasks_info.append(f"Task #{task_index + 1}:{task_info}")
+#
+#         if not all_tasks_info:
+#             reply = await get_message(other_messages, "NO_TASKS_TEXT", language)
+#             await message.answer(text=reply, parse_mode="MARKDOWN")
+#         else:
+#             all_tasks_message = "\n".join(all_tasks_info)
+#             await message.answer(text=all_tasks_message, parse_mode="MARKDOWN")
+#     except Exception as e:
+#         logger.error("An error occurred in send_all_tasks_info: %s", e)
+async def send_all_tasks_info(message: types.Message):
     """
     Отправляет информацию обо всех заданиях пользователю.
 
@@ -169,7 +216,7 @@ async def send_all_tasks_info(message: types.Message, tasks_done):
     """
     try:
         language = await get_language_for_user(message.from_user.id)
-        tasks_list = [task for index, task in enumerate(tasks.values()) if index not in tasks_done]
+        tasks_list = [task for index, task in enumerate(tasks.values())]
         all_tasks_info = []
 
         for task_index, task in enumerate(tasks_list):
@@ -181,10 +228,10 @@ async def send_all_tasks_info(message: types.Message, tasks_done):
 
         if not all_tasks_info:
             reply = await get_message(other_messages, "NO_TASKS_TEXT", language)
-            await message.answer(text=reply, parse_mode="MARKDOWN")
+            return reply
         else:
             all_tasks_message = "\n".join(all_tasks_info)
-            await message.answer(text=all_tasks_message, parse_mode="MARKDOWN")
+            return all_tasks_message
     except Exception as e:
         logger.error("An error occurred in send_all_tasks_info: %s", e)
 
