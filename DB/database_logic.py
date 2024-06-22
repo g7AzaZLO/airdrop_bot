@@ -6,7 +6,6 @@ from DB.mongo import users_collection, tasks_collection, admin_messages_collecti
 from FSM.states import get_state_from_string
 from settings.logging_config import get_logger
 
-
 logger = get_logger()
 
 
@@ -740,3 +739,27 @@ async def format_top_users(top_users):
         formatted_output.append(f"{index}. ID {user[0]} - Points {user[1]}")
 
     return "\n".join(formatted_output)
+
+
+async def get_user_address(user_id: int) -> str | None:
+    """
+    Возвращает адрес пользователя по указанному юзер айди.
+
+    Параметры:
+    - user_id (int): Уникальный идентификатор пользователя.
+
+    Возвращает:
+    - address (str): Адрес пользователя, если он существует.
+    - None, если пользователь не найден или произошла ошибка.
+    """
+    logger.debug("def get_user_address")
+    try:
+        user = await users_collection.find_one({"USER_ID": user_id})
+        if user:
+            return user.get("ADDR")
+        else:
+            logger.info(f"User not found for user_id {user_id}")
+            return None
+    except Exception as e:
+        logger.error(f"Error retrieving user address for user_id {user_id}: {e}")
+        return None
