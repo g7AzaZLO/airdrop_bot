@@ -168,8 +168,8 @@ You have successfully linked your wallet!
     },
 
     "NOT_SUB_AT_GROUP_TEXT": {
-        "ENG": "First, subscribe to the channel. [{telegram_links}] ",
-        "RU": "Сначала подпишитесь на канал. [{telegram_links}] "
+        "ENG": "First, subscribe to the channel. {telegram_links}",
+        "RU": "Сначала подпишитесь на канал. {telegram_links}"
     },
 
     "START_AGAIN_TEXT": {
