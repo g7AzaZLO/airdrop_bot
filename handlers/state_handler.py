@@ -625,9 +625,9 @@ async def current_tasks_handler(callback_query: types.CallbackQuery, state: FSMC
         return
     else:
         reply = await get_message(menu_messages, "UNKNOWN_COMMAND_TEXT", language)
-        tasks_done = user.get("TASKС_DONE", [])
+        tasks_done = user.get("TASKS_DONE", [])
         total_buttons = await get_num_of_tasks()
-        tasks_await = user.get("TASKС_AWAIT", [])
+        tasks_await = user.get("TASKS_AWAIT", [])
         tasks_keyboard = await create_numeric_keyboard(total_buttons, tasks_done + tasks_await, language)
         await edit_message(callback_query.message, reply, tasks_keyboard)
         return
@@ -650,12 +650,12 @@ async def single_task_handler(callback_query: types.CallbackQuery, state: FSMCon
             points = await get_points_from_task(index_task)
             await add_points_to_user(callback_query.from_user.id, points)
             task_marked = await mark_task_as_done(callback_query.from_user.id, index_task)
-            tasks_done = user.get("TASKС_DONE", [])
+            tasks_done = user.get("TASKS_DONE", [])
             if task_marked:
                 tasks_done.append(index_task)
             task_done_points = await calculate_total_points(tasks_done)
             total_buttons = await get_num_of_tasks()
-            tasks_await = user.get("TASKС_AWAIT", [])
+            tasks_await = user.get("TASKS_AWAIT", [])
             tasks_keyboard = await create_numeric_keyboard(total_buttons, tasks_done + tasks_await, language)
             tasks_total_points = await get_all_points()
             reply = await get_message(task_menu_messages, "CHOOSE_NUMBER_TASK_TEXT", language,
@@ -679,9 +679,9 @@ async def single_task_handler(callback_query: types.CallbackQuery, state: FSMCon
                 logger.warning(f"THIS PROTECTION IS NOT IMPLEMENTED YET")
                 reply = await get_message(other_messages, "PROTECTION_NOT_IMPLEMENTED", language)
                 await edit_message(callback_query.message, reply, None)
-                tasks_done = user.get("TASKС_DONE", [])
+                tasks_done = user.get("TASKS_DONE", [])
                 total_buttons = await get_num_of_tasks()
-                tasks_await = user.get("TASKС_AWAIT", [])
+                tasks_await = user.get("TASKS_AWAIT", [])
                 tasks_keyboard = await create_numeric_keyboard(total_buttons, tasks_done + tasks_await, language)
                 reply = await get_message(task_menu_messages, "WE_ARE_BACK_CHOOSE_TEXT", language)
                 await edit_message(callback_query.message, reply, tasks_keyboard)
@@ -725,9 +725,10 @@ async def follow_twitter_response_handler_in_reg(event: Union[types.Message, typ
     if isinstance(event, types.CallbackQuery):
         user_response = event.data
         if user_response == "return_back":
-            tasks_done = (await get_user_details(user_id)).get("TASKС_DONE", [])
+            # await update_user_details(user_id, TWITTER_USER=None)
+            tasks_done = (await get_user_details(user_id)).get("TASKS_DONE", [])
             total_buttons = await get_num_of_tasks()
-            tasks_await = (await get_user_details(user_id)).get("TASKС_AWAIT", [])
+            tasks_await = (await get_user_details(user_id)).get("TASKS_AWAIT", [])
             tasks_keyboard = await create_numeric_keyboard(total_buttons, tasks_done + tasks_await, language)
             reply = await get_message(task_menu_messages, "WE_ARE_BACK_CHOOSE_TEXT", language)
             await event.message.edit_text(text=reply, reply_markup=tasks_keyboard)
@@ -753,7 +754,7 @@ async def follow_twitter_response_handler_in_reg(event: Union[types.Message, typ
                 reply1 = await get_message(messages, "TWITTER_ALREADY_REGISTERED_TEXT", language)
                 tasks_done = user.get("TASKS_DONE", [])
                 total_buttons = await get_num_of_tasks()
-                tasks_await = user.get("TASKС_AWAIT", [])
+                tasks_await = user.get("TASKS_AWAIT", [])
                 tasks_keyboard = await create_numeric_keyboard(total_buttons, tasks_done + tasks_await, language)
                 reply2 = await get_message(task_menu_messages, "WE_ARE_BACK_CHOOSE_TEXT", language)
                 await event.answer(text=reply1)
@@ -763,9 +764,9 @@ async def follow_twitter_response_handler_in_reg(event: Union[types.Message, typ
             logger.warning("Invalid Twitter Link")
             reply1 = await get_message(messages, "TWITTER_INVALID_LINK_TEXT", language)
             user = await get_user_details(user_id)
-            tasks_done = user.get("TASKС_DONE", [])
+            tasks_done = user.get("TASKS_DONE", [])
             total_buttons = await get_num_of_tasks()
-            tasks_await = user.get("TASKС_AWAIT", [])
+            tasks_await = user.get("TASKS_AWAIT", [])
             tasks_keyboard = await create_numeric_keyboard(total_buttons, tasks_done + tasks_await, language)
             reply2 = await get_message(task_menu_messages, "WE_ARE_BACK_CHOOSE_TEXT", language)
             await event.answer(text=reply1 + '\n' + reply2, reply_markup=tasks_keyboard)
@@ -782,9 +783,9 @@ async def achievements_handler(callback_query: types.CallbackQuery, state: FSMCo
     user_response = callback_query.data
     user = await get_user_details(callback_query.from_user.id)
     if user_response == "return_back":
-        tasks_done = user.get("TASKС_DONE", [])
+        tasks_done = user.get("TASKS_DONE", [])
         total_buttons = await get_num_of_tasks()
-        tasks_await = user.get("TASKС_AWAIT", [])
+        tasks_await = user.get("TASKS_AWAIT", [])
         tasks_keyboard = await create_numeric_keyboard(total_buttons, tasks_done + tasks_await, language)
         reply = await get_message(task_menu_messages, "WE_ARE_BACK_CHOOSE_TEXT", language)
         await edit_message(callback_query.message, reply, tasks_keyboard)
@@ -858,9 +859,9 @@ async def handle_screen_check(event: Union[types.Message, types.CallbackQuery], 
             except Exception as e:
                 logger.error(f"Не удалось отправить сообщение администратору с ID {admin_id}: {e}")
         await insert_admin_messages({index_task: admin_messages}, user_id)
-        tasks_done = user.get("TASKС_DONE", [])
+        tasks_done = user.get("TASKS_DONE", [])
         total_buttons = await get_num_of_tasks()
-        tasks_await = user.get("TASKС_AWAIT", [])
+        tasks_await = user.get("TASKS_AWAIT", [])
         tasks_keyboard = await create_numeric_keyboard(total_buttons, tasks_done + tasks_await, language)
         reply = await get_message(task_menu_messages, "WE_ARE_BACK_CHOOSE_TEXT", language)
         reply2 = await get_message(other_messages, "YOUR_PIC_SEND_TEXT", language)
@@ -891,7 +892,7 @@ async def auto_reject_task(user_id: int, index_task: int, admin_messages: dict, 
     """
     await asyncio.sleep(delay)
     user = await get_user_details(user_id)
-    tasks_await = user.get("TASKС_AWAIT", [])
+    tasks_await = user.get("TASKS_AWAIT", [])
     if index_task in tasks_await:
         await remove_task_from_await(user_id, index_task)
         if index_task in admin_messages:
