@@ -687,9 +687,9 @@ async def single_task_handler(callback_query: types.CallbackQuery, state: FSMCon
                 await edit_message(callback_query.message, reply, tasks_keyboard)
                 await state.set_state(TasksState.current_tasks_state)
     elif user_response == "return_back":
-        tasks_done = user.get("TASKС_DONE", [])
+        tasks_done = user.get("TASKS_DONE", [])
         total_buttons = await get_num_of_tasks()
-        tasks_await = user.get("TASKС_AWAIT", [])
+        tasks_await = user.get("TASKS_AWAIT", [])
         tasks_keyboard = await create_numeric_keyboard(total_buttons, tasks_done + tasks_await, language)
         reply = await get_message(task_menu_messages, "WE_ARE_BACK_CHOOSE_TEXT", language)
         await edit_message(callback_query.message, reply, tasks_keyboard)
