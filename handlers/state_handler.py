@@ -828,8 +828,30 @@ async def handle_screen_check(event: Union[types.Message, types.CallbackQuery], 
         tasks_await = user.get("TASKS_AWAIT", [])
         tasks_keyboard = await create_numeric_keyboard(total_buttons, tasks_done + tasks_await, language)
         reply = await get_message(task_menu_messages, "WE_ARE_BACK_CHOOSE_TEXT", language)
-        await event.message.edit_text(text=reply, reply_markup=tasks_keyboard)
+        reply_markup = tasks_keyboard
+        photo_path = IMAGE_PATHS["tasks"]
         await state.set_state(TasksState.current_tasks_state)
+        if photo_path:
+            if event.message.photo:
+                await event.message.edit_media(
+                    media=types.InputMediaPhoto(media=photo_path)
+                )
+                await event.message.edit_caption(inline_message_id=str(event.message.message_id),
+                                                          parse_mode="MARKDOWN", caption=reply,
+                                                          reply_markup=reply_markup)
+            else:
+                await event.message.delete()
+                await event.message.answer_photo(
+                    photo=photo_path, caption=reply, reply_markup=reply_markup,
+                    parse_mode="MARKDOWN"
+                )
+        else:
+            if event.message.text:
+                await event.message.edit_text(text=reply, reply_markup=reply_markup,
+                                                       parse_mode="MARKDOWN")
+            else:
+                await event.message.delete()
+                await event.message.answer(text=reply, reply_markup=reply_markup, parse_mode="MARKDOWN")
         return
 
     if screenshot:
