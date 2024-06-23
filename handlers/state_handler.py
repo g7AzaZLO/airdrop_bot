@@ -692,8 +692,31 @@ async def single_task_handler(callback_query: types.CallbackQuery, state: FSMCon
         tasks_await = user.get("TASKS_AWAIT", [])
         tasks_keyboard = await create_numeric_keyboard(total_buttons, tasks_done + tasks_await, language)
         reply = await get_message(task_menu_messages, "WE_ARE_BACK_CHOOSE_TEXT", language)
-        await edit_message(callback_query.message, reply, tasks_keyboard)
+        reply_markup = tasks_keyboard
+        photo_path = IMAGE_PATHS["tasks"]
         await state.set_state(TasksState.current_tasks_state)
+        if photo_path:
+            if callback_query.message.photo:
+                await callback_query.message.edit_media(
+                    media=types.InputMediaPhoto(media=photo_path)
+                )
+                await callback_query.message.edit_caption(inline_message_id=str(callback_query.message.message_id),
+                                                          parse_mode="MARKDOWN", caption=reply,
+                                                          reply_markup=reply_markup)
+            else:
+                await callback_query.message.delete()
+                await callback_query.message.answer_photo(
+                    photo=photo_path, caption=reply, reply_markup=reply_markup,
+                    parse_mode="MARKDOWN"
+                )
+        else:
+            if callback_query.message.text:
+                await callback_query.message.edit_text(text=reply, reply_markup=reply_markup,
+                                                       parse_mode="MARKDOWN")
+            else:
+                await callback_query.message.delete()
+                await callback_query.message.answer(text=reply, reply_markup=reply_markup, parse_mode="MARKDOWN")
+        return
     else:
         reply = await get_message(menu_messages, "UNKNOWN_COMMAND_TEXT", language)
         await edit_message(callback_query.message, reply, kb_task_done_back[language])
@@ -731,8 +754,30 @@ async def follow_twitter_response_handler_in_reg(event: Union[types.Message, typ
             tasks_await = (await get_user_details(user_id)).get("TASKS_AWAIT", [])
             tasks_keyboard = await create_numeric_keyboard(total_buttons, tasks_done + tasks_await, language)
             reply = await get_message(task_menu_messages, "WE_ARE_BACK_CHOOSE_TEXT", language)
-            await event.message.edit_text(text=reply, reply_markup=tasks_keyboard)
+            reply_markup = tasks_keyboard
+            photo_path = IMAGE_PATHS["tasks"]
             await state.set_state(TasksState.current_tasks_state)
+            if photo_path:
+                if event.message.photo:
+                    await event.message.edit_media(
+                        media=types.InputMediaPhoto(media=photo_path)
+                    )
+                    await event.message.edit_caption(inline_message_id=str(event.message.message_id),
+                                                     parse_mode="MARKDOWN", caption=reply,
+                                                     reply_markup=reply_markup)
+                else:
+                    await event.message.delete()
+                    await event.message.answer_photo(
+                        photo=photo_path, caption=reply, reply_markup=reply_markup,
+                        parse_mode="MARKDOWN"
+                    )
+            else:
+                if event.message.text:
+                    await event.message.edit_text(text=reply, reply_markup=reply_markup,
+                                                  parse_mode="MARKDOWN")
+                else:
+                    await event.message.delete()
+                    await event.message.answer(text=reply, reply_markup=reply_markup, parse_mode="MARKDOWN")
             return
         else:
             await event.answer()  # Просто отвечаем на callback, чтобы убрать часы ожидания
@@ -837,8 +882,8 @@ async def handle_screen_check(event: Union[types.Message, types.CallbackQuery], 
                     media=types.InputMediaPhoto(media=photo_path)
                 )
                 await event.message.edit_caption(inline_message_id=str(event.message.message_id),
-                                                          parse_mode="MARKDOWN", caption=reply,
-                                                          reply_markup=reply_markup)
+                                                 parse_mode="MARKDOWN", caption=reply,
+                                                 reply_markup=reply_markup)
             else:
                 await event.message.delete()
                 await event.message.answer_photo(
@@ -848,7 +893,7 @@ async def handle_screen_check(event: Union[types.Message, types.CallbackQuery], 
         else:
             if event.message.text:
                 await event.message.edit_text(text=reply, reply_markup=reply_markup,
-                                                       parse_mode="MARKDOWN")
+                                              parse_mode="MARKDOWN")
             else:
                 await event.message.delete()
                 await event.message.answer(text=reply, reply_markup=reply_markup, parse_mode="MARKDOWN")
