@@ -822,6 +822,7 @@ async def handle_screen_check(event: Union[types.Message, types.CallbackQuery], 
             return
 
     elif isinstance(event, types.CallbackQuery) and event.data == "return_back":
+        await update_user_details(user_id, TWITTER_USER=None)
         tasks_done = user.get("TASKS_DONE", [])
         total_buttons = await get_num_of_tasks()
         tasks_await = user.get("TASKS_AWAIT", [])
