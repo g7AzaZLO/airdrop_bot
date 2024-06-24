@@ -148,5 +148,9 @@ other_messages = {
     "CORRECT_ANSWER": {
         "ENG": "That's the right answer",
         "RU": "Верный ответ"
+    },
+    "TWITTER_SUCC": {
+        "ENG": "Twitter has been successfully linked ",
+        "RU": "Твиттер успешно привязан"
     }
 }

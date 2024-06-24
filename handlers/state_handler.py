@@ -671,6 +671,10 @@ async def single_task_handler(callback_query: types.CallbackQuery, state: FSMCon
                 reply = await get_message(task_menu_messages, "TYPE_TWITTER_TEXT", language)
                 await edit_message(callback_query.message, reply, reply_markup=kb_tasks_back[language])
                 await state.set_state(TasksState.follow_twitter_state)
+            elif protection == "twitter_without_screen_check":
+                reply = await get_message(task_menu_messages, "TYPE_TWITTER_TEXT", language)
+                await edit_message(callback_query.message, reply, reply_markup=kb_tasks_back[language])
+                await state.set_state(TasksState.follow_without_twitter_state)
             elif protection == "puzzle":
                 reply = await get_message(other_messages, "PUZZLE_CHECK", language)
                 await edit_message(callback_query.message, reply, kb_tasks_back[language])
@@ -721,6 +725,117 @@ async def single_task_handler(callback_query: types.CallbackQuery, state: FSMCon
         reply = await get_message(menu_messages, "UNKNOWN_COMMAND_TEXT", language)
         await edit_message(callback_query.message, reply, kb_task_done_back[language])
         return
+
+
+@state_handler_router.callback_query(TasksState.follow_without_twitter_state)
+@state_handler_router.message(TasksState.follow_without_twitter_state)
+async def follow_twitter_response_handler_without_check(event: Union[types.Message, types.CallbackQuery],
+                                                        state: FSMContext) -> None:
+    """
+    Обрабатывает ответ пользователя на запрос на подписку в Twitter в процессе регистрации.
+
+    Параметры:
+    - event (Union[types.Message, types.CallbackQuery]): Событие от пользователя (сообщение или callback).
+    - state (FSMContext): Контекст состояния конечного автомата.
+
+    Действия:
+    - Обрабатывает ссылку на Twitter от пользователя.
+    - Проверяет валидность ссылки на Twitter.
+    - Если пользователь подписан на канал, обновляет данные пользователя и переводит его в состояние проверки скриншота.
+    - Если пользователь уже подписан, возвращает его в меню задач.
+    - Если ссылка на Twitter невалидна, возвращает пользователя в меню задач.
+    - Обрабатывает нажатие кнопки "Вернуться Назад".
+    """
+    user_id = event.from_user.id
+    language = await get_language_for_user(user_id)
+
+    if isinstance(event, types.CallbackQuery):
+        user_response = event.data
+        if user_response == "return_back":
+            # await update_user_details(user_id, TWITTER_USER=None)
+            tasks_done = (await get_user_details(user_id)).get("TASKS_DONE", [])
+            total_buttons = await get_num_of_tasks()
+            tasks_await = (await get_user_details(user_id)).get("TASKS_AWAIT", [])
+            tasks_keyboard = await create_numeric_keyboard(total_buttons, tasks_done + tasks_await, language)
+            reply = await get_message(task_menu_messages, "WE_ARE_BACK_CHOOSE_TEXT", language)
+            reply_markup = tasks_keyboard
+            photo_path = IMAGE_PATHS["tasks"]
+            await state.set_state(TasksState.current_tasks_state)
+            if photo_path:
+                if event.message.photo:
+                    await event.message.edit_media(
+                        media=types.InputMediaPhoto(media=photo_path)
+                    )
+                    await event.message.edit_caption(inline_message_id=str(event.message.message_id),
+                                                     parse_mode="MARKDOWN", caption=reply,
+                                                     reply_markup=reply_markup)
+                else:
+                    await event.message.delete()
+                    await event.message.answer_photo(
+                        photo=photo_path, caption=reply, reply_markup=reply_markup,
+                        parse_mode="MARKDOWN"
+                    )
+            else:
+                if event.message.text:
+                    await event.message.edit_text(text=reply, reply_markup=reply_markup,
+                                                  parse_mode="MARKDOWN")
+                else:
+                    await event.message.delete()
+                    await event.message.answer(text=reply, reply_markup=reply_markup, parse_mode="MARKDOWN")
+            return
+        else:
+            await event.answer()  # Просто отвечаем на callback, чтобы убрать часы ожидания
+            return
+
+    if isinstance(event, types.Message):
+        user_response = event.text
+        await state.update_data(user_follow_twitter_response=user_response)
+        if is_valid_twitter_link(user_response):
+            if await check_joined_twitter_channel(user_response):
+                logger.info("User has joined the Twitter channel")
+                user = await get_user_details(user_id)
+                await update_user_details(user_id, TWITTER_USER=user_response)
+
+                logger.info("Twitter without check - success")
+                task_text = await state.get_data()
+                index_task = await get_index_by_text_task(task_text["num_of_task"], language)
+                points = await get_points_from_task(index_task)
+                await add_points_to_user(event.from_user.id, points)
+                task_marked = await mark_task_as_done(event.from_user.id, index_task)
+                tasks_done = user.get("TASKS_DONE", [])
+                if task_marked:
+                    tasks_done.append(index_task)
+
+                reply = await get_message(other_messages, "TWITTER_SUCC", language)
+                tasks_done = user.get("TASKS_DONE", [])
+                total_buttons = await get_num_of_tasks()
+                tasks_await = user.get("TASKS_AWAIT", [])
+                tasks_keyboard = await create_numeric_keyboard(total_buttons, tasks_done + tasks_await, language)
+                await event.answer(text=reply, parse_mode="MARKDOWN", reply_markup=tasks_keyboard)
+                await state.set_state(TasksState.current_tasks_state)
+            else:
+                logger.info("User is already in the database")
+                user = await get_user_details(user_id)
+                reply1 = await get_message(messages, "TWITTER_ALREADY_REGISTERED_TEXT", language)
+                tasks_done = user.get("TASKS_DONE", [])
+                total_buttons = await get_num_of_tasks()
+                tasks_await = user.get("TASKS_AWAIT", [])
+                tasks_keyboard = await create_numeric_keyboard(total_buttons, tasks_done + tasks_await, language)
+                reply2 = await get_message(task_menu_messages, "WE_ARE_BACK_CHOOSE_TEXT", language)
+                await event.answer(text=reply1)
+                await event.answer(text=reply2, reply_markup=tasks_keyboard)
+                await state.set_state(TasksState.current_tasks_state)
+        else:
+            logger.warning(f"Invalid Twitter Link : {user_response}")
+            reply1 = await get_message(messages, "TWITTER_INVALID_LINK_TEXT", language)
+            user = await get_user_details(user_id)
+            tasks_done = user.get("TASKS_DONE", [])
+            total_buttons = await get_num_of_tasks()
+            tasks_await = user.get("TASKS_AWAIT", [])
+            tasks_keyboard = await create_numeric_keyboard(total_buttons, tasks_done + tasks_await, language)
+            reply2 = await get_message(task_menu_messages, "WE_ARE_BACK_CHOOSE_TEXT", language)
+            await event.answer(text=reply1 + '\n' + reply2, reply_markup=tasks_keyboard)
+            await state.set_state(TasksState.current_tasks_state)
 
 
 @state_handler_router.callback_query(TasksState.follow_twitter_state)
@@ -806,7 +921,7 @@ async def follow_twitter_response_handler_in_reg(event: Union[types.Message, typ
                 await event.answer(text=reply2, reply_markup=tasks_keyboard)
                 await state.set_state(TasksState.current_tasks_state)
         else:
-            logger.warning("Invalid Twitter Link")
+            logger.warning(f"Invalid Twitter Link : {user_response}")
             reply1 = await get_message(messages, "TWITTER_INVALID_LINK_TEXT", language)
             user = await get_user_details(user_id)
             tasks_done = user.get("TASKS_DONE", [])

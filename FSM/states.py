@@ -39,6 +39,7 @@ class TasksState(StatesGroup):
     screen_check_state = State()
     waiting_for_approval = State()
     follow_twitter_state = State()
+    follow_without_twitter_state = State()
     puzzle_check_state = State()
 
 
