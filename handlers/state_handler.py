@@ -665,7 +665,7 @@ async def single_task_handler(callback_query: types.CallbackQuery, state: FSMCon
         else:
             if protection == "screen_check":
                 reply = await get_message(other_messages, "SEND_PIC_TO_CHECK_TEXT", language)
-                await edit_message(callback_query.message, reply, None)
+                await edit_message(callback_query.message, reply, kb_tasks_back[language])
                 await state.set_state(TasksState.screen_check_state)
             elif protection == "twitter_screen_check":
                 reply = await get_message(task_menu_messages, "TYPE_TWITTER_TEXT", language)
