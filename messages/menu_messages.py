@@ -150,13 +150,13 @@ Unknown command. Please choose from the menu.
     "FAQ_TEXT": {
     "ENG": """
 1. What is $GOICHEV?
-$GOICHEV is the internal meme-token of the Ondrej Goichev project, which has not yet been listed on DEX/CEX exchanges. After listing, it will be possible to exchange $GOICHEV for $TON and vice versa.
+$GOICHEV is the internal meme-token of the Ondrej Goichev project, which has not yet been listed on DEX/CEX exchanges.
 
 2. What are GOICHEV points?
 GOICHEV points are points that will be converted into $GOICHEV tokens after the season is over.
 
 3. Who is Ondrej GOICHEV? What is the company DFW Bals?
-Ondrej Goichev is a fictional meme character dedicated to Andrey Grachev and his MM-company DWF Labs, BUT it is not related to them in any way!
+Ondrej Goichev is a fictional meme character inspired by Andrey Grachev and his company DWF Labs, but not related to them.
 
 4. How can I avoid becoming a goy hamster?
 You need to farm GOICHEV points and prepare your TONs to exchange them for $GOICHEV and become a holder!
