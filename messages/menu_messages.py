@@ -91,14 +91,14 @@ _ВНИМАНИЕ: Пользователи, замеченные в мошен�
         "ENG": """
 GOICHEV POINTS DROP 😎 SEASON 1
 
-How to avoid becoming a <s>hamster</s> goy and getting shaved by Ondrej's company, DFW Bals? The easiest way is to earn points!
+How to avoid becoming a goy and getting shaved by Ondrej's company, DFW Bals? The easiest way is to earn points!
 
 Earn GOICHEV points by performing various tasks and inviting friends and acquaintances. With GOICHEV points, you will be able to receive a $GOICHEV airdrop in the future.
         """,
         "RU": """
 GOICHEV POINTS DROP 😎 SEASON 1
 
-Как не стать <s>хомяком</s> гоем и не быть побритым компанией Ондрея, DFW Bals? Cамый простой способ – фармить поинты!
+Как не стать гоем и не быть побритым компанией Ондрея, DFW Bals? Cамый простой способ – фармить поинты!
 
 Зарабатывайте GOICHEV-поинты, выполняя различные задания и приглашая друзей и знакомых. За GOICHEV-поинты в дальнейшем можно будет получить эирдроп $GOICHEV.
         """
