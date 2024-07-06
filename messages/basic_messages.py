@@ -80,10 +80,10 @@ _ВНИМАНИЕ: Пользователи, замеченные в мошен�
 
     "MAKE_SURE_TELEGRAM": {
         "ENG": """
-Join the official Telegram channel [@ondreigoichev_ton], once done click on "joined" button
+    Join the official Telegram channel [@ondreigoichev_ton]. Once done, click the "Joined" button.
         """,
         "RU": """
-Присоединитесь к официальному телеграм каналу [@ondreigoichev_ton], после выполнения нажмите на кнопку «вступил»
+    Присоединитесь к официальному телеграм-каналу [@ondreigoichev_ton]. После этого нажмите кнопку «Вступил».
         """
     },
 
@@ -122,7 +122,7 @@ Please make sure your wallet supports the *{airdrop_network}*.
 
 Example:
 [UQBxCOstPWvIADbaYYBapGhwfRZCEZUui5p2OEFHU0a_wWem]
-IMPORTANT: Use non-custodial wallets [(e.g. Tonkeeper, MyTonWallet), do not use exchange/wallet wallets (TON Space is ok).]
+IMPORTANT: Use non-custodial wallets [(e.g. Tonkeeper, MyTonWallet). Do not use exchange wallets (TON Space is okay).]
         """,
         "RU": """
 Введите ваш адрес кошелька.
@@ -132,7 +132,7 @@ IMPORTANT: Use non-custodial wallets [(e.g. Tonkeeper, MyTonWallet), do not use 
 Пример:
 [UQBxCOstPWvIADbaYYBapGhwfRZCEZUui5p2OEFHU0a_wWem]
 
-ВАЖНО: Используйте некастодиальные кошельки [(например, Tonkeeper, MyTonWallet), не используйте кошельки бирж/wallet (TON Space можно).]
+ВАЖНО: Используйте некастодиальные кошельки [(например, Tonkeeper, MyTonWallet). Не используйте кошельки бирж (TON Space можно).]
         """
     },
 
@@ -168,8 +168,8 @@ You have successfully linked your wallet!
     },
 
     "NOT_SUB_AT_GROUP_TEXT": {
-        "ENG": "First, subscribe to the channel. {telegram_links}",
-        "RU": "Сначала подпишитесь на канал. {telegram_links}"
+        "ENG": "First, subscribe to the channel: {telegram_links}",
+        "RU": "Сначала подпишитесь на канал: {telegram_links}"
     },
 
     "START_AGAIN_TEXT": {
@@ -180,16 +180,16 @@ You have successfully linked your wallet!
         "ENG": """
 GOICHEV POINTS DROP 😎 SEASON 1
 
-How to not become a <s>hamster</s> goy and get shaved by Ondrej's company, DFW Bals? - the easiest way is to earn points!
+How to avoid becoming a <s>hamster</s> goy and getting shaved by Ondrej's company, DFW Bals? The easiest way is to earn points!
 
-Earn GOICHEV-points by performing various tasks and inviting friends and acquaintances. For GOICHEV points you will be able to get $GOICHEV eirdrop in the future.
+Earn GOICHEV points by performing various tasks and inviting friends and acquaintances. With GOICHEV points, you will be able to receive a $GOICHEV airdrop in the future.
         """,
         "RU": """
 GOICHEV POINTS DROP 😎 SEASON 1
 
-Как не стать <s>хомяком</s> гоем и не быть побритым компанией Ондрея, DFW Bals? – самый простой способ – фармить поинты!
+Как не стать <s>хомяком</s> гоем и не быть побритым компанией Ондрея, DFW Bals? Cамый простой способ – фармить поинты!
 
-Зарабатывайте GOICHEV-поинты выполняя различные задания и приглашая друзей, знакомых. За GOICHEV-поинты в дальнейшем можно будет получить эирдроп $GOICHEV
+Зарабатывайте GOICHEV-поинты, выполняя различные задания и приглашая друзей и знакомых. За GOICHEV-поинты в дальнейшем можно будет получить эирдроп $GOICHEV.
         """
     }
 }
