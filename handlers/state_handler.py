@@ -1226,7 +1226,10 @@ async def handle_admin_message(message: types.Message, state: FSMContext) -> Non
         reply = await get_message(other_messages, "SEND_GIF_TEXT", language)
         await message.answer(text=reply)
     all_users = await get_all_users()
+    counter = 0
     for user in all_users:
+        counter += 1
+        print(str(counter) + f"/{len(all_users)}")
         try:
             if content_type == types.ContentType.TEXT:
                 await message.bot.send_message(chat_id=user["USER_ID"], text=user_message, parse_mode="Markdown")
